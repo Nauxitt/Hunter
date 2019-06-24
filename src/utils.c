@@ -1,3 +1,5 @@
+#include <SDL2/SDL.h>
+
 void printRect(SDL_Rect * rect){
 	if(rect == NULL)
 		printf("{NULL PTR RECT}");
