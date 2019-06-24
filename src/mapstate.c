@@ -58,6 +58,7 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 	mapstate->camera_y = 125;
 
 	// Load some textures
+	// TODO: move texture loading to its own file
 	mapstate->cards_texture = IMG_LoadTexture(
 			game.renderer, "resources/cards.png");
 	mapstate->tiles_texture = IMG_LoadTexture(
@@ -69,7 +70,7 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 
 	mapstate->menubar->background_texture = IMG_LoadTexture(
 			game.renderer, "resources/menubar-gradient.png");
-	mapstate->menubar->buttons_map = IMG_LoadTexture(
+	mapstate->menubar->buttons_texture = IMG_LoadTexture(
 			game.renderer, "resources/menu-battle-icons.png");
 
 	EventHandler(mapstate)->onTick = mapOnTick;
@@ -79,7 +80,7 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 
 	EventHandler(mapstate->menubar)->onDraw = menuOnDraw;
 
-	pushAction(mapstate, "poll_turn_action");
+	pushAction("poll_turn_action");
 	return mapstate;
 }
 
@@ -280,7 +281,7 @@ void mapOnTick(EventHandler * h){
 	MapState * state = MapState(h);
 	const Uint8 *keys = SDL_GetKeyboardState(NULL);
 	
-	if(pollAction(state, "poll_tile_select")){
+	if(pollAction("poll_tile_select")){
 		// Pan camera with arrow keys
 		if(keys[SDL_SCANCODE_UP])    state->camera_y += 10;
 		if(keys[SDL_SCANCODE_DOWN])  state->camera_y -= 10;
@@ -296,18 +297,20 @@ void mapOnTick(EventHandler * h){
 			);
 	}
 
-	else if(pollAction(state, "move_entity")){
-		int target_x = state->action->target_x;
-		int target_y = state->action->target_y;
-		int speed = 6;
+	else if(pollAction("move_entity")){
+		int target_x = ((ActionQueueEntity*) game.action)->target_x;
+		int target_y = ((ActionQueueEntity*) game.action)->target_y;
+		int speed = ((ActionQueueEntity*) game.action)->speed;
 		Entity * entity = Entity(state->daniel);
+
+		// Move Entity offset and cell position
+		// Set running animation
 
 		if(entity->x > target_x){
 			entity->direction = WEST;
 			entity->flip_h = 1;
 			entitySetAnimation(
-					entity,
-					(AnimationFrame *) &ANIM_HUNTER_RUN_N
+					entity, (AnimationFrame *) &ANIM_HUNTER_RUN_N
 				);
 
 			entity->offset_x -= speed;
@@ -320,8 +323,7 @@ void mapOnTick(EventHandler * h){
 			entity->direction = EAST;
 			entity->flip_h = 1;
 			entitySetAnimation(
-					Entity(entity),
-					(AnimationFrame *) &ANIM_HUNTER_RUN_S
+					Entity(entity), (AnimationFrame *) &ANIM_HUNTER_RUN_S
 				);
 
 			entity->offset_x += speed;
@@ -334,8 +336,7 @@ void mapOnTick(EventHandler * h){
 			entity->direction = NORTH;
 			entity->flip_h = 0;
 			entitySetAnimation(
-					entity,
-					(AnimationFrame *) &ANIM_HUNTER_RUN_N
+					entity, (AnimationFrame *) &ANIM_HUNTER_RUN_N
 				);
 
 			entity->offset_y -= speed;
@@ -348,8 +349,7 @@ void mapOnTick(EventHandler * h){
 			entity->direction = SOUTH;
 			entity->flip_h = 0;
 			entitySetAnimation(
-					entity,
-					(AnimationFrame *) &ANIM_HUNTER_RUN_S
+					entity, (AnimationFrame *) &ANIM_HUNTER_RUN_S
 				);
 
 			entity->offset_y += speed;
@@ -360,12 +360,14 @@ void mapOnTick(EventHandler * h){
 		}
 
 		hunterSetTile(state->daniel, entity->x, entity->y);
+		
+		// If finished running, stop.  Switch to standing animation
 
 		if(
 			(entity->x == target_x) &&
 			(entity->y == target_y)
 		){
-			popAction(state);
+			nextAction(state);
 			state->daniel->hunter->turn_stats.mov = 0;
 			switch(entity->direction){
 				case NORTH:
@@ -387,7 +389,7 @@ void mapOnTick(EventHandler * h){
 	}
 
 	// Forward event to menubar
-	state->menubar->active = pollAction(state, "poll_turn_action");
+	state->menubar->active = pollAction("poll_turn_action");
 
 	EventHandler * menu_handler = EventHandler(state->menubar);
 	if(menu_handler && menu_handler->onTick)
@@ -398,7 +400,7 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 	MapState * state = MapState(h);
 
 	// Menubar arrow keys
-	if(pollAction(state, "poll_turn_action")){
+	if(pollAction("poll_turn_action")){
 		switch(e->key.keysym.scancode){
 			case SDL_SCANCODE_LEFT:
 				state->menubar->selector--;
@@ -414,7 +416,7 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 
 			case SDL_SCANCODE_SPACE:
 				state->card_selected = 0;
-				pushAction(state, "poll_move_card_select");
+				pushAction("poll_move_card_select");
 				break;
 
 			default:
@@ -423,7 +425,7 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 	}
 	
 	// Select card
-	else if(pollAction(state, "poll_move_card_select")){
+	else if(pollAction("poll_move_card_select")){
 
 		// Calculate hand size
 		int hand_size = hunterHandSize(state->daniel->hunter);
@@ -445,12 +447,12 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 			case SDL_SCANCODE_SPACE:
 				card = hunterPopCard(state->daniel->hunter, state->card_selected);
 				state->daniel->hunter->turn_stats.mov = card->num;
-				popAction(state);
-				pushAction(state, "poll_tile_select");
+				nextAction(state);
+				pushAction("poll_tile_select");
 				break;
 
 			case SDL_SCANCODE_ESCAPE:
-				popAction(state);
+				nextAction(state);
 				break;
 
 			default:
@@ -459,9 +461,9 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 	}
 
 	
-	else if(pollAction(state, "poll_tile_select")){
+	else if(pollAction("poll_tile_select")){
 		if(e->key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-			popAction(state);
+			nextAction(state);
 	}
 }
 
@@ -476,13 +478,16 @@ void mapOnMouseDown(EventHandler * h, SDL_Event * e){
 		);
 
 	if(t){
-		if(pollAction(state, "poll_tile_select")){
+		if(pollAction("poll_tile_select")){
 			if((t->selected) && (t->val)){
-				popAction(state);
+				nextAction(state);
 				mapSelectNone(state->map);
-				ActionQueue * action = pushAction(state, "move_entity");
+				ActionQueueEntity * action = pushEntityAction(
+						Entity(state->daniel), "move_entity"
+					);
 				action->target_x = t->x;
 				action->target_y = t->y;
+				action->speed = 6;
 			}
 		}
 	}
@@ -551,7 +556,7 @@ void mapOnDraw(EventHandler * h){
 
 	// TODO: draw screen tint
 
-	if(pollAction(state, "poll_move_card_select")){
+	if(pollAction("poll_move_card_select")){
 
 		// Draw card select
 		SDL_Rect window_panel = {32, 76, 16 + state->card_w * 7, 64};
@@ -613,14 +618,14 @@ void mapOnDraw(EventHandler * h){
 
 	// Draw stat windows, character stats
 	int panel_gutter = 4;
-	int panel_w = (640 - 16*2 - 4*3) / 4;
+	int panel_w = (game.w - 16*2 - 4*3) / 4;
 	for(int h=0; h < HUNTERS_COUNT; h++){
 		Hunter * hunter = state->hunters[h].hunter;
 		Statset * stats = hunterStats(hunter);
 		
 		// Draw panel
 		SDL_Rect panel_rect = {
-				16 + (panel_w + panel_gutter)*h, 480 - 160 - panel_gutter,
+				16 + (panel_w + panel_gutter)*h, game.h - 160 - panel_gutter,
 				panel_w, 160
 			};
 		drawWindowPanel(state, h, &panel_rect);
@@ -700,7 +705,7 @@ void menuOnDraw(EventHandler * h){
 
 	// Render menubar
 	SDL_Rect src = {0, 0, 1, 64};
-	SDL_Rect dest = {0, 0, 640, 64};
+	SDL_Rect dest = {0, 0, game.w, 64};
 	
 	blit(menu->background_texture, &src, &dest);
 	
@@ -712,13 +717,13 @@ void menuOnDraw(EventHandler * h){
 	for(int i=0; i<5; i++){
 		src.x = i * 16;
 		dest.x = i * 38 + 32;
-		blit(menu->buttons_map, &src, &dest);
+		blit(menu->buttons_texture, &src, &dest);
 	}
 
 	// Draw deck icon
 	src.x = 5 * 16;
-	dest.x = 640 - 32 * 4;
-	blit(menu->buttons_map, &src, &dest);
+	dest.x = game.w - 32 * 4;
+	blit(menu->buttons_texture, &src, &dest);
 
 	// Draw scroling text window
 	src.x = 0; src.y = 16;
@@ -726,7 +731,7 @@ void menuOnDraw(EventHandler * h){
 	src.h = 16;
 	dest.x = 5 * 38 + 32;
 	dest.w = 144*2;
-	blit(menu->buttons_map, &src, &dest);
+	blit(menu->buttons_texture, &src, &dest);
 
 	// Draw selector feather
 	if(menu->active){
@@ -736,34 +741,24 @@ void menuOnDraw(EventHandler * h){
 		if(menu->selector != -1){
 			dest.x = menu->selector * 38 + 32;
 			dest.w = 64; dest.h = 64;
-			blit(menu->buttons_map, &src, &dest);
+			blit(menu->buttons_texture, &src, &dest);
 		}
 	}
 }
 
-ActionQueue * makeAction(char * type){
-	ActionQueue * ret = (ActionQueue*) malloc(sizeof(ActionQueue));
-	ret->type = type;
+
+ActionQueueEntity * makeEntityAction(char * type){
+	ActionQueueEntity * ret = (ActionQueueEntity *) malloc(sizeof(ActionQueueEntity));
+	ActionQueue(ret)->type = type;
 	return ret;
 }
 
-ActionQueue * pushAction(MapState * state, char * type){
-	ActionQueue * new_action = makeAction(type);
-	new_action->next = state->action;
-	new_action->start = SDL_GetTicks();
-	state->action = new_action;
+
+ActionQueueEntity * pushEntityAction(Entity * entity, char * type){
+	ActionQueueEntity * new_action = makeEntityAction(type);
+	ActionQueue(new_action)->next = game.action;
+	ActionQueue(new_action)->start = SDL_GetTicks();
+	new_action->entity = entity;
+	game.action = ActionQueue(new_action);
 	return new_action;
-}
-
-int pollAction(MapState * state, char * type){
-	if(state->action == NULL)
-		return 0;
-
-	return strcmp(state->action->type, type) == 0;
-}
-
-void popAction(MapState * state){
-	ActionQueue * pop = state->action;
-	state->action = state->action->next;
-	free(pop);
 }

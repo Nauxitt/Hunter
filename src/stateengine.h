@@ -1,15 +1,16 @@
 /*
-	Provides structures for defining states of different event handlers to SDL events, and provides a basic game loop.  Three important structures are defined here: Game, EventHandler, and GameState.
+	Provides structures for defining states of different event handlers to SDL events, and provides a basic game loop which passes events to these states.  Three important structures are defined here: Game, EventHandler, and GameState.
 */
 
-#ifndef stateengine_h
-#define stateengine_h
+#ifndef __stateengine_h
+#define __stateengine_h
 
 #include <SDL2/SDL.h>
 
 typedef struct _Game Game;
 typedef struct _EventHandler EventHandler;
 typedef struct _GameState GameState;
+typedef struct _ActionQueue ActionQueue;
 
 extern Game game;
 
@@ -18,7 +19,9 @@ extern Game game;
 */
 struct _Game {
 	GameState * state;
+	ActionQueue * action;
 	uint8_t quit;
+	int w, h;
 	
 	SDL_Window   * window;
 	SDL_Renderer * renderer;
@@ -55,14 +58,30 @@ struct _GameState {
 	GameState * prevState;
 };
 
+
+typedef struct _ActionQueue {
+	char * type;
+	struct _ActionQueue * next;
+
+	uint32_t start;
+	int duration;
+} ActionQueue;
+
+
 // Convenience casting macros
 #define EventHandler(H) ((EventHandler *) H)
 #define GameState(S) ((GameState *) S)
+#define ActionQueue(Q) ((ActionQueue *) Q)
 
 int initGame();
 GameState * gamePushState(GameState * state);
 GameState * gamePopState();
 void gameMainLoop();
+
+ActionQueue * makeAction(char * type);
+ActionQueue * pushAction(char * type);
+int pollAction(char * type);
+void nextAction();
 
 void blit(SDL_Texture * texture, SDL_Rect * src, SDL_Rect * dest);
 

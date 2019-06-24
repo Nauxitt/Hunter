@@ -1,15 +1,18 @@
 #include "stateengine.h"
 
 int initGame(){
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0){
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 		return 1;
-	}
+
+	// TODO: allow different window sizes
+	game.w = 640;
+	game.h = 480;
 
 	game.window = SDL_CreateWindow(
 			"Hunter of Battles",
 			SDL_WINDOWPOS_CENTERED,
 			SDL_WINDOWPOS_CENTERED,
-			640, 480,
+			game.w, game.h,
 			SDL_WINDOW_SHOWN
 		);
 
@@ -90,32 +93,67 @@ void blit(SDL_Texture * texture, SDL_Rect * src, SDL_Rect * dest){
 	SDL_RenderCopy(game.renderer, texture, src, dest);
 }
 
-void gameMainLoop(){
+void gameCycle(){
+	GameState state = *game.state;
 	SDL_Event event;
 
-	while(game.state && !game.quit){
-		GameState state = *game.state;
+	while(SDL_PollEvent(&event)){
+		if(event.type == SDL_QUIT){
+			game.quit = 1;
+			return;
+		}
+		else
+			gameProcessEvent(&event);
+	};
+	
+	if(state.events.onTick)
+		state.events.onTick((EventHandler*) game.state);
 
-		while(SDL_PollEvent(&event)){
-			if(event.type == SDL_QUIT)
-				game.quit = 1;
-			else
-				gameProcessEvent(&event);
-		};
-		
-		if(state.events.onTick)
-			state.events.onTick((EventHandler*) game.state);
+	SDL_SetRenderDrawColor(game.renderer,0,0,0,255);
+	SDL_RenderClear(game.renderer);
 
-		SDL_SetRenderDrawColor(game.renderer,0,0,0,255);
-		SDL_RenderClear(game.renderer);
+	if(state.events.onDraw)
+		state.events.onDraw((EventHandler *) game.state);
 
-		if(state.events.onDraw)
-			state.events.onDraw((EventHandler *) game.state);
+	SDL_RenderPresent(game.renderer);
+	SDL_Delay(16);
+}
 
-		SDL_RenderPresent(game.renderer);
-		SDL_Delay(16);
-	}
+void gameMainLoop(){
+	while(game.state && !game.quit)
+		gameCycle();
 	
 	SDL_DestroyWindow(game.window);
 	SDL_Quit();
+}
+
+
+ActionQueue * makeAction(char * type){
+	ActionQueue * ret = (ActionQueue*) malloc(sizeof(ActionQueue));
+	ret->type = type;
+	return ret;
+}
+
+
+ActionQueue * pushAction(char * type){
+	ActionQueue * new_action = makeAction(type);
+	new_action->next = game.action;
+	new_action->start = SDL_GetTicks();
+	game.action = new_action;
+	return new_action;
+}
+
+
+int pollAction(char * type){
+	if(game.action == NULL)
+		return 0;
+
+	return strcmp(game.action->type, type) == 0;
+}
+
+
+void nextAction(){
+	ActionQueue * pop = game.action;
+	game.action = game.action->next;
+	free(pop);
 }

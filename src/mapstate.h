@@ -32,7 +32,7 @@ enum WindowColor {
 
 
 typedef struct _Tile {
-	int val; // 0 if void, otherwise floor
+	int val;        // 0 if void, otherwise floor
 	int selected;
 
 	int contents_len;
@@ -52,26 +52,15 @@ typedef struct _Map {
 typedef struct _MenubarState {
 	GameState state;
 	SDL_Texture * background_texture;
-	SDL_Texture * buttons_map;
-	uint8_t selector;
-	uint8_t active;
+	SDL_Texture * buttons_texture;
+	uint8_t selector;  // Index of the item being selected
+	uint8_t active;    // Whether the menubar is selecting anything
 } MenubarState;
 
 
 typedef struct _StatpanelState {
 	GameState state;
 } StatpanelState;
-
-
-typedef struct _ActionQueue {
-	char * type;
-	struct _ActionQueue * next;
-
-	uint32_t start;
-	int duration;
-	Entity * entity;
-	int target_x, target_y;
-} ActionQueue;
 
 
 typedef struct _AnimationFrame {
@@ -137,9 +126,22 @@ typedef struct _MapState {
 	Map * map;
 	MenubarState * menubar;
 	StatpanelState * statpanel;
-	ActionQueue * action;
 } MapState;
 
+
+/*
+   Specialized ActionQeueue which with with containers a container for Entity data.
+*/
+typedef struct _ActionQueueEntity {
+	ActionQueue action;
+	MapState * state;
+	Entity * entity;
+	int target_x, target_y;
+	int speed;
+} ActionQueueEntity;
+
+ActionQueueEntity * pushEntityAction(Entity * entity, char * type);
+ActionQueueEntity * makeEntityAction(char * type);
 
 // Convenience macros for casting to EventHandler subtype pointers
 #define MapState(M) ((MapState *) M)
@@ -183,17 +185,15 @@ HunterEntity * initHunter(HunterEntity * hunter, MapState * state, SDL_Texture *
 
 void hunterSetTile(HunterEntity * e, int x, int y);
 
+/*
+   MapState event hooks
+*/
 void mapOnTick(EventHandler * h);
 void mapOnKeyUp(EventHandler * h, SDL_Event * e);
 void mapOnMouseDown(EventHandler * h, SDL_Event * e);
 void mapOnDraw(EventHandler * h);
 
 void menuOnDraw(EventHandler * h);
-
-ActionQueue * makeAction(char * type);
-ActionQueue * pushAction(MapState * state, char * type);
-int pollAction(MapState * state, char * type);
-void popAction(MapState * state);
 
 void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window_dest);
 #endif

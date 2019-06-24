@@ -1,5 +1,6 @@
 Graphics Extractions:
 	Small numbers: 5, 9
+	Big letters (found in characters' statboxes)
 	Big numbers: 4, 5, 6, 7
 	Cards:
 		Letters: A, C, and E
@@ -28,9 +29,9 @@ Gameplay Done:
 Gameplay Features:
 	Pathfinding
 	Pathfinding + movement
+	Click-and-drag map view
 	Turn incrementation
 	Stat window HP bar
-	Font extraction
 	Stat window name
 	Stat window hand
 	Card graphics
