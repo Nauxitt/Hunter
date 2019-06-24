@@ -1,0 +1,87 @@
+Graphics Extractions:
+	Small numbers: 5, 9
+	Big numbers: 4, 5, 6, 7
+	Cards:
+		Letters: A, C, and E
+		Icons: Attack, Trap
+
+Refactor:
+	Separate game mechanics into their own set of structures and functions, so that a match may be ran headless.
+
+	Encapsulate card selector in its own structure, similar to MenuState
+
+	Split MapState event functions, particularly onDraw and onTick, into additional functions
+
+	Substitute manual ActionQueue pushes for functions which also perform some setup data, and have names which describe what they're doing
+
+	Number blitting should be handled in a single function
+
+Gameplay Done:
+	HunterEntity type
+	Multiple hunters on screen
+	Movement highlight
+	Card selector
+	Movement card bonus
+	Window panels
+	Stat window
+
+Gameplay Features:
+	Pathfinding
+	Pathfinding + movement
+	Turn incrementation
+	Stat window HP bar
+	Font extraction
+	Stat window name
+	Stat window hand
+	Card graphics
+	Deck of cards, shuffle, draw
+	Dice
+	Combat window
+	Combat logic
+	Combat sprite animation
+	Combat background animation
+	Attack and Rest menu actions
+	Crates + item sprites
+	Ingame crates + items
+	Trap logic
+	Exit, Base game mode
+	Match rank screen
+	Flags
+
+Gameplay polish:
+	Auto panning
+	Trap animation extraction
+	Trap animations
+	Screen flash/fade
+	Movement cursor
+	Card animations
+	Dice animations
+	Music
+	Menu sound effects
+	Combat sound effects
+	All map tilesets
+	Original map layouts
+
+Main menu features:
+	Main menu, broker, nurse
+	Character palates
+	Character builder
+	Character save/load
+	Broker missions
+	Nurse services
+
+Bot features:
+	AI action registers
+	AI profile system
+	Ingame bots
+	Implement personalities and bot names
+	Enemy sprites
+	Enemy spawning
+	Gon
+
+Online features:
+	Server software
+	Online gamestate sync
+	Online action sending/blocking/scheduling
+	Online lobby
+	Online character hosting

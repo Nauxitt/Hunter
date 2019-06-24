@@ -1,0 +1,121 @@
+#include "stateengine.h"
+
+int initGame(){
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0){
+		return 1;
+	}
+
+	game.window = SDL_CreateWindow(
+			"Hunter of Battles",
+			SDL_WINDOWPOS_CENTERED,
+			SDL_WINDOWPOS_CENTERED,
+			640, 480,
+			SDL_WINDOW_SHOWN
+		);
+
+	if (game.window == NULL){
+		return 1;
+		SDL_Quit();
+	}
+
+	game.renderer = SDL_CreateRenderer(game.window, -1, SDL_RENDERER_ACCELERATED);
+
+	if(game.renderer == NULL){
+		SDL_DestroyWindow(game.window);
+		return 1;
+	}
+
+	return 0;
+}
+
+GameState * gamePushState(GameState * state){
+	EventHandler * prev = (EventHandler *) game.state;
+	if(prev && prev->onExit)
+		prev->onExit(prev);
+
+	state->prevState = game.state;
+	game.state = state;
+
+	if(state->events.onEnter)
+		state->events.onEnter((EventHandler*) state);
+
+	return state;
+}
+
+GameState * gamePopState(){
+	GameState * ret = game.state;
+	if(ret->events.onExit)
+		ret->events.onExit((EventHandler*) ret);
+	
+	game.state = ret->prevState;
+
+	if(game.state->events.onEnter)
+		game.state->events.onEnter((EventHandler*) game.state);
+
+	return ret;
+}
+
+void gameProcessEvent(SDL_Event * e){
+	EventHandler * handler = (EventHandler *) game.state;
+	switch(e->type){
+		case SDL_KEYUP:
+			if(handler->onKeyUp)
+				handler->onKeyUp(handler, e);
+			break;
+
+		case SDL_KEYDOWN:
+			if(e->key.repeat){
+				if(handler->onKeyHold)
+					handler->onKeyHold(handler, e);
+			}
+			else {
+				if(handler->onKeyDown)
+					handler->onKeyDown(handler, e);
+			}
+			break;
+
+		case SDL_MOUSEBUTTONDOWN:
+			if(handler->onMouseDown)
+				handler->onMouseDown(handler, e);
+			break;
+
+		case SDL_MOUSEBUTTONUP:
+			if(handler->onMouseUp)
+				handler->onMouseUp(handler, e);
+			break;
+	}
+}
+
+void blit(SDL_Texture * texture, SDL_Rect * src, SDL_Rect * dest){
+	SDL_RenderCopy(game.renderer, texture, src, dest);
+}
+
+void gameMainLoop(){
+	SDL_Event event;
+
+	while(game.state && !game.quit){
+		GameState state = *game.state;
+
+		while(SDL_PollEvent(&event)){
+			if(event.type == SDL_QUIT)
+				game.quit = 1;
+			else
+				gameProcessEvent(&event);
+		};
+		
+		if(state.events.onTick)
+			state.events.onTick((EventHandler*) game.state);
+
+		SDL_SetRenderDrawColor(game.renderer,0,0,0,255);
+		SDL_RenderClear(game.renderer);
+
+		if(state.events.onDraw)
+			state.events.onDraw((EventHandler *) game.state);
+
+		SDL_RenderPresent(game.renderer);
+		SDL_Delay(16);
+	}
+	
+	SDL_DestroyWindow(game.window);
+	SDL_Quit();
+}
