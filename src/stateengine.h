@@ -88,7 +88,7 @@ void nextAction();
 
 void blit(SDL_Texture * texture, SDL_Rect * src, SDL_Rect * dest);
 
-void onTick(EventHandler * h){ if(h->onTick) h->onTick(h); }
-void onDraw(EventHandler * h){ if(h->onDraw) h->onDraw(h); }
+void onTick(EventHandler * h);
+void onDraw(EventHandler * h);
 
 #endif

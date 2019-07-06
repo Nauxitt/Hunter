@@ -139,6 +139,8 @@ void gameMainLoop(){
 	SDL_Quit();
 }
 
+void onTick(EventHandler * h){ if(h->onTick) h->onTick(h); }
+void onDraw(EventHandler * h){ if(h->onDraw) h->onDraw(h); }
 
 ActionQueue * makeAction(char * type){
 	ActionQueue * ret = (ActionQueue*) malloc(sizeof(ActionQueue));
