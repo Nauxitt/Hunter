@@ -1,6 +1,11 @@
 #include "stateengine.h"
+#include <stdlib.h>
+#include <time.h>
 
 int initGame(){
+	// Initialize random numbers
+	srand(time(NULL));
+	
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 		return 1;
 
@@ -29,6 +34,14 @@ int initGame(){
 	}
 
 	return 0;
+}
+
+GameState * makeGameState(){
+	return (GameState *) calloc(sizeof(GameState), 1);
+}
+
+EventHandler * makeEventHandler(){
+	return (EventHandler *) calloc(sizeof(EventHandler), 1);
 }
 
 GameState * gamePushState(GameState * state){
@@ -94,7 +107,6 @@ void blit(SDL_Texture * texture, SDL_Rect * src, SDL_Rect * dest){
 }
 
 void gameCycle(){
-	GameState state = *game.state;
 	SDL_Event event;
 
 	while(SDL_PollEvent(&event)){
@@ -106,14 +118,14 @@ void gameCycle(){
 			gameProcessEvent(&event);
 	};
 	
-	if(state.events.onTick)
-		state.events.onTick((EventHandler*) game.state);
+	if(game.state->events.onTick)
+		game.state->events.onTick((EventHandler*) game.state);
 
 	SDL_SetRenderDrawColor(game.renderer,0,0,0,255);
 	SDL_RenderClear(game.renderer);
 
-	if(state.events.onDraw)
-		state.events.onDraw((EventHandler *) game.state);
+	if(game.state->events.onDraw)
+		game.state->events.onDraw((EventHandler *) game.state);
 
 	SDL_RenderPresent(game.renderer);
 	SDL_Delay(16);

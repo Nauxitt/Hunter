@@ -53,6 +53,7 @@ typedef struct _MenubarState {
 	GameState state;
 	SDL_Texture * background_texture;
 	SDL_Texture * buttons_texture;
+	MatchContext * match;
 	uint8_t selector;  // Index of the item being selected
 	uint8_t active;    // Whether the menubar is selecting anything
 } MenubarState;
@@ -101,6 +102,7 @@ typedef struct _HunterEntity {
 
 typedef struct _MapState {
 	GameState state;
+	MatchContext * match;
 
 	int camera_x;
 	int camera_y;
@@ -192,6 +194,9 @@ void mapOnTick(EventHandler * h);
 void mapOnKeyUp(EventHandler * h, SDL_Event * e);
 void mapOnMouseDown(EventHandler * h, SDL_Event * e);
 void mapOnDraw(EventHandler * h);
+
+void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed);
+void mapOnTickMoveHunter(EventHandler * h);
 
 void menuOnDraw(EventHandler * h);
 

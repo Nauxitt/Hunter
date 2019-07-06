@@ -1,5 +1,5 @@
 /*
-   Specifies datatypes for the gameplay's RPG features, primarily consisting of hunters and their stats.
+   Specifies datatypes for the gameplay's RPG features, primarily consisting of hunters and their stats.  Also contains functions for headless gameplay logic. 
 */
 
 #ifndef __hunter_h
@@ -9,27 +9,29 @@
 
 typedef struct _Statset Statset;
 typedef struct _Hunter Hunter;
-typedef struct _Item Item;
+typedef struct _Relic Relic;
 typedef struct _Card Card;
 
 typedef struct _Statset {
-	uint8_t atk;
-	uint8_t mov;
-	uint8_t def;
 	uint8_t hp;
 	uint8_t max_hp;
-
+	uint8_t atk;    // Adds to damage in combat
+	uint8_t mov;    // Adds to map movement and combat escape attemps
+	uint8_t def;    // Subtracts from damage in combat
+	
+	// Invisible bonuses granted by certain items:
 	uint8_t escape_chance;
 	uint8_t evade_trap_chance;
 } Statset;
 
-typedef struct _Item {
+typedef struct _Relic {
 	char name[7];
 	Statset (*statModifier)(Hunter * hunter);
-} Item;
+} Relic;
 
 enum CardType {
 	NULL_CARD,
+	UNKNOWN_CARD,        // Reserved for networked games
 
 	MOVE_CARD,           // Ranged 1-3, increases MOV
 	MOVE_EXIT_CARD,      // Teleports to EXIT or escapes combat
@@ -53,6 +55,9 @@ typedef struct _Card {
 	int num;
 } Card;
 
+#define DECK_SIZE 30
+extern Card CARDS[DECK_SIZE];
+
 #define NAME_MAX_LENGTH 8
 #define HAND_LIMIT 6
 #define INVENTORY_LIMIT 6
@@ -60,40 +65,129 @@ typedef struct _Card {
 typedef struct _Hunter {
 	Statset stats;
 	Statset turn_stats;
+	Statset dice_stats;
 	Statset base_stats;
 	char name[NAME_MAX_LENGTH + 1];
-	Item * inventory[INVENTORY_LIMIT];
+	int level;
+	Relic * inventory[INVENTORY_LIMIT];
 	Card * hand[HAND_LIMIT];
+	int x, y;
 	int credits;
 } Hunter;
 
-enum BoardActionType {
-	MOVE_ACTION,
-	ATTACK_ACTION,
-	REST_ACTION
-};
+enum MatchActionType {
+	BEGIN_MATCH_ACTION,
+	TURN_START_ACTION,
+	TURN_END_ACTION,
+	
+	DRAW_CARD_ACTION,
+	USE_CARD_ACTION,
+	HEAL_ACTION,
 
-enum CobatActionType {
+	ROLL_MOVE_DICE_ACTION,
+	ROLL_ATTACK_DICE_ACTION,
+	ROLL_DEFENSE_DICE_ACTION,
+
+	POLL_TURN_ACTION,
+	POLL_MOVE_CARD_ACTION,
+	POLL_MOVE_ACTION,
+	POLL_ATTACK_ACTION,
+	POLL_COMBAT_CARD_ACTION,
+	POLL_COMBAT_ACTION,
+
+	// Board actions
+	MOVE_ACTION,
+	MOVE_STEP_ACTION,
+	END_MOVE_ACTION,
+	ATTACK_ACTION,
+	REST_ACTION,
+	
+	// Combat actions
 	COUNTERATTACK_ACTION,
 	DEFEND_ACTION,
 	ESCAPE_ACTION,
-	SURRENDER_ACTION
+	SURRENDER_ACTION,
+
+	OPEN_CRATE_ACTION
 };
 
-typedef struct _Battle {
-	Hunter * hunters[4];
-	Item * target_item;
-	// Map *
-	// Flag * flags;
-	// Monster * monsters;
-	// Monster * gon;
-	// Card cards[100];
-	// int top_card;
-	// Crate * crates[n];
-} Battle;
+enum ControllerType {
+	CONTROLLER_SLEEPBOT,
+	CONTROLLER_LOCAL_HUMAN,
+	CONTROLLER_NETWORK,
+	CONTROLLER_BOT
+};
+
+typedef struct _Agent {
+	enum ControllerType type;
+} Agent;
+
+typedef struct _MatchAction {
+	enum MatchActionType type;
+	struct _MatchAction * next;
+	Hunter * actor;
+	Hunter * target;
+
+	Card * card;
+	int x, y;
+	int value;
+} MatchAction;
+
+
+/*
+   Contains data pertaining to one game match, and should allow the simulation of a match, independant of how it may be displayed, or how it may recieve input.
+*/
+typedef struct _MatchContext {
+	MatchAction * action;
+	MatchAction * enqueue;  // Used internally for adding actions in FIFO order to the FILO action stack
+	
+	/*
+	   When the context is in polling mode, it will not remove actions from the stack unless an action has been stored in postedAction.  This allows control from outside functions.
+	*/
+	uint8_t polling;
+	MatchAction * postedAction;
+	
+	/*
+		List of game characters,  null-terminated
+
+		NOTE: this number will be increased from four to account for the enemies which can spawn on the map, as well as for Gon.  This will require looking into the turn order.  If the enemies take their turns in between players, since the ordering of this array reflects turn order, space needs to be reserved in between elements denoting player characters, with NULL pointers being skipped over in the case of enemies which haven't spawned yet.
+	*/
+	Hunter * characters [4 + 1];
+	int active_player;
+	
+	int dice_rolled;  // How many dice are being rolled
+	int dice[2];      // The values of each rolled die
+	int dice_total;   // The sum of all dice
+
+	Card * deck[DECK_SIZE];
+	int deck_len;
+} MatchContext;
 
 Statset * hunterStats(Hunter * h);
 Card * hunterPopCard(Hunter * h, int card_num);
 int hunterHandSize(Hunter * h);
+
+void initMatch(MatchContext * context);
+void matchCycle(MatchContext * context);
+
+void matchQueueUpdate(MatchContext * context);
+int matchQueueLength(MatchContext * context);
+const char * getMatchActionName(enum MatchActionType type);
+MatchAction * matchEnqueueAction(MatchContext * context, enum MatchActionType type);
+MatchAction * matchEnqueueActorAction(MatchContext * context, enum MatchActionType type, Hunter * actor);
+
+void enqueueBeginMatch(MatchContext * context);
+void enqueueEndTurn(MatchContext * context, Hunter * actor);
+void enqueueStartTurn(MatchContext * context, Hunter * actor);
+void enqueueMoveAction(MatchContext * context, Hunter * actor, int x, int y);
+void enqueueEndMoveAction(MatchContext * context, Hunter * actor);
+void enqueuePollTurnAction(MatchContext * context, Hunter * actor);
+void enqueueDrawCard(MatchContext * context, Hunter * hunter);
+void enqueueDrawCards(MatchContext * context, Hunter * hunter, int number);
+void enqueueHealAction(MatchContext * context, Hunter * actor, int amount);
+
+uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter * character, Card * card);
+uint8_t postMoveCardAction(MatchContext * context, Hunter * character, Card * card);
+uint8_t postMoveAction(MatchContext * context, Hunter * character, int x, int y);
 
 #endif

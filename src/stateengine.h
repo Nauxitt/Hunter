@@ -78,11 +78,17 @@ GameState * gamePushState(GameState * state);
 GameState * gamePopState();
 void gameMainLoop();
 
+EventHandler * makeEventHandler();
+GameState * makeGameState();
+
 ActionQueue * makeAction(char * type);
 ActionQueue * pushAction(char * type);
 int pollAction(char * type);
 void nextAction();
 
 void blit(SDL_Texture * texture, SDL_Rect * src, SDL_Rect * dest);
+
+void onTick(EventHandler * h){ if(h->onTick) h->onTick(h); }
+void onDraw(EventHandler * h){ if(h->onDraw) h->onDraw(h); }
 
 #endif
