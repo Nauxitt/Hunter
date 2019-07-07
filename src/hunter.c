@@ -276,6 +276,10 @@ void matchCycle(MatchContext * context){
 			break;
 
 		case ROLL_MOVE_DICE_ACTION:
+			rollDice(context);
+			actor->turn_stats.mov += context->dice[0];
+			break;
+
 		case ROLL_ATTACK_DICE_ACTION:
 		case ROLL_DEFENSE_DICE_ACTION:
 			break;
@@ -341,6 +345,12 @@ void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
 		default:
 			break;
 	}
+}
+
+void rollDice(MatchContext * context){
+	context->dice[0] = rand() % 6 + 1;
+	context->dice[1] = rand() % 6 + 1;
+	context->dice_total = context->dice[0] + context->dice[1];
 }
 
 uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter * character, Card * card){

@@ -155,7 +155,6 @@ typedef struct _MatchContext {
 	Hunter * characters [4 + 1];
 	int active_player;
 	
-	int dice_rolled;  // How many dice are being rolled
 	int dice[2];      // The values of each rolled die
 	int dice_total;   // The sum of all dice
 
@@ -170,6 +169,7 @@ void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card);
 
 void initMatch(MatchContext * context);
 void matchCycle(MatchContext * context);
+void rollDice(MatchContext * context);
 
 void matchQueueUpdate(MatchContext * context);
 int matchQueueLength(MatchContext * context);

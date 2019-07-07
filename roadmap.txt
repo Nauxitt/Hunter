@@ -7,15 +7,7 @@ Graphics Extractions:
 		Icons: Attack, Trap
 
 Refactor:
-	Separate game mechanics into their own set of structures and functions, so that a match may be ran headless.
-
 	Encapsulate card selector in its own structure, similar to MenuState
-
-	Split MapState event functions, particularly onDraw and onTick, into additional functions
-
-	Substitute manual ActionQueue pushes for functions which also perform some setup data, and have names which describe what they're doing
-
-	Number blitting should be handled in a single function
 
 Gameplay Done:
 	HunterEntity type
@@ -25,23 +17,23 @@ Gameplay Done:
 	Movement card bonus
 	Window panels
 	Stat window
+	Turn incrementation
+	Deck of cards, shuffle, draw
+	Stat window hand
+	Rest menu action
 
 Gameplay Features:
 	Pathfinding
 	Pathfinding + movement
 	Click-and-drag map view
-	Turn incrementation
 	Stat window HP bar
 	Stat window name
-	Stat window hand
 	Card graphics
-	Deck of cards, shuffle, draw
 	Dice
 	Combat window
 	Combat logic
 	Combat sprite animation
-	Combat background animation
-	Attack and Rest menu actions
+	Attack menu action
 	Crates + item sprites
 	Ingame crates + items
 	Trap logic
@@ -62,6 +54,7 @@ Gameplay polish:
 	Combat sound effects
 	All map tilesets
 	Original map layouts
+	Combat background animation
 
 Main menu features:
 	Main menu, broker, nurse
@@ -72,8 +65,9 @@ Main menu features:
 	Nurse services
 
 Bot features:
-	AI action registers
-	AI profile system
+	AI action polling
+	AI action candidate register
+	AI profiles
 	Ingame bots
 	Implement personalities and bot names
 	Enemy sprites
