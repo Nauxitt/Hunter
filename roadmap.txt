@@ -9,6 +9,8 @@ Graphics Extractions:
 Refactor:
 	Encapsulate card selector in its own structure, similar to MenuState
 
+	MatchContext should have map data, and the MapState should generate its map from that data.
+
 Gameplay Done:
 	HunterEntity type
 	Multiple hunters on screen
