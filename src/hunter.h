@@ -141,6 +141,7 @@ typedef struct _MatchAction {
 	Hunter * target;
 
 	Card * card;
+	Crate * crate;
 	int x, y;
 	int value;
 } MatchAction;
@@ -182,6 +183,8 @@ typedef struct _MatchContext {
 	int deck_len;
 } MatchContext;
 
+Crate * getCrateAt(MatchContext * context, int x, int y);
+
 Statset * hunterStats(Hunter * h);
 Card * hunterPopCard(Hunter * h, int card_num);
 int hunterHandSize(Hunter * h);
@@ -206,6 +209,7 @@ void enqueuePollTurnAction(MatchContext * context, Hunter * actor);
 void enqueueDrawCard(MatchContext * context, Hunter * hunter);
 void enqueueDrawCards(MatchContext * context, Hunter * hunter, int number);
 void enqueueHealAction(MatchContext * context, Hunter * actor, int amount);
+void enqueueOpenCrateAction(MatchContext * context, Crate * crate, Hunter * actor);
 
 uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter * character, Card * card);
 uint8_t postMoveCardAction(MatchContext * context, Hunter * character, Card * card);

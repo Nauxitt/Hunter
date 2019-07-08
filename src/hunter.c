@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 Card CARDS[DECK_SIZE] = {
 	{.type = MOVE_CARD, .num = 1}, {.type = MOVE_CARD, .num = 1},
@@ -167,6 +168,11 @@ void enqueueHealAction(MatchContext * context, Hunter * actor, int amount){
 	action->value = amount;
 }
 
+void enqueueOpenCrateAction(MatchContext * context, Crate * crate, Hunter * actor){
+	MatchAction * action = matchEnqueueActorAction(context, OPEN_CRATE_ACTION, actor);
+	action->crate = crate;
+}
+
 void matchQueueUpdate(MatchContext * context){
 	// Push enqueue onto stack
 	if(context->enqueue){
@@ -275,9 +281,16 @@ void matchCycle(MatchContext * context){
 			break;
 
 		case END_MOVE_ACTION:
-			crate = getCrateAt(context, actor->x, actor->y);
-			if(crate != NULL)
-				enqueueOpenCrateAction(context, crate, actor);
+			// Open crate if one has been landed on
+			if(strcmp(actor->type, "hunter") == 0){
+				crate = getCrateAt(context, actor->x, actor->y);
+				if(crate != NULL)
+					enqueueOpenCrateAction(context, crate, actor);
+			}
+
+			// TODO: landing on the exit tile
+			//     - End game if it's a hunter with the target item
+			//     - Otherwise teleport to random valid location
 
 			break;
 
@@ -344,11 +357,11 @@ void matchCycle(MatchContext * context){
 
 Crate * getCrateAt(MatchContext * context, int x, int y){
 	for(int n=0; n < context->crates_len; n++){
-		Crate * crate = context->crates[n];
+		Crate * crate = &context->crates[n];
 		if(crate->x != x) continue;
 		if(crate->y != y) continue;
-		if(!crate->exists) continue;
-		return crate;
+		if(crate->exists)
+			return crate;
 	}
 	return NULL;
 }
@@ -357,6 +370,22 @@ void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
 	switch(card->type){
 		case MOVE_CARD:
 			hunter->turn_stats.mov += card->num;
+			break;
+
+		case MOVE_EXIT_CARD:
+			// enqueueTeleportAction();
+			//    --OR--
+			// enqueueEscapeCombatAction();
+			break;
+
+		case ATTACK_CARD:
+			hunter->turn_stats.atk += card->num;
+
+		case ATTACK_DOUBLE_CARD:
+			hunter->turn_stats.atk += hunter->base_stats.atk;
+
+		case ATTACK_COPY_CARD:
+			// TODO: figure out how to get the enemy hunter in combat
 			break;
 
 		default:
