@@ -209,6 +209,8 @@ void matchCycle(MatchContext * context){
 
 	Statset * active_stats = hunterStats(actor);
 
+	Crate * crate;
+
 	switch(action->type){
 		case BEGIN_MATCH_ACTION:
 			// Deal each player four cards
@@ -273,6 +275,10 @@ void matchCycle(MatchContext * context){
 			break;
 
 		case END_MOVE_ACTION:
+			crate = getCrateAt(context, actor->x, actor->y);
+			if(crate != NULL)
+				enqueueOpenCrateAction(context, crate, actor);
+
 			break;
 
 		case ROLL_MOVE_DICE_ACTION:
@@ -336,6 +342,17 @@ void matchCycle(MatchContext * context){
 		free(action);
 }
 
+Crate * getCrateAt(MatchContext * context, int x, int y){
+	for(int n=0; n < context->crates_len; n++){
+		Crate * crate = context->crates[n];
+		if(crate->x != x) continue;
+		if(crate->y != y) continue;
+		if(!crate->exists) continue;
+		return crate;
+	}
+	return NULL;
+}
+
 void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
 	switch(card->type){
 		case MOVE_CARD:
@@ -385,8 +402,6 @@ uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter
 	}
 	return 0;
 }
-
-// uint8_t postMoveCardAction(MatchContext context, Hunter * character, Card * card){}
 
 
 uint8_t postMoveAction(MatchContext * context, Hunter * character, int x, int y){

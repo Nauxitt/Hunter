@@ -97,6 +97,13 @@ typedef struct _HunterEntity {
 	Hunter * hunter;
 } HunterEntity;
 
+
+typedef struct _CrateEntity {
+	Entity entity;
+	Crate * contents;
+} CrateEntity;
+
+
 #define HUNTERS_COUNT 4
 
 
@@ -201,4 +208,5 @@ void mapOnTickMoveHunter(EventHandler * h);
 void menuOnDraw(EventHandler * h);
 
 void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window_dest);
+
 #endif

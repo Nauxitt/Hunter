@@ -27,6 +27,8 @@ typedef struct _Statset {
 typedef struct _Relic {
 	char name[7];
 	Statset (*statModifier)(Hunter * hunter);
+	int item_id;
+	int target_item;
 } Relic;
 
 enum CardType {
@@ -58,6 +60,7 @@ typedef struct _Card {
 #define DECK_SIZE 30
 extern Card CARDS[DECK_SIZE];
 
+#define CHARACTER_TYPE_MAX_LENGTH 8
 #define NAME_MAX_LENGTH 8
 #define HAND_LIMIT 6
 #define INVENTORY_LIMIT 6
@@ -68,12 +71,21 @@ typedef struct _Hunter {
 	Statset dice_stats;
 	Statset base_stats;
 	char name[NAME_MAX_LENGTH + 1];
+	char type[CHARACTER_TYPE_MAX_LENGTH];
 	int level;
 	Relic * inventory[INVENTORY_LIMIT];
 	Card * hand[HAND_LIMIT];
 	int x, y;
 	int credits;
 } Hunter;
+
+
+typedef struct _Crate {
+	Relic * contents;
+	int x, y;
+	int exists;
+} Crate;
+
 
 enum MatchActionType {
 	BEGIN_MATCH_ACTION,
@@ -157,6 +169,14 @@ typedef struct _MatchContext {
 	
 	int dice[2];      // The values of each rolled die
 	int dice_total;   // The sum of all dice
+
+	int exit_x;
+	int exit_y;
+
+	Relic * target_item;
+
+	int crates_len;
+	Crate * crates;
 
 	Card * deck[DECK_SIZE];
 	int deck_len;

@@ -26,15 +26,19 @@ int main(){
 
 	Hunter daniel_character = {
 		.name = "Daniel", .base_stats={.atk = 2, .mov = 3, .def = 6},
+		.type = "hunter"
 	};
 	Hunter dave_character = {
 		.name = "Dave", .base_stats = {.mov = 3, .atk = 4, .def = 4},
+		.type = "hunter"
 	};
 	Hunter stan_character = {
 		.name = "Stan", .base_stats = {.atk = 2, .mov = 1, .def = 8},
+		.type = "hunter"
 	};
 	Hunter tim_character = {
 		.name = "Tim", .base_stats = {.atk = 9, .mov = 1, .def = 1},
+		.type = "hunter"
 	};
 
 	HunterEntity * daniel = initHunter(
