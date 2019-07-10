@@ -266,8 +266,17 @@ void entityOnDraw(EventHandler * h){
 	int src_w = 1;
 	int src_h = 1;
 
-	if(src) src_w = src->w;
-	if(src) src_h = src->h;
+	if(src){
+		src_w = src->w;
+		src_h = src->h;
+	}
+	else {
+		SDL_QueryTexture(
+				entity->texture,
+				NULL, NULL,
+				&src_w, &src_h
+			);
+	}
 
 	SDL_Rect dest = {
 			0, 0, src_w*entity->scale_w, src_h*entity->scale_h
@@ -287,6 +296,12 @@ void entityOnDraw(EventHandler * h){
 		dest.x -= frame->center_x * entity->scale_w;
 		dest.y -= frame->center_y * entity->scale_h;
 	}
+	else {
+		dest.x -= dest.w / 2;
+		dest.y -= dest.h;
+	}
+
+	dest.y += entity->offset_z;
 
 	// Render
 	SDL_RenderCopyEx(
@@ -321,6 +336,12 @@ void hunterSetTile(HunterEntity * e, int x, int y){
 	e->hunter->y = y;
 }
 
+void crateSetTile(CrateEntity * c, int x, int y){
+	entitySetTile(Entity(c), x, y, TILE_LAYER_CRATE);
+	c->crate->x = x;
+	c->crate->y = y;
+}
+
 HunterEntity * initHunter(HunterEntity * hunter, MapState * state, SDL_Texture * texture){
 	if(hunter == NULL)
 		hunter = HunterEntity(malloc(sizeof(HunterEntity)));
@@ -334,6 +355,21 @@ HunterEntity * initHunter(HunterEntity * hunter, MapState * state, SDL_Texture *
 	e->scale_h = 2;
 	EventHandler(hunter)->onDraw = entityOnDraw;
 	return hunter;
+}
+
+CrateEntity * initCrateEntity(CrateEntity * crate, MapState * state, SDL_Texture * texture){
+	if(crate == NULL)
+		crate = CrateEntity(calloc(sizeof(CrateEntity), 1));
+
+	Entity * e = Entity(crate);
+	e->mapstate = state;
+	e->texture = texture;
+	e->animation = NULL;
+	e->scale_w = 2;
+	e->scale_h = 2;
+	e->offset_z = state->tile_h / 2;
+	EventHandler(crate)->onDraw = entityOnDraw;
+	return crate;
 }
 
 void mapOnTick(EventHandler * h){
@@ -731,6 +767,9 @@ void mapOnDraw(EventHandler * h){
 
 			if(entity == NULL)
 				continue;
+
+			if(e == TILE_LAYER_CRATE)
+				printf("Printing tile: %x (%d, %d)\n", (int) entity, entity->x, entity->y);
 
 			if(EventHandler(entity))
 				EventHandler(entity)->onDraw(EventHandler(entity));

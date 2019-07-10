@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 
+#include <SDL2/SDL_image.h>
+
 #include "main.h"
 #include "animations.h"
 #include "stateengine.h"
@@ -61,6 +63,17 @@ int main(){
 	hunterSetTile(stan,   0,4);
 	hunterSetTile(tim,    8,7);
 
+	Crate * crates = calloc(sizeof(Crate), 2);
+	crates[0].x = 1;
+	crates[0].y = 0;
+	crates[0].contents = NULL;
+	crates[0].exists = 1;
+
+	crates[1].x = 5;
+	crates[1].y = 8;
+	crates[1].contents = NULL;
+	crates[1].exists = 1;
+
 	MatchContext context = {
 		.characters = {
 			&daniel_character,
@@ -68,7 +81,21 @@ int main(){
 			&stan_character,
 			&tim_character
 		},
+		.crates_len = 2,
+		.crates = crates
 	};
+
+	CrateEntity * crate_entities = calloc(sizeof(CrateEntity), 2);
+	SDL_Texture * crate_texture = IMG_LoadTexture(
+			game.renderer, "resources/crate.png"
+		);
+
+	initCrateEntity(&crate_entities[0], mapstate, crate_texture);
+	initCrateEntity(&crate_entities[1], mapstate, crate_texture);
+	crate_entities[0].crate = &crates[0];
+	crate_entities[1].crate = &crates[1];
+	crateSetTile(&crate_entities[0], crates[0].x, crates[0].y);
+	crateSetTile(&crate_entities[1], crates[1].x, crates[1].y);
 	
 	mapstate->match = &context;
 	initMatch(&context);

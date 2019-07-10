@@ -16,12 +16,13 @@ enum Direction {
 	NORTH, EAST, SOUTH, WEST
 };
 
-#define TILE_MAX_TRAPS 3
 #define TILE_LAYER_TILESELECTOR 0
-#define TILE_TRAPS 1
-#define TILE_LAYER_HUNTER 4
-#define TILE_LAYER_OVERHEADSELECTOR 5
-#define TILE_ENTITY_LAYERS 6
+#define TILE_LAYER_TRAPS 1
+#define TILE_MAX_TRAPS 3
+#define TILE_LAYER_CRATE 4
+#define TILE_LAYER_HUNTER 5
+#define TILE_LAYER_OVERHEADSELECTOR 6
+#define TILE_ENTITY_LAYERS 7
 
 enum WindowColor {
 	WINDOW_BLUE,
@@ -100,7 +101,7 @@ typedef struct _HunterEntity {
 
 typedef struct _CrateEntity {
 	Entity entity;
-	Crate * contents;
+	Crate * crate;
 } CrateEntity;
 
 
@@ -131,6 +132,9 @@ typedef struct _MapState {
 	SDL_Texture * daniel_texture;
 	HunterEntity * daniel;
 	HunterEntity hunters[HUNTERS_COUNT];
+
+	int crates_len;
+	CrateEntity * crates;
 	
 	Map * map;
 	MenubarState * menubar;
@@ -158,6 +162,7 @@ ActionQueueEntity * makeEntityAction(char * type);
 #define StatpanelState(S) ((StatepanelState *) S)
 #define Entity(E) ((Entity *) E)
 #define HunterEntity(E) ((HunterEntity *) E)
+#define CrateEntity(E) ((CrateEntity *) E)
 
 /*
    Macro which makes 2D for loops, where X and Y are names of integers that for_xy defines, and where W and H are the bounds iterated over.
@@ -191,8 +196,10 @@ void entitySetAnimation(Entity * entity, AnimationFrame * animation);
 void entitySetTile(Entity * e, int x, int y, int layer);
 
 HunterEntity * initHunter(HunterEntity * hunter, MapState * state, SDL_Texture * texture);
+CrateEntity * initCrateEntity(CrateEntity * hunter, MapState * state, SDL_Texture * texture);
 
 void hunterSetTile(HunterEntity * e, int x, int y);
+void crateSetTile(CrateEntity * c, int x, int y);
 
 /*
    MapState event hooks
