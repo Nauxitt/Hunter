@@ -1,28 +1,10 @@
-#include "hunter.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-Card CARDS[DECK_SIZE] = {
-	{.type = MOVE_CARD, .num = 1}, {.type = MOVE_CARD, .num = 1},
-	{.type = MOVE_CARD, .num = 1}, {.type = MOVE_CARD, .num = 1},
-	{.type = MOVE_CARD, .num = 1}, {.type = MOVE_CARD, .num = 1},
-	{.type = MOVE_CARD, .num = 1}, {.type = MOVE_CARD, .num = 1},
-	{.type = MOVE_CARD, .num = 1}, {.type = MOVE_CARD, .num = 1},
-
-	{.type = MOVE_CARD, .num = 2}, {.type = MOVE_CARD, .num = 2},
-	{.type = MOVE_CARD, .num = 2}, {.type = MOVE_CARD, .num = 2},
-	{.type = MOVE_CARD, .num = 2}, {.type = MOVE_CARD, .num = 2},
-	{.type = MOVE_CARD, .num = 2}, {.type = MOVE_CARD, .num = 2},
-	{.type = MOVE_CARD, .num = 2}, {.type = MOVE_CARD, .num = 2},
-
-	{.type = MOVE_CARD, .num = 3}, {.type = MOVE_CARD, .num = 3},
-	{.type = MOVE_CARD, .num = 3}, {.type = MOVE_CARD, .num = 3},
-	{.type = MOVE_CARD, .num = 3}, {.type = MOVE_CARD, .num = 3},
-	{.type = MOVE_CARD, .num = 3}, {.type = MOVE_CARD, .num = 3},
-	{.type = MOVE_CARD, .num = 3}, {.type = MOVE_CARD, .num = 3}
-};
+#include "hunter.h"
+#include "cards.h"
 
 void hunterClearBonus(Hunter * h){
 	h->turn_stats.atk = 0;
