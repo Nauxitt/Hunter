@@ -198,12 +198,6 @@ void matchCycle(MatchContext * context){
 	Statset * active_stats = hunterStats(actor);
 
 	Crate * crate;
-	
-	if(context->polling == 0){
-		printMatchAction(action);
-		printMatchQueue(context);
-		printf("\n");
-	}
 
 	switch(action->type){
 		case BEGIN_MATCH_ACTION:
@@ -334,7 +328,7 @@ void matchCycle(MatchContext * context){
 			break;
 
 		default:
-			// printf("%s: %s\n", getMatchActionName(action->type), action->actor ? action->actor->name: 0);
+			printMatchAction(action);
 			context->polling = 0;
 			break;
 	}
@@ -344,7 +338,11 @@ void matchCycle(MatchContext * context){
 }
 
 void printMatchQueue(MatchContext * context){
-	printf("Match queue:\n");
+	printf("Match queue");
+	if(context->polling)
+		printf(" (polling)");
+	printf(":\n");
+
 	for(MatchAction * action = context->enqueue; action; action = action->next){
 		printf("\t(Enqueued) ");
 		printMatchAction(action);
@@ -496,10 +494,6 @@ uint8_t postMoveAction(MatchContext * context, Hunter * character, int x, int y)
 	if(context->action->type != POLL_MOVE_ACTION)
 		return 1;
 
-	context->polling = 0;
-	MatchAction * pop = context->action;
-	context->action = pop->next;
-	free(pop);
 	enqueueMoveAction(context, character, x, y);
 	return 0;
 }
