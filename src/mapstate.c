@@ -768,9 +768,6 @@ void mapOnDraw(EventHandler * h){
 			if(entity == NULL)
 				continue;
 
-			if(e == TILE_LAYER_CRATE)
-				printf("Printing tile: %x (%d, %d)\n", (int) entity, entity->x, entity->y);
-
 			if(EventHandler(entity))
 				EventHandler(entity)->onDraw(EventHandler(entity));
 		}
