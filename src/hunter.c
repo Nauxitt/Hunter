@@ -198,6 +198,12 @@ void matchCycle(MatchContext * context){
 	Statset * active_stats = hunterStats(actor);
 
 	Crate * crate;
+	
+	if(context->polling == 0){
+		printMatchAction(action);
+		printMatchQueue(context);
+		printf("\n");
+	}
 
 	switch(action->type){
 		case BEGIN_MATCH_ACTION:
@@ -328,7 +334,7 @@ void matchCycle(MatchContext * context){
 			break;
 
 		default:
-			printf("%s: %s\n", getMatchActionName(action->type), action->actor ? action->actor->name: 0);
+			// printf("%s: %s\n", getMatchActionName(action->type), action->actor ? action->actor->name: 0);
 			context->polling = 0;
 			break;
 	}
@@ -336,6 +342,69 @@ void matchCycle(MatchContext * context){
 	if(context->polling == 0)
 		free(action);
 }
+
+void printMatchQueue(MatchContext * context){
+	printf("Match queue:\n");
+	for(MatchAction * action = context->enqueue; action; action = action->next){
+		printf("\t(Enqueued) ");
+		printMatchAction(action);
+	}
+	for(MatchAction * action = context->action; action; action = action->next){
+		printf("\t");
+		printMatchAction(action);
+	}
+}
+
+void printMatchAction(MatchAction * action){
+	printf("%s(", getMatchActionName(action->type));
+
+	switch(action->type){
+		// For these actions, print nothing inside the parenthesis, as the actions are either unimplemented or do not use any parameters
+		case BEGIN_MATCH_ACTION:
+		case ROLL_ATTACK_DICE_ACTION:
+		case ROLL_DEFENSE_DICE_ACTION:
+		case POLL_ATTACK_ACTION:
+		case POLL_COMBAT_CARD_ACTION:
+		case POLL_COMBAT_ACTION:
+		case COUNTERATTACK_ACTION:
+		case DEFEND_ACTION:
+		case ESCAPE_ACTION:
+		case ATTACK_ACTION:
+		case SURRENDER_ACTION:
+			break;
+		
+		// Actions in which a single hunter is the only parameter
+		case TURN_START_ACTION:
+		case TURN_END_ACTION:
+		case DRAW_CARD_ACTION:
+		case HEAL_ACTION:
+		case ROLL_MOVE_DICE_ACTION:
+		case POLL_TURN_ACTION:
+		case POLL_MOVE_CARD_ACTION:
+		case POLL_MOVE_ACTION:
+		case END_MOVE_ACTION:
+		case REST_ACTION:
+			printf("%s", action->actor->name);
+			break;
+
+		// Actions with a special configuration of parameters
+		case MOVE_ACTION:
+		case MOVE_STEP_ACTION:
+			printf("%s, [%d, %d]", action->actor->name, action->x, action->y);
+			break;
+		
+		case USE_CARD_ACTION:
+			printf("%s", action->actor->name);
+			break;
+
+		case OPEN_CRATE_ACTION:
+			printf("%s, [%d, %d]", action->actor->name, action->crate->x, action->crate->y);
+			break;
+	}
+
+	printf(")\n");
+}
+
 
 Crate * getCrateAt(MatchContext * context, int x, int y){
 	for(int n=0; n < context->crates_len; n++){

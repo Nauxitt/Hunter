@@ -73,7 +73,7 @@ typedef struct _Hunter {
 	char name[NAME_MAX_LENGTH + 1];
 	char type[CHARACTER_TYPE_MAX_LENGTH];
 	int level;
-	Relic * inventory[INVENTORY_LIMIT];
+	Relic * inventory[INVENTORY_LIMIT+1];
 	Card * hand[HAND_LIMIT];
 	int x, y;
 	int credits;
@@ -194,6 +194,8 @@ void initMatch(MatchContext * context);
 void matchCycle(MatchContext * context);
 void rollDice(MatchContext * context);
 
+void printMatchQueue(MatchContext * context);
+void printMatchAction(MatchAction * action);
 void matchQueueUpdate(MatchContext * context);
 int matchQueueLength(MatchContext * context);
 const char * getMatchActionName(enum MatchActionType type);
