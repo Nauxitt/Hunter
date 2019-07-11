@@ -189,6 +189,8 @@ Statset * hunterStats(Hunter * h);
 Card * hunterPopCard(Hunter * h, int card_num);
 int hunterHandSize(Hunter * h);
 void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card);
+int hunterInventoryLength(Hunter * hunter);
+int hunterAddRelic(Hunter * hunter, Relic * relic);
 
 void initMatch(MatchContext * context);
 void matchCycle(MatchContext * context);

@@ -442,6 +442,25 @@ void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
 	}
 }
 
+int hunterInventoryLength(Hunter * hunter){
+	int len = 0;
+	for(; len < INVENTORY_LIMIT; len++)
+		if(hunter->inventory[len] == NULL)
+			return len;
+	
+	return INVENTORY_LIMIT;
+}
+
+int hunterAddRelic(Hunter * hunter, Relic * relic){
+	int len = hunterInventoryLength(hunter);
+
+	if(len == INVENTORY_LIMIT)
+		return 0;
+	
+	hunter->inventory[len] = relic;
+	return 1;
+}
+
 void rollDice(MatchContext * context){
 	context->dice[0] = rand() % 6 + 1;
 	context->dice[1] = rand() % 6 + 1;
