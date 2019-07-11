@@ -295,6 +295,10 @@ void matchCycle(MatchContext * context){
 		case ESCAPE_ACTION:
 		case SURRENDER_ACTION:
 		case OPEN_CRATE_ACTION:
+			// TODO: check if hunter successfully received the item, or if we need to poll for whether they wish to discard another item to make room.
+
+			hunterAddRelic(actor, action->crate->contents);
+			action->crate->exists = 0;
 			break;
 
 		case POLL_MOVE_CARD_ACTION:

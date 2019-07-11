@@ -368,9 +368,16 @@ CrateEntity * initCrateEntity(CrateEntity * crate, MapState * state, SDL_Texture
 	e->scale_w = 2;
 	e->scale_h = 2;
 	e->offset_z = state->tile_h / 2;
-	EventHandler(crate)->onDraw = entityOnDraw;
+
+	EventHandler(crate)->onDraw = crateOnDraw;
 	return crate;
 }
+
+void crateOnDraw(EventHandler * h){
+	if(CrateEntity(h)->crate->exists)
+		entityOnDraw(h);
+}
+
 
 void mapOnTick(EventHandler * h){
 	MapState * state = MapState(h);
@@ -420,12 +427,25 @@ void mapOnTick(EventHandler * h){
 			case DEFEND_ACTION:
 			case ESCAPE_ACTION:
 			case SURRENDER_ACTION:
-			case OPEN_CRATE_ACTION:
 			case USE_CARD_ACTION:
 			case ROLL_MOVE_DICE_ACTION:
 			case ROLL_ATTACK_DICE_ACTION:
 			case ROLL_DEFENSE_DICE_ACTION:
 				matchCycle(match);
+				break;
+
+			case OPEN_CRATE_ACTION:
+				matchCycle(match);
+				for_xy(x, y, state->map->w, state->map->h){
+					Tile * tile = getTile(state->map, x, y);
+					CrateEntity * entity = CrateEntity(tile->contents[TILE_LAYER_CRATE]);
+
+					if(!entity || (entity->crate != action->crate))
+						continue;
+
+					tile->contents[TILE_LAYER_CRATE] = NULL;
+					break;
+				}
 				break;
 
 			case MOVE_STEP_ACTION:

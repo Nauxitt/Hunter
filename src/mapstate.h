@@ -197,6 +197,7 @@ void entitySetTile(Entity * e, int x, int y, int layer);
 
 HunterEntity * initHunter(HunterEntity * hunter, MapState * state, SDL_Texture * texture);
 CrateEntity * initCrateEntity(CrateEntity * hunter, MapState * state, SDL_Texture * texture);
+void crateOnDraw(EventHandler * h);
 
 void hunterSetTile(HunterEntity * e, int x, int y);
 void crateSetTile(CrateEntity * c, int x, int y);
