@@ -155,6 +155,11 @@ void enqueueOpenCrateAction(MatchContext * context, Crate * crate, Hunter * acto
 	action->crate = crate;
 }
 
+void enqueueGiveRelicAction(MatchContext * context, Hunter * actor, Relic * relic){
+	MatchAction * action = matchEnqueueActorAction(context, GIVE_RELIC_ACTION, actor);
+	action->relic = relic;
+}
+
 void matchQueueUpdate(MatchContext * context){
 	// Push enqueue onto stack
 	if(context->enqueue){
@@ -295,10 +300,13 @@ void matchCycle(MatchContext * context){
 		case ESCAPE_ACTION:
 		case SURRENDER_ACTION:
 		case OPEN_CRATE_ACTION:
-			// TODO: check if hunter successfully received the item, or if we need to poll for whether they wish to discard another item to make room.
-
-			hunterAddRelic(actor, action->crate->contents);
+			enqueueGiveRelicAction(context, actor, action->crate->contents);
 			action->crate->exists = 0;
+			break;
+
+		case GIVE_RELIC_ACTION:
+			// TODO: check if hunter successfully received the item, or if we need to poll for whether they wish to discard another item to make room.
+			hunterAddRelic(actor, action->relic);
 			break;
 
 		case POLL_MOVE_CARD_ACTION:
@@ -396,7 +404,12 @@ void printMatchAction(MatchAction * action){
 			break;
 		
 		case USE_CARD_ACTION:
+			// TODO: print card
 			printf("%s", action->actor->name);
+			break;
+
+		case GIVE_RELIC_ACTION:
+			printf("%s, %s", action->actor->name, action->relic->name);
 			break;
 
 		case OPEN_CRATE_ACTION:
@@ -548,6 +561,7 @@ const char * getMatchActionName(enum MatchActionType type){
 		case ESCAPE_ACTION: return "ESCAPE_ACTION";
 		case SURRENDER_ACTION: return "SURRENDER_ACTION";
 		case OPEN_CRATE_ACTION: return "OPEN_CRATE_ACTION";
+		case GIVE_RELIC_ACTION: return "GIVE_RELIC_ACTION";
 	}
 	return NULL;
 }

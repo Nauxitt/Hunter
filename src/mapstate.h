@@ -136,6 +136,10 @@ typedef struct _MapState {
 	int tile_src_w, tile_src_h;
 	int tile_img_h;
 
+	SDL_Texture * items_texture;
+	int item_w, item_h;
+	int item_src_w, item_src_h;
+
 	SDL_Texture * daniel_texture;
 	HunterEntity * daniel;
 	HunterEntity hunters[HUNTERS_COUNT];
@@ -226,6 +230,7 @@ void menuOnDraw(EventHandler * h);
 
 void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window_dest);
 void drawStatbox(MapState * state, Hunter * hunter, enum StatboxViews view, enum WindowColor color, int x, int y);
+void drawStatboxItems(MapState * state, Hunter * hunter, int x, int y);
 void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y);
 
 #endif

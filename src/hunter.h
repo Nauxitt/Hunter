@@ -120,7 +120,8 @@ enum MatchActionType {
 	ESCAPE_ACTION,
 	SURRENDER_ACTION,
 
-	OPEN_CRATE_ACTION
+	OPEN_CRATE_ACTION,
+	GIVE_RELIC_ACTION
 };
 
 enum ControllerType {
@@ -142,6 +143,7 @@ typedef struct _MatchAction {
 
 	Card * card;
 	Crate * crate;
+	Relic * relic;
 	int x, y;
 	int value;
 } MatchAction;
@@ -214,6 +216,7 @@ void enqueueDrawCard(MatchContext * context, Hunter * hunter);
 void enqueueDrawCards(MatchContext * context, Hunter * hunter, int number);
 void enqueueHealAction(MatchContext * context, Hunter * actor, int amount);
 void enqueueOpenCrateAction(MatchContext * context, Crate * crate, Hunter * actor);
+void enqueueGiveRelicAction(MatchContext * context, Hunter * actor, Relic * relic);
 
 uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter * character, Card * card);
 uint8_t postMoveCardAction(MatchContext * context, Hunter * character, Card * card);

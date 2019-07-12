@@ -52,6 +52,11 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 	mapstate->statbox_tile_h = 18;
 	mapstate->statbox_tile_src_w = 8;
 	mapstate->statbox_tile_src_h = 9;
+
+	mapstate->item_w = 32;
+	mapstate->item_h = 32;
+	mapstate->item_src_w = 16;
+	mapstate->item_src_h = 16;
 	
 	// TODO: calculate center
 	mapstate->camera_x = 280;
@@ -67,6 +72,8 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 			game.renderer, "resources/daniel.png");
 	mapstate->statbox_texture = IMG_LoadTexture(
 			game.renderer, "resources/statbox.png");
+	mapstate->items_texture = IMG_LoadTexture(
+			game.renderer, "resources/items.png");
 
 	mapstate->menubar->background_texture = IMG_LoadTexture(
 			game.renderer, "resources/menubar-gradient.png");
@@ -449,6 +456,11 @@ void mapOnTick(EventHandler * h){
 					break;
 				}
 				break;
+
+			case GIVE_RELIC_ACTION:
+				// mapGiveRelic(state, action_hunter_entity, action->relic);
+				matchCycle(match);
+				return;
 
 			case MOVE_STEP_ACTION:
 				mapMoveHunter(
@@ -868,7 +880,35 @@ void drawStatbox(MapState * state, Hunter * hunter, enum StatboxViews view, enum
 	if(view == STATBOX_VIEW_STATS)
 		drawStatboxStats(state, hunter, x, y);
 	else if(view == STATBOX_VIEW_ITEMS)
-		;
+		drawStatboxItems(state, hunter, x, y);
+}
+
+void drawStatboxItems(MapState * state, Hunter * hunter, int x, int y){
+	int panel_w = (game.w - 16*2 - 4*3) / 4;
+	int element_margin = 18;
+	int element_gutter = (panel_w - 2*element_margin - 3*state->item_w) / 2;
+
+	for(int r=0; r < INVENTORY_LIMIT; r++){
+		Relic * relic = hunter->inventory[r];
+		if(relic == NULL)
+			break;
+
+		SDL_Rect dest = {
+				x + element_margin + (state->item_w+element_gutter) * (r % 3),
+				y + 160 - element_margin + (state->item_h + element_gutter) * (r/3 - 2),
+				state->item_w, state->item_h
+			};
+
+		SDL_Rect src = {
+				state->item_src_w * relic->item_id, 0,
+				state->item_src_w, state->item_src_h
+			};
+
+		blit(
+				state->items_texture,
+				&src, &dest
+			);
+	}
 }
 
 void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){
