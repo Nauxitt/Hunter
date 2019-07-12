@@ -135,6 +135,11 @@ typedef struct _MapState {
 
 	int crates_len;
 	CrateEntity * crates;
+
+	/*
+	   viewing_items controls the statbox displays. A value of 0 indicates viewing player stats and hands, whereas any other value denotes viewing their inventories
+   */
+	uint8_t viewing_items;
 	
 	Map * map;
 	MenubarState * menubar;
@@ -216,5 +221,6 @@ void mapOnTickMoveHunter(EventHandler * h);
 void menuOnDraw(EventHandler * h);
 
 void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window_dest);
+void drawStatbox(MapState * state, Hunter * hunter, enum WindowColor color, int x, int y);
 
 #endif

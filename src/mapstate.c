@@ -90,7 +90,9 @@ void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window
 	
 	// Draw panel fill
 	SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
-	SDL_SetRenderDrawColor(game.renderer, 255-32, 255, 255, 32);
+	SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 32);
+	// SDL_SetRenderDrawColor(game.renderer, 255-32, 255, 255, 32);
+	// active player background color ^
 	SDL_RenderFillRect(game.renderer, window_dest);
 	SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_NONE);
 	SDL_SetRenderDrawColor(game.renderer, 255, 255, 255, 255);
@@ -835,90 +837,98 @@ void mapOnDraw(EventHandler * h){
 	int panel_w = (game.w - 16*2 - 4*3) / 4;
 	for(int h=0; h < HUNTERS_COUNT; h++){
 		Hunter * hunter = state->hunters[h].hunter;
-		Statset * stats = hunterStats(hunter);
-		
-		// Draw panel
-		SDL_Rect panel_rect = {
-				16 + (panel_w + panel_gutter)*h, game.h - 160 - panel_gutter,
-				panel_w, 160
-			};
-		drawWindowPanel(state, h, &panel_rect);
+		drawStatbox(
+				state, hunter, (enum WindowColor) h,
+				16 + (panel_w+panel_gutter)*h,
+				game.h-160-panel_gutter
+			);
+	}
+}
 
-		int element_gutter = 8;
-		int element_margin = 18;
-		
-		// Draw stat names
-		//    Mv. stat
-		SDL_Rect statname_src = {
-				0, state->statbox_tile_src_h,
-				state->statbox_tile_src_w * 2,     // takes up two tiles
-				state->statbox_tile_src_h
-			};
+void drawStatbox(MapState * state, Hunter * hunter, enum WindowColor color, int x, int y){
+	// int panel_gutter = 4;
+	int panel_w = (game.w - 16*2 - 4*3) / 4;
 
-		SDL_Rect statname_dest = {
-				panel_rect.x + element_margin,
-				panel_rect.y + (element_gutter + state->statbox_tile_h) * 2,
-				state->statbox_tile_w * 2,
-				state->statbox_tile_h
-			};
+	Statset * stats = hunterStats(hunter);
+	
+	// Draw panel
+	SDL_Rect panel_rect = {x, y, panel_w, 160};
+	drawWindowPanel(state, color, &panel_rect);
 
-		blit(state->statbox_texture, &statname_src, &statname_dest);
+	int element_gutter = 8;
+	int element_margin = 18;
+	
+	// Draw stat names
+	//    Mv. stat
+	SDL_Rect statname_src = {
+			0, state->statbox_tile_src_h,
+			state->statbox_tile_src_w * 2,     // takes up two tiles
+			state->statbox_tile_src_h
+		};
 
-		//    Mv. +
-		SDL_Rect statval_src  = statname_src;
-		statval_src.x = state->statbox_tile_src_w * 8;
-		statval_src.w = state->statbox_tile_src_w;
+	SDL_Rect statname_dest = {
+			panel_rect.x + element_margin,
+			panel_rect.y + (element_gutter + state->statbox_tile_h) * 2,
+			state->statbox_tile_w * 2,
+			state->statbox_tile_h
+		};
 
-		SDL_Rect statval_dest = statname_dest;
-		statval_dest.y += state->statbox_tile_h + 2;
-		statval_dest.w = state->statbox_tile_w;
+	blit(state->statbox_texture, &statname_src, &statname_dest);
+
+	//    Mv. +
+	SDL_Rect statval_src  = statname_src;
+	statval_src.x = state->statbox_tile_src_w * 8;
+	statval_src.w = state->statbox_tile_src_w;
+
+	SDL_Rect statval_dest = statname_dest;
+	statval_dest.y += state->statbox_tile_h + 2;
+	statval_dest.w = state->statbox_tile_w;
+	blit(state->statbox_texture, &statval_src, &statval_dest);
+
+	//    Mv. #
+	statval_dest.x += state->statbox_tile_w;
+	statval_src.y = 0;
+	statval_src.x = stats->mov * state->statbox_tile_src_w;
+
+	drawBigNumber(state, statval_dest.x, statval_dest.y, stats->mov);
+
+	//    At. stat label
+	statname_src.x += state->statbox_tile_src_w * 2;
+	statname_dest.x += state->statbox_tile_w*2 + element_gutter;
+	blit(state->statbox_texture, &statname_src, &statname_dest);
+
+	//    At. stat 10's digit
+	statval_dest.x = statname_dest.x;
+	if(stats->atk / 10){
+		statval_src.x = (stats->atk/10) * state->statbox_tile_src_w;
 		blit(state->statbox_texture, &statval_src, &statval_dest);
+	}
+	//    At. stat 1's digit
+	statval_dest.x += state->statbox_tile_w;
+	drawBigNumber(state, statval_dest.x, statval_dest.y, stats->atk % 10);
 
-		//    Mv. #
-		statval_dest.x += state->statbox_tile_w;
-		statval_src.y = 0;
-		statval_src.x = stats->mov * state->statbox_tile_src_w;
+	//    Df. stat label
+	statname_dest.x += state->statbox_tile_w*2 + element_gutter;
+	blit(state->statbox_texture, &statname_src, &statname_dest);
 
-		drawBigNumber(state, statval_dest.x, statval_dest.y, stats->mov);
+	//    Df. stat 10's digit
+	statval_dest.x = statname_dest.x;
+	if(stats->def / 10){
+		drawBigNumber(state, statval_dest.x, statval_dest.y, stats->def / 10);
+	}
+	//    Df. stat 1's digit
+	statval_dest.x += state->statbox_tile_w;
+	drawBigNumber(state, statval_dest.x, statval_dest.y, stats->def % 10);
+	
 
-		//    At. stat label
-		statname_src.x += state->statbox_tile_src_w * 2;
-		statname_dest.x += state->statbox_tile_w*2 + element_gutter;
-		blit(state->statbox_texture, &statname_src, &statname_dest);
+	// Draw player hand
+	int card_y = panel_rect.y + panel_rect.h - element_margin/2 - state->card_h;
+	
+	for(int c = hunterHandSize(hunter)-1; c >= 0; c--){
+		Card * card = hunter->hand[c];
+		int card_x = panel_rect.x + element_margin/2 + c * state->card_w/2;
 
-		//    At. stat 10's digit
-		statval_dest.x = statname_dest.x;
-		if(stats->atk / 10){
-			statval_src.x = (stats->atk/10) * state->statbox_tile_src_w;
-			blit(state->statbox_texture, &statval_src, &statval_dest);
-		}
-		//    At. stat 1's digit
-		statval_dest.x += state->statbox_tile_w;
-		drawBigNumber(state, statval_dest.x, statval_dest.y, stats->atk % 10);
-
-		//    Df. stat label
-		statname_dest.x += state->statbox_tile_w*2 + element_gutter;
-		blit(state->statbox_texture, &statname_src, &statname_dest);
-
-		//    Df. stat 10's digit
-		statval_dest.x = statname_dest.x;
-		if(stats->def / 10){
-			drawBigNumber(state, statval_dest.x, statval_dest.y, stats->def / 10);
-		}
-		//    Df. stat 1's digit
-		statval_dest.x += state->statbox_tile_w;
-		drawBigNumber(state, statval_dest.x, statval_dest.y, stats->def % 10);
-		
-
-		// Draw player hand
-		int card_y = panel_rect.y + panel_rect.h - element_margin/2 - state->card_h;
-		
-		for(int c = hunterHandSize(hunter)-1; c >= 0; c--){
-			Card * card = hunter->hand[c];
-			int card_x = panel_rect.x + element_margin/2 + c * state->card_w/2;
-
-			drawCard(state, card_x, card_y, card);
-		}
+		drawCard(state, card_x, card_y, card);
 	}
 }
 

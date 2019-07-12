@@ -63,16 +63,23 @@ int main(){
 	hunterSetTile(stan,   0,4);
 	hunterSetTile(tim,    8,7);
 
+	Relic floppy = {.item_id=0, .name="floppy"};
+	Relic book = {.item_id=1, .name="book"};
+	Relic crystal = {.item_id=2, .name="crystal"};
+	Relic metal = {.item_id=3, .name="metal"};
+
 	Crate * crates = calloc(sizeof(Crate), 2);
 	crates[0].x = 1;
 	crates[0].y = 0;
 	crates[0].contents = NULL;
 	crates[0].exists = 1;
+	crates[0].contents = &floppy;
 
 	crates[1].x = 5;
 	crates[1].y = 8;
 	crates[1].contents = NULL;
 	crates[1].exists = 1;
+	crates[1].contents = &metal;
 
 	MatchContext context = {
 		.characters = {
