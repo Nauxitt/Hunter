@@ -625,6 +625,12 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 	MatchAction * action = match->action;
 	Hunter * active_player = match->characters[match->active_player];
 
+	if(e->key.keysym.scancode == SDL_SCANCODE_TAB){
+		state->statbox_view++;
+		if(state->statbox_view == STATBOX_VIEW_NONE + 1)
+			state->statbox_view = 0;
+	}
+
 	// Menubar arrow keys
 	if(action->type == POLL_TURN_ACTION){
 		if(pollAction("poll_turn_action")){
@@ -837,27 +843,43 @@ void mapOnDraw(EventHandler * h){
 	int panel_w = (game.w - 16*2 - 4*3) / 4;
 	for(int h=0; h < HUNTERS_COUNT; h++){
 		Hunter * hunter = state->hunters[h].hunter;
+
 		drawStatbox(
-				state, hunter, (enum WindowColor) h,
+				state, hunter,
+				(enum StatboxViews) state->statbox_view,
+				(enum WindowColor) h,
 				16 + (panel_w+panel_gutter)*h,
 				game.h-160-panel_gutter
 			);
 	}
 }
 
-void drawStatbox(MapState * state, Hunter * hunter, enum WindowColor color, int x, int y){
+void drawStatbox(MapState * state, Hunter * hunter, enum StatboxViews view, enum WindowColor color, int x, int y){
+	if(view == STATBOX_VIEW_NONE)
+		return;
+
 	// int panel_gutter = 4;
 	int panel_w = (game.w - 16*2 - 4*3) / 4;
-
-	Statset * stats = hunterStats(hunter);
 	
 	// Draw panel
 	SDL_Rect panel_rect = {x, y, panel_w, 160};
 	drawWindowPanel(state, color, &panel_rect);
+	
+	if(view == STATBOX_VIEW_STATS)
+		drawStatboxStats(state, hunter, x, y);
+	else if(view == STATBOX_VIEW_ITEMS)
+		;
+}
+
+void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){
+	Statset * stats = hunterStats(hunter);
+
+	int panel_w = (game.w - 16*2 - 4*3) / 4;
+	SDL_Rect panel_rect = {x, y, panel_w, 160};
 
 	int element_gutter = 8;
 	int element_margin = 18;
-	
+
 	// Draw stat names
 	//    Mv. stat
 	SDL_Rect statname_src = {
