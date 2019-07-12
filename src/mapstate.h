@@ -162,6 +162,7 @@ typedef struct _ActionQueueEntity {
 	ActionQueue action;
 	MapState * state;
 	Entity * entity;
+	Relic * relic;
 	int target_x, target_y;
 	int speed;
 } ActionQueueEntity;
@@ -226,8 +227,12 @@ void mapOnDraw(EventHandler * h);
 void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed);
 void mapOnTickMoveHunter(EventHandler * h);
 
+void mapGiveRelic(MapState * state, HunterEntity * hunter, Relic * relic);
+void mapOnDrawGiveRelic(EventHandler * h);
+
 void menuOnDraw(EventHandler * h);
 
+void drawRelic(MapState * state, Relic * relic, int x, int y);
 void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window_dest);
 void drawStatbox(MapState * state, Hunter * hunter, enum StatboxViews view, enum WindowColor color, int x, int y);
 void drawStatboxItems(MapState * state, Hunter * hunter, int x, int y);

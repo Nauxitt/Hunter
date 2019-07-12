@@ -56,6 +56,8 @@ struct _EventHandler {
 struct _GameState {
 	EventHandler events;
 	GameState * prevState;
+	uint32_t enterTime;
+	uint32_t duration;
 };
 
 

@@ -458,7 +458,7 @@ void mapOnTick(EventHandler * h){
 				break;
 
 			case GIVE_RELIC_ACTION:
-				// mapGiveRelic(state, action_hunter_entity, action->relic);
+				mapGiveRelic(state, action_hunter_entity, action->relic);
 				matchCycle(match);
 				return;
 
@@ -628,6 +628,47 @@ void mapOnTickMoveHunter(EventHandler * h){
 
 		// Runs the move game action, updating the game logic with the completed movement
 		matchCycle(MapState(game.state)->match);
+	}
+}
+
+void mapGiveRelic(MapState * state, HunterEntity * hunter, Relic * relic){
+	GameState * giveState = makeGameState();
+	gamePushState(giveState);
+
+	ActionQueueEntity * action = makeEntityAction("give_item");
+	action->relic = relic;
+	action->entity = Entity(hunter);
+
+	EventHandler(giveState)->data = action;
+	EventHandler(giveState)->onDraw = mapOnDrawGiveRelic;
+}
+
+void mapOnDrawGiveRelic(EventHandler * h){
+	GameState * giveState = GameState(h);
+	MapState * mapstate = MapState(giveState->prevState);
+	ActionQueueEntity * action = EventHandler(giveState)->data;
+
+	uint32_t duration = giveState->duration;
+	Relic * relic = action->relic;
+	HunterEntity * hunter = HunterEntity(action->entity);
+	
+	float drop_speed = 1.25;
+	int pause_duration = 120;
+	int x = iso_x(mapstate, Entity(hunter)->x, Entity(hunter)->y) - mapstate->item_w/2;
+	int y = duration * drop_speed;
+	int end_y = iso_y(mapstate, Entity(hunter)->x, Entity(hunter)->y) - 64 - mapstate->item_h;
+
+	if(y > end_y)
+		y = end_y;
+
+	onDraw(EventHandler(mapstate));
+	drawRelic(mapstate, relic, x, y);
+
+	if(duration >= duration/drop_speed + pause_duration){
+		gamePopState();
+		matchCycle(mapstate->match);
+		free(action);
+		free(giveState);
 	}
 }
 
@@ -892,23 +933,29 @@ void drawStatboxItems(MapState * state, Hunter * hunter, int x, int y){
 		Relic * relic = hunter->inventory[r];
 		if(relic == NULL)
 			break;
-
-		SDL_Rect dest = {
+		
+		drawRelic(
+				state, relic, 
 				x + element_margin + (state->item_w+element_gutter) * (r % 3),
-				y + 160 - element_margin + (state->item_h + element_gutter) * (r/3 - 2),
-				state->item_w, state->item_h
-			};
-
-		SDL_Rect src = {
-				state->item_src_w * relic->item_id, 0,
-				state->item_src_w, state->item_src_h
-			};
-
-		blit(
-				state->items_texture,
-				&src, &dest
+				y + 160 - element_margin + (state->item_h + element_gutter) * (r/3 - 2)
 			);
 	}
+}
+
+void drawRelic(MapState * state, Relic * relic, int x, int y){
+	SDL_Rect dest = {
+			x, y, state->item_w, state->item_h
+		};
+
+	SDL_Rect src = {
+			state->item_src_w * relic->item_id, 0,
+			state->item_src_w, state->item_src_h
+		};
+
+	blit(
+			state->items_texture,
+			&src, &dest
+		);
 }
 
 void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){

@@ -54,7 +54,8 @@ GameState * gamePushState(GameState * state){
 
 	if(state->events.onEnter)
 		state->events.onEnter((EventHandler*) state);
-
+	
+	state->enterTime = SDL_GetTicks();
 	return state;
 }
 
@@ -116,7 +117,10 @@ void gameCycle(){
 		}
 		else
 			gameProcessEvent(&event);
-	};
+	}
+
+	uint32_t time = SDL_GetTicks();
+	game.state->duration = time - game.state->enterTime;
 	
 	if(game.state->events.onTick)
 		game.state->events.onTick((EventHandler*) game.state);
