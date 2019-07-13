@@ -7,6 +7,7 @@
 #include "stateengine.h"
 #include "mapstate.h"
 #include "animations.h"
+#include "sprites.h"
 
 extern Game game;
 extern MapState mapstate;
@@ -31,6 +32,8 @@ Map * makeMap(int w, int h){
 }
 
 MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
+	loadSprites();
+
 	if(mapstate == NULL)
 		mapstate = MapState(calloc(sizeof(MapState), 1));
 
@@ -64,21 +67,13 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 
 	// Load some textures
 	// TODO: move texture loading to its own file
-	mapstate->cards_texture = IMG_LoadTexture(
-			game.renderer, "resources/cards.png");
-	mapstate->tiles_texture = IMG_LoadTexture(
-			game.renderer, "resources/hunter-tile.png");
-	mapstate->daniel_texture = IMG_LoadTexture(
-			game.renderer, "resources/daniel.png");
-	mapstate->statbox_texture = IMG_LoadTexture(
-			game.renderer, "resources/statbox.png");
-	mapstate->items_texture = IMG_LoadTexture(
-			game.renderer, "resources/items.png");
-
-	mapstate->menubar->background_texture = IMG_LoadTexture(
-			game.renderer, "resources/menubar-gradient.png");
-	mapstate->menubar->buttons_texture = IMG_LoadTexture(
-			game.renderer, "resources/menu-battle-icons.png");
+	mapstate->cards_texture = textures.cards.texture;
+	mapstate->tiles_texture = textures.tiles.texture;
+	mapstate->daniel_texture = textures.daniel.texture;
+	mapstate->statbox_texture = textures.statbox.texture;
+	mapstate->items_texture = textures.items.texture;
+	mapstate->menubar->background_texture = textures.menu_gradient.texture;
+	mapstate->menubar->buttons_texture = textures.menu_icons.texture;
 
 	EventHandler(mapstate)->onTick = mapOnTick;
 	EventHandler(mapstate)->onMouseDown = mapOnMouseDown;
