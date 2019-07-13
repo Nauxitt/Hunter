@@ -22,6 +22,7 @@ typedef struct _Textures {
 	SpriteSheet cards;
 	SpriteSheet menu_gradient;
 	SpriteSheet menu_icons;
+	SpriteSheet crate;
 } Textures;
 
 extern Textures textures;

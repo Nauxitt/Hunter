@@ -17,9 +17,10 @@ Textures textures = {
 	SHEET(items         , "resources/items.png", 16, 16),
 	SHEET(daniel        , "resources/daniel.png", 0, 0),
 	SHEET(statbox       , "resources/statbox.png", 8, 9),
-	SHEET(cards         , "resources/cards.png", 0, 0),
+	SHEET(cards         , "resources/cards.png", 16, 18),
 	SHEET(menu_gradient , "resources/menubar-gradient.png", 0, 0),
-	SHEET(menu_icons    , "resources/menu-battle-icons.png", 0, 0)
+	SHEET(menu_icons    , "resources/menu-battle-icons.png", 0, 0),
+	SHEET(crate         , "resources/crate.png", 0, 0)
 };
 
 

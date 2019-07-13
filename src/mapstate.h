@@ -122,27 +122,7 @@ typedef struct _MapState {
 	int camera_x;
 	int camera_y;
 
-	SDL_Texture * statbox_texture;
-	int statbox_tile_w, statbox_tile_h;
-	int statbox_tile_src_w, statbox_tile_src_h;
-
-	SDL_Texture * cards_texture;
-	int card_w, card_h;
-	int card_src_h, card_src_w;
 	int card_selected;
-
-	SDL_Texture * tiles_texture;
-	int tile_w,     tile_h;
-	int tile_src_w, tile_src_h;
-	int tile_img_h;
-
-	SDL_Texture * items_texture;
-	int item_w, item_h;
-	int item_src_w, item_src_h;
-
-	SDL_Texture * daniel_texture;
-	HunterEntity * daniel;
-	HunterEntity hunters[HUNTERS_COUNT];
 
 	int crates_len;
 	CrateEntity * crates;
@@ -152,6 +132,14 @@ typedef struct _MapState {
 	Map * map;
 	MenubarState * menubar;
 	StatpanelState * statpanel;
+
+	SDL_Texture * tiles_texture;
+	int tile_w,     tile_h;
+	int tile_src_w, tile_src_h;
+	int tile_img_h;
+
+	HunterEntity * daniel;
+	HunterEntity hunters[HUNTERS_COUNT];
 } MapState;
 
 

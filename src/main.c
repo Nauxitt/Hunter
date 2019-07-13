@@ -9,11 +9,13 @@
 #include "stateengine.h"
 #include "mapstate.h"
 #include "hunter.h"
+#include "sprites.h"
 
 Game game;
 
 int main(){
 	initGame();
+	loadSprites();
 	
 	MapState * mapstate = makeMapState(NULL, 10, 10);
 	
@@ -44,13 +46,13 @@ int main(){
 	};
 
 	HunterEntity * daniel = initHunter(
-			&mapstate->hunters[0], mapstate, mapstate->daniel_texture);
+			&mapstate->hunters[0], mapstate, textures.daniel.texture);
 	HunterEntity * dave = initHunter(
-			&mapstate->hunters[1], mapstate, mapstate->daniel_texture);
+			&mapstate->hunters[1], mapstate, textures.daniel.texture);
 	HunterEntity * stan = initHunter(
-			&mapstate->hunters[2], mapstate, mapstate->daniel_texture);
+			&mapstate->hunters[2], mapstate, textures.daniel.texture);
 	HunterEntity * tim = initHunter(
-			&mapstate->hunters[3], mapstate, mapstate->daniel_texture);
+			&mapstate->hunters[3], mapstate, textures.daniel.texture);
 
 	daniel->hunter = &daniel_character;
 	dave->hunter = &dave_character;
@@ -93,9 +95,7 @@ int main(){
 	};
 
 	CrateEntity * crate_entities = calloc(sizeof(CrateEntity), 2);
-	SDL_Texture * crate_texture = IMG_LoadTexture(
-			game.renderer, "resources/crate.png"
-		);
+	SDL_Texture * crate_texture = textures.crate.texture;
 
 	initCrateEntity(&crate_entities[0], mapstate, crate_texture);
 	initCrateEntity(&crate_entities[1], mapstate, crate_texture);

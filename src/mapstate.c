@@ -32,8 +32,6 @@ Map * makeMap(int w, int h){
 }
 
 MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
-	loadSprites();
-
 	if(mapstate == NULL)
 		mapstate = MapState(calloc(sizeof(MapState), 1));
 
@@ -46,34 +44,15 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 	mapstate->tile_src_h = 16;
 	mapstate->tile_img_h = 32;
 
-	mapstate->card_w = 32;
-	mapstate->card_h = 36;
-	mapstate->card_src_w = 16;
-	mapstate->card_src_h = 18;
-
-	mapstate->statbox_tile_w = 16;
-	mapstate->statbox_tile_h = 18;
-	mapstate->statbox_tile_src_w = 8;
-	mapstate->statbox_tile_src_h = 9;
-
-	mapstate->item_w = 32;
-	mapstate->item_h = 32;
-	mapstate->item_src_w = 16;
-	mapstate->item_src_h = 16;
-	
 	// TODO: calculate center
 	mapstate->camera_x = 280;
 	mapstate->camera_y = 125;
 
 	// Load some textures
 	// TODO: move texture loading to its own file
-	mapstate->cards_texture = textures.cards.texture;
 	mapstate->tiles_texture = textures.tiles.texture;
-	mapstate->daniel_texture = textures.daniel.texture;
-	mapstate->statbox_texture = textures.statbox.texture;
-	mapstate->items_texture = textures.items.texture;
-	mapstate->menubar->background_texture = textures.menu_gradient.texture;
-	mapstate->menubar->buttons_texture = textures.menu_icons.texture;
+	textures.menu_gradient.texture = textures.menu_gradient.texture;
+	textures.menu_icons.texture = textures.menu_icons.texture;
 
 	EventHandler(mapstate)->onTick = mapOnTick;
 	EventHandler(mapstate)->onMouseDown = mapOnMouseDown;
@@ -108,41 +87,41 @@ void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window
 	//Draw bar middle
 	SDL_Rect src = {tile_w, tile_h*2 + tile_h* color, tile_w, tile_h};
 	SDL_Rect dest = {window_dest->x, window_dest->y, window_dest->w, tile_w*2};
-	blit(state->statbox_texture, &src, &dest);
+	blit(textures.statbox.texture, &src, &dest);
 	
 	// Draw bar left
 	src.x = 0;
 	dest.w = tile_w * 2;
-	blit(state->statbox_texture, &src, &dest);
+	blit(textures.statbox.texture, &src, &dest);
 
 	// Draw bar right
 	src.x = tile_w * 2;
 	dest.x += window_dest->w - tile_w * 2;
-	blit(state->statbox_texture, &src, &dest);
+	blit(textures.statbox.texture, &src, &dest);
 }
 
 void drawBigNumber(MapState * state, int x, int y, int n){
 	SDL_Rect src = {
-			state->statbox_tile_src_w * n, 0,
-			state->statbox_tile_src_w,
-			state->statbox_tile_src_h
+			textures.statbox.src_w * n, 0,
+			textures.statbox.src_w,
+			textures.statbox.src_h
 		};
 	SDL_Rect dest = {
-			x, y, state->statbox_tile_w, state->statbox_tile_h
+			x, y, textures.statbox.w, textures.statbox.h
 		};
 
-	blit(state->statbox_texture, &src, &dest);
+	blit(textures.statbox.texture, &src, &dest);
 }
 
 void drawCard(MapState * state, int x, int y, Card * card){
 	SDL_Rect src = {
-			card->num * state->card_src_w, 0,
-			state->card_src_w, state->card_src_h
+			card->num * textures.cards.src_w, 0,
+			textures.cards.src_w, textures.cards.src_h
 		};
 	
 	SDL_Rect dest = {
 			x, y,
-			state->card_w, state->card_h
+			textures.cards.w, textures.cards.h
 		};
 
 	switch(card->type){
@@ -175,7 +154,7 @@ void drawCard(MapState * state, int x, int y, Card * card){
 			break;
 	}
 
-	blit(state->cards_texture,  &src, &dest);
+	blit(textures.cards.texture,  &src, &dest);
 }
 
 void mapSetSelection(Map * map, int value){
@@ -649,9 +628,9 @@ void mapOnDrawGiveRelic(EventHandler * h){
 	
 	float drop_speed = 1.25;
 	int pause_duration = 120;
-	int x = iso_x(mapstate, Entity(hunter)->x, Entity(hunter)->y) - mapstate->item_w/2;
+	int x = iso_x(mapstate, Entity(hunter)->x, Entity(hunter)->y) - textures.items.w/2;
 	int y = duration * drop_speed;
-	int end_y = iso_y(mapstate, Entity(hunter)->x, Entity(hunter)->y) - 64 - mapstate->item_h;
+	int end_y = iso_y(mapstate, Entity(hunter)->x, Entity(hunter)->y) - 64 - textures.items.h;
 
 	if(y > end_y)
 		y = end_y;
@@ -854,7 +833,7 @@ void mapOnDraw(EventHandler * h){
 	if(pollAction("poll_move_card_select")){
 
 		// Draw card select
-		SDL_Rect window_panel = {32, 76, 16 + state->card_w * 7, 64};
+		SDL_Rect window_panel = {32, 76, 16 + textures.cards.w * 7, 64};
 		drawWindowPanel(state, WINDOW_BLUE, &window_panel);
 
 		for(int c=0; c < HAND_LIMIT; c++){
@@ -864,9 +843,9 @@ void mapOnDraw(EventHandler * h){
 				break;
 
 			SDL_Rect dest = {
-					window_panel.x + 8 + c*state->card_w,
+					window_panel.x + 8 + c*textures.cards.w,
 					window_panel.y + 16,
-					state->card_w, state->card_h
+					textures.cards.w, textures.cards.h
 				};
 
 			if(state->card_selected == c)
@@ -922,7 +901,7 @@ void drawStatbox(MapState * state, Hunter * hunter, enum StatboxViews view, enum
 void drawStatboxItems(MapState * state, Hunter * hunter, int x, int y){
 	int panel_w = (game.w - 16*2 - 4*3) / 4;
 	int element_margin = 18;
-	int element_gutter = (panel_w - 2*element_margin - 3*state->item_w) / 2;
+	int element_gutter = (panel_w - 2*element_margin - 3*textures.items.w) / 2;
 
 	for(int r=0; r < INVENTORY_LIMIT; r++){
 		Relic * relic = hunter->inventory[r];
@@ -931,24 +910,24 @@ void drawStatboxItems(MapState * state, Hunter * hunter, int x, int y){
 		
 		drawRelic(
 				state, relic, 
-				x + element_margin + (state->item_w+element_gutter) * (r % 3),
-				y + 160 - element_margin + (state->item_h + element_gutter) * (r/3 - 2)
+				x + element_margin + (textures.items.w+element_gutter) * (r % 3),
+				y + 160 - element_margin + (textures.items.h + element_gutter) * (r/3 - 2)
 			);
 	}
 }
 
 void drawRelic(MapState * state, Relic * relic, int x, int y){
 	SDL_Rect dest = {
-			x, y, state->item_w, state->item_h
+			x, y, textures.items.w, textures.items.h
 		};
 
 	SDL_Rect src = {
-			state->item_src_w * relic->item_id, 0,
-			state->item_src_w, state->item_src_h
+			textures.items.src_w * relic->item_id, 0,
+			textures.items.src_w, textures.items.src_h
 		};
 
 	blit(
-			state->items_texture,
+			textures.items.texture,
 			&src, &dest
 		);
 }
@@ -965,55 +944,55 @@ void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){
 	// Draw stat names
 	//    Mv. stat
 	SDL_Rect statname_src = {
-			0, state->statbox_tile_src_h,
-			state->statbox_tile_src_w * 2,     // takes up two tiles
-			state->statbox_tile_src_h
+			0, textures.statbox.src_h,
+			textures.statbox.src_w * 2,     // takes up two tiles
+			textures.statbox.src_h
 		};
 
 	SDL_Rect statname_dest = {
 			panel_rect.x + element_margin,
-			panel_rect.y + (element_gutter + state->statbox_tile_h) * 2,
-			state->statbox_tile_w * 2,
-			state->statbox_tile_h
+			panel_rect.y + (element_gutter + textures.statbox.h) * 2,
+			textures.statbox.w * 2,
+			textures.statbox.h
 		};
 
-	blit(state->statbox_texture, &statname_src, &statname_dest);
+	blit(textures.statbox.texture, &statname_src, &statname_dest);
 
 	//    Mv. +
 	SDL_Rect statval_src  = statname_src;
-	statval_src.x = state->statbox_tile_src_w * 8;
-	statval_src.w = state->statbox_tile_src_w;
+	statval_src.x = textures.statbox.src_w * 8;
+	statval_src.w = textures.statbox.src_w;
 
 	SDL_Rect statval_dest = statname_dest;
-	statval_dest.y += state->statbox_tile_h + 2;
-	statval_dest.w = state->statbox_tile_w;
-	blit(state->statbox_texture, &statval_src, &statval_dest);
+	statval_dest.y += textures.statbox.h + 2;
+	statval_dest.w = textures.statbox.w;
+	blit(textures.statbox.texture, &statval_src, &statval_dest);
 
 	//    Mv. #
-	statval_dest.x += state->statbox_tile_w;
+	statval_dest.x += textures.statbox.w;
 	statval_src.y = 0;
-	statval_src.x = stats->mov * state->statbox_tile_src_w;
+	statval_src.x = stats->mov * textures.statbox.src_w;
 
 	drawBigNumber(state, statval_dest.x, statval_dest.y, stats->mov);
 
 	//    At. stat label
-	statname_src.x += state->statbox_tile_src_w * 2;
-	statname_dest.x += state->statbox_tile_w*2 + element_gutter;
-	blit(state->statbox_texture, &statname_src, &statname_dest);
+	statname_src.x += textures.statbox.src_w * 2;
+	statname_dest.x += textures.statbox.w*2 + element_gutter;
+	blit(textures.statbox.texture, &statname_src, &statname_dest);
 
 	//    At. stat 10's digit
 	statval_dest.x = statname_dest.x;
 	if(stats->atk / 10){
-		statval_src.x = (stats->atk/10) * state->statbox_tile_src_w;
-		blit(state->statbox_texture, &statval_src, &statval_dest);
+		statval_src.x = (stats->atk/10) * textures.statbox.src_w;
+		blit(textures.statbox.texture, &statval_src, &statval_dest);
 	}
 	//    At. stat 1's digit
-	statval_dest.x += state->statbox_tile_w;
+	statval_dest.x += textures.statbox.w;
 	drawBigNumber(state, statval_dest.x, statval_dest.y, stats->atk % 10);
 
 	//    Df. stat label
-	statname_dest.x += state->statbox_tile_w*2 + element_gutter;
-	blit(state->statbox_texture, &statname_src, &statname_dest);
+	statname_dest.x += textures.statbox.w*2 + element_gutter;
+	blit(textures.statbox.texture, &statname_src, &statname_dest);
 
 	//    Df. stat 10's digit
 	statval_dest.x = statname_dest.x;
@@ -1021,16 +1000,16 @@ void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){
 		drawBigNumber(state, statval_dest.x, statval_dest.y, stats->def / 10);
 	}
 	//    Df. stat 1's digit
-	statval_dest.x += state->statbox_tile_w;
+	statval_dest.x += textures.statbox.w;
 	drawBigNumber(state, statval_dest.x, statval_dest.y, stats->def % 10);
 	
 
 	// Draw player hand
-	int card_y = panel_rect.y + panel_rect.h - element_margin/2 - state->card_h;
+	int card_y = panel_rect.y + panel_rect.h - element_margin/2 - textures.cards.h;
 	
 	for(int c = hunterHandSize(hunter)-1; c >= 0; c--){
 		Card * card = hunter->hand[c];
-		int card_x = panel_rect.x + element_margin/2 + c * state->card_w/2;
+		int card_x = panel_rect.x + element_margin/2 + c * textures.cards.w/2;
 
 		drawCard(state, card_x, card_y, card);
 	}
@@ -1043,7 +1022,7 @@ void menuOnDraw(EventHandler * h){
 	SDL_Rect src = {0, 0, 1, 64};
 	SDL_Rect dest = {0, 0, game.w, 64};
 	
-	blit(menu->background_texture, &src, &dest);
+	blit(textures.menu_gradient.texture, &src, &dest);
 	
 	// Render left icons
 	src.w  = 16; src.h  = 16;
@@ -1053,13 +1032,13 @@ void menuOnDraw(EventHandler * h){
 	for(int i=0; i<5; i++){
 		src.x = i * 16;
 		dest.x = i * 38 + 32;
-		blit(menu->buttons_texture, &src, &dest);
+		blit(textures.menu_icons.texture, &src, &dest);
 	}
 
 	// Draw deck icon
 	src.x = 5 * 16;
 	dest.x = game.w - 32 * 4;
-	blit(menu->buttons_texture, &src, &dest);
+	blit(textures.menu_icons.texture, &src, &dest);
 
 	// Draw scroling text window
 	src.x = 0; src.y = 16;
@@ -1067,7 +1046,7 @@ void menuOnDraw(EventHandler * h){
 	src.h = 16;
 	dest.x = 5 * 38 + 32;
 	dest.w = 144*2;
-	blit(menu->buttons_texture, &src, &dest);
+	blit(textures.menu_icons.texture, &src, &dest);
 
 	// Draw selector feather
 	if(pollAction("poll_turn_action")){
@@ -1077,7 +1056,7 @@ void menuOnDraw(EventHandler * h){
 		if(menu->selector != -1){
 			dest.x = menu->selector * 38 + 32;
 			dest.w = 64; dest.h = 64;
-			blit(menu->buttons_texture, &src, &dest);
+			blit(textures.menu_icons.texture, &src, &dest);
 		}
 	}
 }
