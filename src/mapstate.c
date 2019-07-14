@@ -66,10 +66,6 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 }
 
 void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window_dest){
-	int tile_w = 8;
-	int tile_h = 9;
-	
-	// Draw panel fill
 	SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 32);
 	// SDL_SetRenderDrawColor(game.renderer, 255-32, 255, 255, 32);
@@ -85,76 +81,65 @@ void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window
 	SDL_RenderDrawRect(game.renderer, &border);
 
 	//Draw bar middle
-	SDL_Rect src = {tile_w, tile_h*2 + tile_h* color, tile_w, tile_h};
-	SDL_Rect dest = {window_dest->x, window_dest->y, window_dest->w, tile_w*2};
+	SDL_Rect src;
+	getSpriteClip(&textures.statbox, 1,2+color, &src);
+	SDL_Rect dest = {window_dest->x, window_dest->y, window_dest->w, textures.statbox.h};
 	blit(textures.statbox.texture, &src, &dest);
 	
 	// Draw bar left
-	src.x = 0;
-	dest.w = tile_w * 2;
+	getSpriteClip(&textures.statbox, 0,2+color, &src);
+	dest.w = textures.statbox.w;
 	blit(textures.statbox.texture, &src, &dest);
 
 	// Draw bar right
-	src.x = tile_w * 2;
-	dest.x += window_dest->w - tile_w * 2;
+	getSpriteClip(&textures.statbox, 2,2+color, &src);
+	dest.x += window_dest->w - textures.statbox.w;
 	blit(textures.statbox.texture, &src, &dest);
 }
 
 void drawBigNumber(MapState * state, int x, int y, int n){
-	SDL_Rect src = {
-			textures.statbox.src_w * n, 0,
-			textures.statbox.src_w,
-			textures.statbox.src_h
-		};
-	SDL_Rect dest = {
-			x, y, textures.statbox.w, textures.statbox.h
-		};
-
-	blit(textures.statbox.texture, &src, &dest);
+	spritesheetBlit(&textures.statbox, n,0, x,y);
 }
 
 void drawCard(MapState * state, int x, int y, Card * card){
-	SDL_Rect src = {
-			card->num * textures.cards.src_w, 0,
-			textures.cards.src_w, textures.cards.src_h
-		};
-	
-	SDL_Rect dest = {
-			x, y,
-			textures.cards.w, textures.cards.h
-		};
+	int sx, sy;
 
 	switch(card->type){
 		case NULL_CARD:
+
 		case MOVE_CARD:         
 		case MOVE_EXIT_CARD:    
-			src.y = 0;
+			sx = card->num;
+			sy = 0;
 			break;
 
-		case DEFENSE_CARD:      
 		case DEFENSE_ALL_CARD:  
 		case DEFENSE_DOUBLE_CARD:
-			src.y = src.h * 1;
+		case DEFENSE_CARD:      
+			sx = card->num;
+			sy = 1;
 			break;
 
-		case ATTACK_CARD:       
 		case ATTACK_DOUBLE_CARD:
 		case ATTACK_COPY_CARD:  
-			src.y = src.h * 2;
+		case ATTACK_CARD:       
+			sx = card->num;
+			sy = 2;
 			break;
 
 		case EMPTY_TRAP_CARD:   
 		case STUN_TRAP_CARD:    
 		case DAMADE_TRAP_CARD:  
 		case LEG_DAMAGE_CARD:   
-			src.y = src.h * 2;
+			sx = 0;
+			sy = 3;
 			break;
 
 		case UNKNOWN_CARD:
 			break;
 	}
 
-	blit(textures.cards.texture,  &src, &dest);
+	spritesheetBlit(&textures.cards, sx,sy, x,y);
 }
 
 void mapSetSelection(Map * map, int value){
@@ -917,19 +902,7 @@ void drawStatboxItems(MapState * state, Hunter * hunter, int x, int y){
 }
 
 void drawRelic(MapState * state, Relic * relic, int x, int y){
-	SDL_Rect dest = {
-			x, y, textures.items.w, textures.items.h
-		};
-
-	SDL_Rect src = {
-			textures.items.src_w * relic->item_id, 0,
-			textures.items.src_w, textures.items.src_h
-		};
-
-	blit(
-			textures.items.texture,
-			&src, &dest
-		);
+	spritesheetBlit(&textures.items, relic->item_id,0, x, y);
 }
 
 void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){
@@ -1032,13 +1005,13 @@ void menuOnDraw(EventHandler * h){
 	for(int i=0; i<5; i++){
 		src.x = i * 16;
 		dest.x = i * 38 + 32;
-		blit(textures.menu_icons.texture, &src, &dest);
+		spritesheetBlit(&textures.menu_icons, i,0, dest.x, dest.y);
 	}
 
 	// Draw deck icon
 	src.x = 5 * 16;
 	dest.x = game.w - 32 * 4;
-	blit(textures.menu_icons.texture, &src, &dest);
+	spritesheetBlit(&textures.menu_icons, 5,0, dest.x, dest.y);
 
 	// Draw scroling text window
 	src.x = 0; src.y = 16;

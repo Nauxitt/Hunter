@@ -13,6 +13,7 @@ typedef struct _SpriteSheet {
 void loadSprites();
 
 void getSpriteClip(SpriteSheet * sheet, int x, int y, SDL_Rect * dest);
+void spritesheetBlit(SpriteSheet * sheet, int sx, int sy, int x, int y);
 
 typedef struct _Textures {
 	SpriteSheet tiles;
