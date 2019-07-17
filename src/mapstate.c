@@ -403,6 +403,7 @@ void mapOnTick(EventHandler * h){
 				break;
 
 			case OPEN_CRATE_ACTION:
+				printf("asdfhaslfdhafdhj\n");
 				matchCycle(match);
 				for_xy(x, y, state->map->w, state->map->h){
 					Tile * tile = getTile(state->map, x, y);
