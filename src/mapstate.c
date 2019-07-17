@@ -375,12 +375,13 @@ void mapOnTick(EventHandler * h){
 		}
 
 		switch(action->type){
-			case POLL_TURN_ACTION:
 			case POLL_MOVE_CARD_ACTION:
 			case POLL_MOVE_ACTION:
 			case POLL_ATTACK_ACTION:
 			case POLL_COMBAT_CARD_ACTION:
 			case POLL_COMBAT_ACTION:
+			case POLL_TURN_ACTION:
+			case POLL_DEFEND_ACTION:
 				breaker = 0;
 
 			case BEGIN_MATCH_ACTION:
@@ -391,14 +392,19 @@ void mapOnTick(EventHandler * h){
 			case MOVE_ACTION:
 			case ATTACK_ACTION:
 			case REST_ACTION:
-			case COUNTERATTACK_ACTION:
 			case DEFEND_ACTION:
 			case ESCAPE_ACTION:
 			case SURRENDER_ACTION:
 			case USE_CARD_ACTION:
-			case ROLL_MOVE_DICE_ACTION:
-			case ROLL_ATTACK_DICE_ACTION:
-			case ROLL_DEFENSE_DICE_ACTION:
+			case MOVE_ROLL_BONUS_ACTION:
+			case CATCH_ROLL_BONUS_ACTION:
+			case ESCAPE_ROLL_BONUS_ACTION:
+			case ATTACK_ROLL_BONUS_ACTION:
+			case DEFENSE_ROLL_BONUS_ACTION:
+				matchCycle(match);
+				break;
+
+			case ROLL_DICE_ACTION:
 				matchCycle(match);
 				break;
 

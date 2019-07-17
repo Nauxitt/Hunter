@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "hunter.h"
+#include "hunter_enqueue.h"
 #include "cards.h"
 
 void hunterClearBonus(Hunter * h){
@@ -59,106 +60,10 @@ void initMatch(MatchContext * context){
 	context->deck_len = DECK_SIZE;
 	context->active_player = 0;
 
-	enqueueBeginMatch(context);
+	enqueueBeginMatchAction(context);
 	matchQueueUpdate(context);
 }
 
-MatchAction * matchEnqueueAction(MatchContext * context, enum MatchActionType type){
-	MatchAction * ret = (MatchAction*) calloc(sizeof(MatchAction), 1);
-	ret->type = type;
-
-	// Append new action to enqueue
-	MatchAction * end = context->enqueue;
-	if(end == NULL)
-		context->enqueue = ret;
-	else {
-		// Append ret to the end of enqueue
-		while(end->next != NULL)
-			end = end->next;
-		end->next = ret;
-	}
-	return ret;
-}
-
-MatchAction * matchEnqueueActorAction(MatchContext * context, enum MatchActionType type, Hunter * actor){
-	MatchAction * action = matchEnqueueAction(context, type);
-	action->actor = actor;
-	return action;
-}
-
-void enqueueBeginMatch(MatchContext * context){
-	matchEnqueueAction(context, BEGIN_MATCH_ACTION);
-}
-
-void enqueueEndTurn(MatchContext * context, Hunter * actor){
-	matchEnqueueActorAction(context, TURN_END_ACTION, actor);
-}
-
-void enqueueStartTurn(MatchContext * context, Hunter * actor){
-	matchEnqueueActorAction(context, TURN_START_ACTION, actor);
-}
-
-void enqueueRestAction(MatchContext * context, Hunter * actor){
-	matchEnqueueActorAction(context, REST_ACTION, actor);
-}
-
-void enqueueUseCardAction(MatchContext * context, Hunter * actor, Card * card){
-	MatchAction * action = matchEnqueueActorAction(context, USE_CARD_ACTION, actor);
-	action->card = card;
-}
-
-void enqueueRollMoveDiceAction(MatchContext * context, Hunter * actor){
-	MatchAction * action = matchEnqueueActorAction(context, ROLL_MOVE_DICE_ACTION, actor);
-	action->value = 1;  // Roll only one dice
-}
-
-void enqueueMoveAction(MatchContext * context, Hunter * actor, int x, int y){
-	MatchAction * action = matchEnqueueActorAction(context, MOVE_ACTION, actor);
-	action->x = x;
-	action->y = y;
-}
-
-void enqueueMoveStepAction(MatchContext * context, Hunter * actor, int x, int y){
-	MatchAction * action = matchEnqueueActorAction(context, MOVE_STEP_ACTION, actor);
-	action->x = x;
-	action->y = y;
-}
-
-void enqueueEndMoveAction(MatchContext * context, Hunter * actor){
-	matchEnqueueActorAction(context, END_MOVE_ACTION, actor);
-}
-
-void enqueuePollTurnAction(MatchContext * context, Hunter * actor){
-	matchEnqueueActorAction(context, POLL_TURN_ACTION, actor);
-}
-
-void enqueuePollMoveAction(MatchContext * context, Hunter * actor){
-	matchEnqueueActorAction(context, POLL_MOVE_ACTION, actor);
-}
-
-void enqueueDrawCard(MatchContext * context, Hunter * hunter){
-	matchEnqueueActorAction(context, DRAW_CARD_ACTION, hunter);
-}
-
-void enqueueDrawCards(MatchContext * context, Hunter * hunter, int number){
-	for(int n=0; n < number; n++)
-		enqueueDrawCard(context, hunter);
-}
-
-void enqueueHealAction(MatchContext * context, Hunter * actor, int amount){
-	MatchAction * action = matchEnqueueActorAction(context, HEAL_ACTION, actor);
-	action->value = amount;
-}
-
-void enqueueOpenCrateAction(MatchContext * context, Crate * crate, Hunter * actor){
-	MatchAction * action = matchEnqueueActorAction(context, OPEN_CRATE_ACTION, actor);
-	action->crate = crate;
-}
-
-void enqueueGiveRelicAction(MatchContext * context, Hunter * actor, Relic * relic){
-	MatchAction * action = matchEnqueueActorAction(context, GIVE_RELIC_ACTION, actor);
-	action->relic = relic;
-}
 
 void matchQueueUpdate(MatchContext * context){
 	// Push enqueue onto stack
@@ -210,13 +115,13 @@ void matchCycle(MatchContext * context){
 			for(int n = 0; n < 4; n++)
 				enqueueDrawCards(context, context->characters[n], 4);
 
-			enqueueStartTurn(context, actor);
+			enqueueStartTurnAction(context, actor);
 			break;
 
 		case TURN_START_ACTION:
-			enqueueDrawCard(context, actor);
+			enqueueDrawCardAction(context, actor);
 			enqueuePollTurnAction(context, actor);
-			enqueueEndTurn(context, actor);
+			enqueueEndTurnAction(context, actor);
 			break;
 
 		case TURN_END_ACTION:
@@ -227,7 +132,7 @@ void matchCycle(MatchContext * context){
 				context->active_player = 0;
 			
 			actor = context->characters[context->active_player];
-			enqueueStartTurn(context, actor);
+			enqueueStartTurnAction(context, actor);
 			break;
 
 		case DRAW_CARD_ACTION:
@@ -250,6 +155,12 @@ void matchCycle(MatchContext * context){
 				actor->base_stats.hp = actor->stats.max_hp;
 			break;
 
+		case DAMAGE_ACTION:
+			actor->base_stats.hp -= action->value;
+			if(actor->base_stats.hp < 0)
+				actor->base_stats.hp = 0;
+			break;
+
 		case MOVE_ACTION:
 			for(int x = actor->x; x != action->x;){
 				x += (x > action->x) ? -1 : 1;
@@ -262,6 +173,21 @@ void matchCycle(MatchContext * context){
 			enqueueEndMoveAction(context, actor);
 			break;
 
+		case DEATH_CHECK_ACTION:
+			if(actor->stats.hp <= 0){
+				actor->stats.hp = 0;
+				enqueueTeleportRandomAction(context, actor);
+			}
+			break;
+
+		case TELEPORT_RANDOM_ACTION:
+			getRandomTile(context, &action->x, &action->y);
+			enqueueTeleportAction(
+					context, actor, action->x, action->y
+				);
+			break;
+
+		case TELEPORT_ACTION:
 		case MOVE_STEP_ACTION:
 			actor->x = action->x;
 			actor->y = action->y;
@@ -275,30 +201,135 @@ void matchCycle(MatchContext * context){
 					enqueueOpenCrateAction(context, crate, actor);
 			}
 
-			// TODO: landing on the exit tile
-			//     - End game if it's a hunter with the target item
-			//     - Otherwise teleport to random valid location
+			// Exit tile handling
+			if(getHunterAt(context, context->exit_x, context->exit_y)){
+				// TODO: End game if it's a hunter with the target item
+				// Otherwise teleport to random valid location
+				enqueueTeleportRandomAction(context, actor);
+			}
 
 			break;
 
-		case ROLL_MOVE_DICE_ACTION:
+		case ROLL_DICE_ACTION:
 			rollDice(context);
-			actor->turn_stats.mov += context->dice[0];
 			break;
 
-		case ROLL_ATTACK_DICE_ACTION:
-		case ROLL_DEFENSE_DICE_ACTION:
+		case MOVE_ROLL_BONUS_ACTION:
+			action->actor->turn_stats.mov += context->dice[0];
+			break;
+
+		case CATCH_ROLL_BONUS_ACTION:
+			action->actor->turn_stats.mov += context->dice_total;
+			break;
+
+		case ESCAPE_ROLL_BONUS_ACTION:
+			action->actor->turn_stats.mov += context->dice_total2;
+			break;
+
+		case ATTACK_ROLL_BONUS_ACTION:
+			action->actor->turn_stats.atk += context->dice_total;
+			break;
+
+		case DEFENSE_ROLL_BONUS_ACTION:
+			action->actor->turn_stats.def += context->dice_total2;
+			break;
+
+		case REMOVE_RELIC_ACTION:
 			break;
 
 		case USE_CARD_ACTION:
 			hunterUseCard(context, actor, action->card);
 			break;
 
-		case ATTACK_ACTION:
-		case COUNTERATTACK_ACTION:
+		case COMBAT_ACTION:
+			enqueueEnterCombatAction(context, actor, action->target);
+			enqueuePollDefenderAction(context, action->target);
+			enqueuePollAttackerCardAction(context, actor);
+			enqueueExecuteCombatAction(context);
+			enqueueExitCombatAction(context);
+
+			// If anyone died, teleport them to a random location
+			enqueueDeathCheckAction(context, actor);
+			enqueueDeathCheckAction(context, action->target);
+			break;
+
+		case ENTER_COMBAT_ACTION:
+			context->attacker = action->actor;
+			context->defender = action->target;
+			break;
+
+		case EXIT_COMBAT_ACTION:
+			context->attacker = NULL;
+			context->defender = NULL;
+			context->attacker_card = NULL;
+			context->defender_card = NULL;
+			context->defender_action = NULL;
+			break;
+
+		case EXECUTE_COMBAT_ACTION:
+			if(context->defender_action->type == SURRENDER_ACTION){
+				enqueueRemoveRelicAction(
+						context,
+						context->defender,
+						context->defender_action->relic
+					);
+				enqueueGiveRelicAction(
+						context,
+						context->attacker,
+						context->defender_action->relic
+					);
+
+				// --- Teleport after combat ---
+
+				MatchAction * insert = context->action;
+
+				// Find the end of combat
+				while(insert->next && insert->type != EXIT_COMBAT_ACTION)
+					insert = insert->next;
+				
+				// Make and insert teleportation action
+				MatchAction * new = (MatchAction*) calloc(sizeof(MatchAction), 1);
+				new->type = TELEPORT_RANDOM_ACTION;
+				new->actor = context->defender;
+				new->next = insert->next;
+				insert->next = new;
+			}
+			else if(context->defender_action->type == ESCAPE_ACTION){
+				enqueueEscapeAttemptAction(context);
+			}
+			else {
+				// A defend action will double the user's base DEF stat.
+				if(context->defender_action->type == DEFEND_ACTION){
+					context->defender->turn_stats.def += context->defender->base_stats.def/2;
+				}
+
+				if(context->attacker_card)
+					enqueueUseCardAction(context, context->attacker, context->attacker_card);
+
+				if(context->defender_card)
+					enqueueUseCardAction(context, context->defender, context->defender_card);
+
+				enqueueAttackAction(context, context->attacker, context->defender);
+
+				if(context->defender_action->type == ATTACK_ACTION){
+					enqueueAttackAction(context, context->defender, context->attacker);
+				}
+
+			}
+			break;
+
 		case DEFEND_ACTION:
 		case ESCAPE_ACTION:
 		case SURRENDER_ACTION:
+			/*
+			   These actions are not directly handled by matchCycle or the action stack.
+			*/
+			break;
+
+		case ATTACK_ACTION:
+			enqueueRollDiceAction(context);
+			break;
+
 		case OPEN_CRATE_ACTION:
 			enqueueGiveRelicAction(context, actor, action->crate->contents);
 			action->crate->exists = 0;
@@ -314,6 +345,7 @@ void matchCycle(MatchContext * context){
 		case POLL_ATTACK_ACTION:
 		case POLL_COMBAT_CARD_ACTION:
 		case POLL_COMBAT_ACTION:
+		case POLL_DEFEND_ACTION:
 		case POLL_TURN_ACTION:
 			/*
 				When polling for an action, if a new action has been posted, push that on top of the stack and continue from there in the next action cycle.  Otherwise, keep this polling action on the stack.
@@ -336,6 +368,7 @@ void matchCycle(MatchContext * context){
 		case POLL_COMBAT_CARD_ACTION:
 		case POLL_COMBAT_ACTION:
 		case POLL_TURN_ACTION:
+		case POLL_DEFEND_ACTION:
 			context->polling = 1;
 			break;
 
@@ -370,13 +403,28 @@ void printMatchAction(MatchAction * action){
 
 	switch(action->type){
 		// For these actions, print nothing inside the parenthesis, as the actions are either unimplemented or do not use any parameters
+		case DAMAGE_ACTION:
+		case POLL_DEFEND_ACTION:
+		case TELEPORT_ACTION:
+		case TELEPORT_RANDOM_ACTION:
+		case ENTER_COMBAT_ACTION:
+		case EXIT_COMBAT_ACTION:
+		case DEATH_CHECK_ACTION:
+		case COMBAT_ACTION:
+		case MOVE_ROLL_BONUS_ACTION:
+		case CATCH_ROLL_BONUS_ACTION:
+		case ESCAPE_ROLL_BONUS_ACTION:
+		case ATTACK_ROLL_BONUS_ACTION:
+		case DEFENSE_ROLL_BONUS_ACTION:
+		case REMOVE_RELIC_ACTION:
+		case ROLL_DICE_ACTION:
+		case EXECUTE_COMBAT_ACTION:
+			break;
+
 		case BEGIN_MATCH_ACTION:
-		case ROLL_ATTACK_DICE_ACTION:
-		case ROLL_DEFENSE_DICE_ACTION:
 		case POLL_ATTACK_ACTION:
 		case POLL_COMBAT_CARD_ACTION:
 		case POLL_COMBAT_ACTION:
-		case COUNTERATTACK_ACTION:
 		case DEFEND_ACTION:
 		case ESCAPE_ACTION:
 		case ATTACK_ACTION:
@@ -388,7 +436,6 @@ void printMatchAction(MatchAction * action){
 		case TURN_END_ACTION:
 		case DRAW_CARD_ACTION:
 		case HEAL_ACTION:
-		case ROLL_MOVE_DICE_ACTION:
 		case POLL_TURN_ACTION:
 		case POLL_MOVE_CARD_ACTION:
 		case POLL_MOVE_ACTION:
@@ -420,6 +467,10 @@ void printMatchAction(MatchAction * action){
 	printf(")\n");
 }
 
+void getRandomTile(MatchContext * context, int * x, int * y){ // TODO
+	*x = 0;
+	*y = 0;
+}
 
 Crate * getCrateAt(MatchContext * context, int x, int y){
 	for(int n=0; n < context->crates_len; n++){
@@ -428,6 +479,16 @@ Crate * getCrateAt(MatchContext * context, int x, int y){
 		if(crate->y != y) continue;
 		if(crate->exists)
 			return crate;
+	}
+	return NULL;
+}
+
+Hunter * getHunterAt(MatchContext * context, int x, int y){
+	for(int n=0; n < 4; n++){
+		Hunter * hunter = context->characters[n];
+		if(hunter->x != x) continue;
+		if(hunter->y != y) continue;
+		return hunter;
 	}
 	return NULL;
 }
@@ -479,9 +540,10 @@ int hunterAddRelic(Hunter * hunter, Relic * relic){
 }
 
 void rollDice(MatchContext * context){
-	context->dice[0] = rand() % 6 + 1;
-	context->dice[1] = rand() % 6 + 1;
+	for(int x=0; x < 4; x++)
+		context->dice[x] = rand() % 6 + 1;
 	context->dice_total = context->dice[0] + context->dice[1];
+	context->dice_total2 = context->dice[2] + context->dice[3];
 }
 
 uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter * character, Card * card){
@@ -500,7 +562,8 @@ uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter
 		case MOVE_ACTION:
 			if(card)
 				enqueueUseCardAction(context, character, card);
-			enqueueRollMoveDiceAction(context, character);
+			enqueueRollDiceAction(context);
+			enqueueMoveRollBonusAction(context, character);
 			enqueuePollMoveAction(context, character);
 			break;
 
@@ -542,26 +605,38 @@ const char * getMatchActionName(enum MatchActionType type){
 		case DRAW_CARD_ACTION: return "DRAW_CARD_ACTION";
 		case USE_CARD_ACTION: return "USE_CARD_ACTION";
 		case HEAL_ACTION: return "HEAL_ACTION";
+		case DAMAGE_ACTION: return "DAMAGE_ACTION";
 		case POLL_TURN_ACTION: return "POLL_TURN_ACTION";
 		case POLL_MOVE_CARD_ACTION: return "POLL_MOVE_CARD_ACTION";
 		case POLL_MOVE_ACTION: return "POLL_MOVE_ACTION";
+		case POLL_COMBAT_ACTION: return "POLL_COMBAT_ACTION";
 		case POLL_ATTACK_ACTION: return "POLL_ATTACK_ACTION";
 		case POLL_COMBAT_CARD_ACTION: return "POLL_COMBAT_CARD_ACTION";
-		case ROLL_MOVE_DICE_ACTION: return "ROLL_MOVE_DICE_ACTION";
-		case ROLL_ATTACK_DICE_ACTION: return "ROLL_ATTACK_DICE_ACTION";
-		case ROLL_DEFENSE_DICE_ACTION: return "ROLL_DEFENSE_DICE_ACTION";
-		case POLL_COMBAT_ACTION: return "POLL_COMBAT_ACTION";
+		case ROLL_DICE_ACTION: return "ROLL_DICE_ACTION";
 		case MOVE_STEP_ACTION: return "MOVE_STEP_ACTION";
 		case MOVE_ACTION: return "MOVE_ACTION";
 		case END_MOVE_ACTION: return "END_MOVE_ACTION";
 		case ATTACK_ACTION: return "ATTACK_ACTION";
 		case REST_ACTION: return "REST_ACTION";
-		case COUNTERATTACK_ACTION: return "COUNTERATTACK_ACTION";
 		case DEFEND_ACTION: return "DEFEND_ACTION";
 		case ESCAPE_ACTION: return "ESCAPE_ACTION";
 		case SURRENDER_ACTION: return "SURRENDER_ACTION";
 		case OPEN_CRATE_ACTION: return "OPEN_CRATE_ACTION";
 		case GIVE_RELIC_ACTION: return "GIVE_RELIC_ACTION";
+		case POLL_DEFEND_ACTION: return "POLL_DEFEND_ACTION";
+		case TELEPORT_ACTION: return "TELEPORT_ACTION";
+		case TELEPORT_RANDOM_ACTION: return "TELEPORT_RANDOM_ACTION";
+		case ENTER_COMBAT_ACTION: return "ENTER_COMBAT_ACTION";
+		case EXIT_COMBAT_ACTION: return "EXIT_COMBAT_ACTION";
+		case DEATH_CHECK_ACTION: return "DEATH_CHECK_ACTION";
+		case COMBAT_ACTION: return "COMBAT_ACTION";
+		case EXECUTE_COMBAT_ACTION: return "EXECUTE_COMBAT_ACTION";
+		case MOVE_ROLL_BONUS_ACTION: return "MOVE_ROLL_BONUS_ACTION";
+		case CATCH_ROLL_BONUS_ACTION: return "CATCH_ROLL_BONUS_ACTION";
+		case ESCAPE_ROLL_BONUS_ACTION: return "ESCAPE_ROLL_BONUS_ACTION";
+		case ATTACK_ROLL_BONUS_ACTION: return "ATTACK_ROLL_BONUS_ACTION";
+		case DEFENSE_ROLL_BONUS_ACTION: return "DEFENSE_ROLL_BONUS_ACTION";
+		case REMOVE_RELIC_ACTION: return "REMOVE_RELIC_ACTION";
 	}
 	return NULL;
 }

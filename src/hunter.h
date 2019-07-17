@@ -92,18 +92,27 @@ enum MatchActionType {
 	TURN_START_ACTION,
 	TURN_END_ACTION,
 	
+	// Turn actions
 	DRAW_CARD_ACTION,
 	USE_CARD_ACTION,
 	HEAL_ACTION,
-
-	ROLL_MOVE_DICE_ACTION,
-	ROLL_ATTACK_DICE_ACTION,
-	ROLL_DEFENSE_DICE_ACTION,
-
+	DAMAGE_ACTION,
+	
+	ROLL_DICE_ACTION,
+	
+	// Actions for applying dice bonuses to stats
+	MOVE_ROLL_BONUS_ACTION,
+	CATCH_ROLL_BONUS_ACTION,
+	ESCAPE_ROLL_BONUS_ACTION,
+	ATTACK_ROLL_BONUS_ACTION,
+	DEFENSE_ROLL_BONUS_ACTION,
+	
+	// Polling actions, which lock the state until input is recieved
 	POLL_TURN_ACTION,
 	POLL_MOVE_CARD_ACTION,
 	POLL_MOVE_ACTION,
 	POLL_ATTACK_ACTION,
+	POLL_DEFEND_ACTION,
 	POLL_COMBAT_CARD_ACTION,
 	POLL_COMBAT_ACTION,
 
@@ -111,17 +120,26 @@ enum MatchActionType {
 	MOVE_ACTION,
 	MOVE_STEP_ACTION,
 	END_MOVE_ACTION,
-	ATTACK_ACTION,
+	TELEPORT_ACTION,
+	TELEPORT_RANDOM_ACTION,
+	COMBAT_ACTION,  // invoked in the map to initiate combat with another hunter
 	REST_ACTION,
 	
 	// Combat actions
-	COUNTERATTACK_ACTION,
+	ENTER_COMBAT_ACTION,
+	EXIT_COMBAT_ACTION,
+	EXECUTE_COMBAT_ACTION,
+	
+	//  User-selected combat actions
+	ATTACK_ACTION,
 	DEFEND_ACTION,
 	ESCAPE_ACTION,
 	SURRENDER_ACTION,
 
+	DEATH_CHECK_ACTION,  // Randomly teleport hunter if at zero HP
 	OPEN_CRATE_ACTION,
-	GIVE_RELIC_ACTION
+	GIVE_RELIC_ACTION,
+	REMOVE_RELIC_ACTION
 };
 
 enum ControllerType {
@@ -170,8 +188,9 @@ typedef struct _MatchContext {
 	Hunter * characters [4 + 1];
 	int active_player;
 	
-	int dice[2];      // The values of each rolled die
-	int dice_total;   // The sum of all dice
+	int dice[4];      // The values of each rolled die
+	int dice_total;   // The sum of the first two dice
+	int dice_total2;   // The sum of the last two dice
 
 	int exit_x;
 	int exit_y;
@@ -183,9 +202,19 @@ typedef struct _MatchContext {
 
 	Card * deck[DECK_SIZE];
 	int deck_len;
+
+	// Combat-specific properties
+	Hunter * attacker;
+	Hunter * defender;
+
+	Card * attacker_card;
+	Card * defender_card;
+
+	MatchAction * defender_action;
 } MatchContext;
 
 Crate * getCrateAt(MatchContext * context, int x, int y);
+Hunter * getHunterAt(MatchContext * context, int x, int y);
 
 Statset * hunterStats(Hunter * h);
 Card * hunterPopCard(Hunter * h, int card_num);
@@ -198,28 +227,17 @@ void initMatch(MatchContext * context);
 void matchCycle(MatchContext * context);
 void rollDice(MatchContext * context);
 
+uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter * character, Card * card);
+uint8_t postMoveCardAction(MatchContext * context, Hunter * character, Card * card);
+uint8_t postMoveAction(MatchContext * context, Hunter * character, int x, int y);
+uint8_t postDefenderAction(MatchContext * context, enum MatchActionType type, Card * card);
+
+uint8_t postAttackerCard(MatchContext * context, Card * card);
 void printMatchQueue(MatchContext * context);
 void printMatchAction(MatchAction * action);
 void matchQueueUpdate(MatchContext * context);
 int matchQueueLength(MatchContext * context);
 const char * getMatchActionName(enum MatchActionType type);
-MatchAction * matchEnqueueAction(MatchContext * context, enum MatchActionType type);
-MatchAction * matchEnqueueActorAction(MatchContext * context, enum MatchActionType type, Hunter * actor);
 
-void enqueueBeginMatch(MatchContext * context);
-void enqueueEndTurn(MatchContext * context, Hunter * actor);
-void enqueueStartTurn(MatchContext * context, Hunter * actor);
-void enqueueMoveAction(MatchContext * context, Hunter * actor, int x, int y);
-void enqueueEndMoveAction(MatchContext * context, Hunter * actor);
-void enqueuePollTurnAction(MatchContext * context, Hunter * actor);
-void enqueueDrawCard(MatchContext * context, Hunter * hunter);
-void enqueueDrawCards(MatchContext * context, Hunter * hunter, int number);
-void enqueueHealAction(MatchContext * context, Hunter * actor, int amount);
-void enqueueOpenCrateAction(MatchContext * context, Crate * crate, Hunter * actor);
-void enqueueGiveRelicAction(MatchContext * context, Hunter * actor, Relic * relic);
-
-uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter * character, Card * card);
-uint8_t postMoveCardAction(MatchContext * context, Hunter * character, Card * card);
-uint8_t postMoveAction(MatchContext * context, Hunter * character, int x, int y);
-
+void getRandomTile(MatchContext * context, int * x, int * y);
 #endif
