@@ -44,10 +44,10 @@ typedef struct _Tile {
 } Tile;
 
 
-typedef struct _Map {
+typedef struct _MapStateMap {
 	Tile * tiles;
 	int w, h;
-} Map;
+} MapStateMap;
 
 
 typedef struct _MenubarState {
@@ -129,7 +129,7 @@ typedef struct _MapState {
 
 	enum StatboxViews statbox_view;
 	
-	Map * map;
+	MapStateMap * map;
 	MenubarState * menubar;
 	StatpanelState * statpanel;
 
@@ -174,9 +174,9 @@ ActionQueueEntity * makeEntityAction(char * type);
 
 MapState * makeMapState(MapState * mapstate, int map_w, int map_h);
 
-Map * makeMap(int w, int h);
-void freeMap(Map * map);
-Tile * getTile(Map * map, int x, int y);
+MapStateMap * makeMap(int w, int h);
+void freeMap(MapStateMap * map);
+Tile * getTile(MapStateMap * map, int x, int y);
 
 /*
    Translates map cell coordinates the pixel coordinates of that cell's center.

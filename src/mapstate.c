@@ -14,8 +14,8 @@ extern MapState mapstate;
 extern MenubarState menubar;
 extern StatpanelState statpanel;
 
-Map * makeMap(int w, int h){
-	Map * ret = (Map*) malloc(sizeof(Map));
+MapStateMap * makeMap(int w, int h){
+	MapStateMap * ret = (MapStateMap*) malloc(sizeof(MapStateMap));
 	ret->w = w;
 	ret->h = h;
 	ret->tiles = (Tile*) calloc(sizeof(Tile), w*h);
@@ -142,26 +142,26 @@ void drawCard(int x, int y, Card * card){
 	spritesheetBlit(&textures.cards, sx,sy, x,y);
 }
 
-void mapSetSelection(Map * map, int value){
+void mapSetSelection(MapStateMap * map, int value){
 	for(int n=0; n < map->w*map->h; n++)
 		map->tiles[n].selected = value;
 }
 
-void mapSelectAll(Map * map){  mapSetSelection(map, 1); }
-void mapSelectNone(Map * map){ mapSetSelection(map, 0); }
-void mapSelectRange(Map * map, int c_x, int c_y, int range){
+void mapSelectAll(MapStateMap * map){  mapSetSelection(map, 1); }
+void mapSelectNone(MapStateMap * map){ mapSetSelection(map, 0); }
+void mapSelectRange(MapStateMap * map, int c_x, int c_y, int range){
 	for_xy(x, y, map->w, map->h){
 		Tile * tile = getTile(map, x,y);
 		tile->selected = (abs(c_x - x) + abs(c_y - y)) <= range;
 	}
 }
 
-void freeMap(Map * map){
+void freeMap(MapStateMap * map){
 	free(map->tiles);
 	free(map);
 }
 
-Tile * getTile(Map * map, int x, int y){
+Tile * getTile(MapStateMap * map, int x, int y){
 	return &(map->tiles[y * map->w + x]);
 }
 
@@ -403,7 +403,6 @@ void mapOnTick(EventHandler * h){
 				break;
 
 			case OPEN_CRATE_ACTION:
-				printf("asdfhaslfdhafdhj\n");
 				matchCycle(match);
 				for_xy(x, y, state->map->w, state->map->h){
 					Tile * tile = getTile(state->map, x, y);
@@ -761,7 +760,7 @@ int iso_y(MapState * state, int x, int y){
 
 void mapOnDraw(EventHandler * h){
 	MapState * state = MapState(h);
-	Map * map = state->map;
+	MapStateMap * map = state->map;
 	MatchContext * match = state->match;
 	Hunter * active_player = match->characters[match->active_player];
 	

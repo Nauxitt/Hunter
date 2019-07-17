@@ -20,7 +20,7 @@ int main(){
 	MapState * mapstate = makeMapState(NULL, 10, 10);
 	
 	// Generate a simple map
-	Map * map = mapstate->map;
+	MapStateMap * map = mapstate->map;
 	for_xy(x, y, map->w, map->h){
 		Tile * tile = getTile(map, x, y);
 		if(		(x < 2) | (x >= map->w - 2) |
