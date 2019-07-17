@@ -65,7 +65,7 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 	return mapstate;
 }
 
-void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window_dest){
+void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest){
 	SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 32);
 	// SDL_SetRenderDrawColor(game.renderer, 255-32, 255, 255, 32);
@@ -97,11 +97,11 @@ void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window
 	blit(textures.statbox.texture, &src, &dest);
 }
 
-void drawBigNumber(MapState * state, int x, int y, int n){
+void drawBigNumber(int x, int y, int n){
 	spritesheetBlit(&textures.statbox, n,0, x,y);
 }
 
-void drawCard(MapState * state, int x, int y, Card * card){
+void drawCard(int x, int y, Card * card){
 	int sx, sy;
 
 	switch(card->type){
@@ -432,7 +432,7 @@ void mapOnTick(EventHandler * h){
 				break;
 
 			case GIVE_RELIC_ACTION:
-				mapGiveRelic(state, action_hunter_entity, action->relic);
+				mapGiveRelic(action_hunter_entity, action->relic);
 				matchCycle(match);
 				return;
 
@@ -601,7 +601,7 @@ void mapOnTickMoveHunter(EventHandler * h){
 	}
 }
 
-void mapGiveRelic(MapState * state, HunterEntity * hunter, Relic * relic){
+void mapGiveRelic(HunterEntity * hunter, Relic * relic){
 	GameState * giveState = makeGameState();
 	gamePushState(giveState);
 
@@ -632,7 +632,7 @@ void mapOnDrawGiveRelic(EventHandler * h){
 		y = end_y;
 
 	onDraw(EventHandler(mapstate));
-	drawRelic(mapstate, relic, x, y);
+	drawRelic(relic, x, y);
 
 	if(duration >= duration/drop_speed + pause_duration){
 		gamePopState();
@@ -830,7 +830,7 @@ void mapOnDraw(EventHandler * h){
 
 		// Draw card select
 		SDL_Rect window_panel = {32, 76, 16 + textures.cards.w * 7, 64};
-		drawWindowPanel(state, WINDOW_BLUE, &window_panel);
+		drawWindowPanel(WINDOW_BLUE, &window_panel);
 
 		for(int c=0; c < HAND_LIMIT; c++){
 			Card * card = active_player->hand[c];
@@ -847,7 +847,7 @@ void mapOnDraw(EventHandler * h){
 			if(state->card_selected == c)
 				dest.y += 8;
 			
-			drawCard(state, dest.x, dest.y, card);
+			drawCard(dest.x, dest.y, card);
 		}
 	}
 	
@@ -858,8 +858,8 @@ void mapOnDraw(EventHandler * h){
 
 	// Draw deck card count
 	// TODO: move this into menubar's draw handler
-	drawBigNumber(state, game.w - 16*6, 32-2, match->deck_len / 10);
-	drawBigNumber(state, game.w - 16*5, 32-2, match->deck_len % 10);
+	drawBigNumber(game.w - 16*6, 32-2, match->deck_len / 10);
+	drawBigNumber(game.w - 16*5, 32-2, match->deck_len % 10);
 
 	// Draw stat windows, character stats
 	int panel_gutter = 4;
@@ -868,7 +868,7 @@ void mapOnDraw(EventHandler * h){
 		Hunter * hunter = state->hunters[h].hunter;
 
 		drawStatbox(
-				state, hunter,
+				hunter,
 				(enum StatboxViews) state->statbox_view,
 				(enum WindowColor) h,
 				16 + (panel_w+panel_gutter)*h,
@@ -877,7 +877,7 @@ void mapOnDraw(EventHandler * h){
 	}
 }
 
-void drawStatbox(MapState * state, Hunter * hunter, enum StatboxViews view, enum WindowColor color, int x, int y){
+void drawStatbox(Hunter * hunter, enum StatboxViews view, enum WindowColor color, int x, int y){
 	if(view == STATBOX_VIEW_NONE)
 		return;
 
@@ -886,15 +886,15 @@ void drawStatbox(MapState * state, Hunter * hunter, enum StatboxViews view, enum
 	
 	// Draw panel
 	SDL_Rect panel_rect = {x, y, panel_w, 160};
-	drawWindowPanel(state, color, &panel_rect);
+	drawWindowPanel(color, &panel_rect);
 	
 	if(view == STATBOX_VIEW_STATS)
-		drawStatboxStats(state, hunter, x, y);
+		drawStatboxStats(hunter, x, y);
 	else if(view == STATBOX_VIEW_ITEMS)
-		drawStatboxItems(state, hunter, x, y);
+		drawStatboxItems(hunter, x, y);
 }
 
-void drawStatboxItems(MapState * state, Hunter * hunter, int x, int y){
+void drawStatboxItems(Hunter * hunter, int x, int y){
 	int panel_w = (game.w - 16*2 - 4*3) / 4;
 	int element_margin = 18;
 	int element_gutter = (panel_w - 2*element_margin - 3*textures.items.w) / 2;
@@ -905,18 +905,18 @@ void drawStatboxItems(MapState * state, Hunter * hunter, int x, int y){
 			break;
 		
 		drawRelic(
-				state, relic, 
+				relic, 
 				x + element_margin + (textures.items.w+element_gutter) * (r % 3),
 				y + 160 - element_margin + (textures.items.h + element_gutter) * (r/3 - 2)
 			);
 	}
 }
 
-void drawRelic(MapState * state, Relic * relic, int x, int y){
+void drawRelic(Relic * relic, int x, int y){
 	spritesheetBlit(&textures.items, relic->item_id,0, x, y);
 }
 
-void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){
+void drawStatboxStats(Hunter * hunter, int x, int y){
 	Statset * stats = hunterStats(hunter);
 
 	int panel_w = (game.w - 16*2 - 4*3) / 4;
@@ -957,7 +957,7 @@ void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){
 	statval_src.y = 0;
 	statval_src.x = stats->mov * textures.statbox.src_w;
 
-	drawBigNumber(state, statval_dest.x, statval_dest.y, stats->mov);
+	drawBigNumber(statval_dest.x, statval_dest.y, stats->mov);
 
 	//    At. stat label
 	statname_src.x += textures.statbox.src_w * 2;
@@ -972,7 +972,7 @@ void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){
 	}
 	//    At. stat 1's digit
 	statval_dest.x += textures.statbox.w;
-	drawBigNumber(state, statval_dest.x, statval_dest.y, stats->atk % 10);
+	drawBigNumber(statval_dest.x, statval_dest.y, stats->atk % 10);
 
 	//    Df. stat label
 	statname_dest.x += textures.statbox.w*2 + element_gutter;
@@ -981,11 +981,11 @@ void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){
 	//    Df. stat 10's digit
 	statval_dest.x = statname_dest.x;
 	if(stats->def / 10){
-		drawBigNumber(state, statval_dest.x, statval_dest.y, stats->def / 10);
+		drawBigNumber(statval_dest.x, statval_dest.y, stats->def / 10);
 	}
 	//    Df. stat 1's digit
 	statval_dest.x += textures.statbox.w;
-	drawBigNumber(state, statval_dest.x, statval_dest.y, stats->def % 10);
+	drawBigNumber(statval_dest.x, statval_dest.y, stats->def % 10);
 	
 
 	// Draw player hand
@@ -995,7 +995,7 @@ void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y){
 		Card * card = hunter->hand[c];
 		int card_x = panel_rect.x + element_margin/2 + c * textures.cards.w/2;
 
-		drawCard(state, card_x, card_y, card);
+		drawCard(card_x, card_y, card);
 	}
 }
 

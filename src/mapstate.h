@@ -212,18 +212,18 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e);
 void mapOnMouseDown(EventHandler * h, SDL_Event * e);
 void mapOnDraw(EventHandler * h);
 
+void mapGiveRelic(HunterEntity * hunter, Relic * relic);
+void mapOnDrawGiveRelic(EventHandler * h);
+
 void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed);
 void mapOnTickMoveHunter(EventHandler * h);
 
-void mapGiveRelic(MapState * state, HunterEntity * hunter, Relic * relic);
-void mapOnDrawGiveRelic(EventHandler * h);
-
 void menuOnDraw(EventHandler * h);
 
-void drawRelic(MapState * state, Relic * relic, int x, int y);
-void drawWindowPanel(MapState * state, enum WindowColor color, SDL_Rect * window_dest);
-void drawStatbox(MapState * state, Hunter * hunter, enum StatboxViews view, enum WindowColor color, int x, int y);
-void drawStatboxItems(MapState * state, Hunter * hunter, int x, int y);
-void drawStatboxStats(MapState * state, Hunter * hunter, int x, int y);
+void drawRelic(Relic * relic, int x, int y);
+void drawStatboxItems(Hunter * hunter, int x, int y);
+void drawStatbox(Hunter * hunter, enum StatboxViews view, enum WindowColor color, int x, int y);
+void drawStatboxStats(Hunter * hunter, int x, int y);
+void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest);
 
 #endif
