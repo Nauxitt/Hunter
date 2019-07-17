@@ -401,6 +401,15 @@ void mapOnTick(EventHandler * h){
 			case ESCAPE_ROLL_BONUS_ACTION:
 			case ATTACK_ROLL_BONUS_ACTION:
 			case DEFENSE_ROLL_BONUS_ACTION:
+			case TELEPORT_ACTION:
+			case TELEPORT_RANDOM_ACTION:
+			case COMBAT_ACTION:
+			case ENTER_COMBAT_ACTION:
+			case EXIT_COMBAT_ACTION:
+			case EXECUTE_COMBAT_ACTION:
+			case DEATH_CHECK_ACTION:
+			case REMOVE_RELIC_ACTION:
+			case DAMAGE_ACTION:
 				matchCycle(match);
 				break;
 
@@ -455,10 +464,6 @@ void mapOnTick(EventHandler * h){
 				}
 				breaker = 0;
 				matchCycle(match);
-				break;
-
-			default:
-				breaker = 0;
 				break;
 		}
 	}
