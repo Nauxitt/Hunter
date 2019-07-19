@@ -24,12 +24,14 @@ typedef struct _Statset {
 	uint8_t evade_trap_chance;
 } Statset;
 
+
 typedef struct _Relic {
 	char name[7];
 	Statset (*statModifier)(Hunter * hunter);
 	int item_id;
 	int target_item;
 } Relic;
+
 
 enum CardType {
 	NULL_CARD,
@@ -85,6 +87,16 @@ typedef struct _Crate {
 	int x, y;
 	int exists;
 } Crate;
+
+
+typedef struct _Tile {
+	int x, y;
+	uint8_t exists;
+	Hunter * hunter;
+	Crate * crate;
+	// Flag * flag;
+	// Trap * traps[3]
+} Tile;
 
 
 enum MatchActionType {
@@ -192,8 +204,7 @@ typedef struct _MatchContext {
 	int dice_total;   // The sum of the first two dice
 	int dice_total2;   // The sum of the last two dice
 
-	int exit_x;
-	int exit_y;
+	int exit_x, exit_y;
 
 	Relic * target_item;
 
@@ -202,6 +213,9 @@ typedef struct _MatchContext {
 
 	Card * deck[DECK_SIZE];
 	int deck_len;
+
+	int map_w, map_h;
+	Tile * map;
 
 	// Combat-specific properties
 	Hunter * attacker;

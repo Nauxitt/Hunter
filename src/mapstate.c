@@ -14,11 +14,11 @@ extern MapState mapstate;
 extern MenubarState menubar;
 extern StatpanelState statpanel;
 
-Map * makeMap(int w, int h){
-	Map * ret = (Map*) malloc(sizeof(Map));
+MapStateMap * makeMap(int w, int h){
+	MapStateMap * ret = (MapStateMap*) malloc(sizeof(MapStateMap));
 	ret->w = w;
 	ret->h = h;
-	ret->tiles = (Tile*) calloc(sizeof(Tile), w*h);
+	ret->tiles = (MapStateTile*) calloc(sizeof(MapStateTile), w*h);
 
 	for(int n=0; n < w*h; n++){
 		ret->tiles[n].x = n % w;
@@ -142,35 +142,35 @@ void drawCard(int x, int y, Card * card){
 	spritesheetBlit(&textures.cards, sx,sy, x,y);
 }
 
-void mapSetSelection(Map * map, int value){
+void mapSetSelection(MapStateMap * map, int value){
 	for(int n=0; n < map->w*map->h; n++)
 		map->tiles[n].selected = value;
 }
 
-void mapSelectAll(Map * map){  mapSetSelection(map, 1); }
-void mapSelectNone(Map * map){ mapSetSelection(map, 0); }
-void mapSelectRange(Map * map, int c_x, int c_y, int range){
+void mapSelectAll(MapStateMap * map){  mapSetSelection(map, 1); }
+void mapSelectNone(MapStateMap * map){ mapSetSelection(map, 0); }
+void mapSelectRange(MapStateMap * map, int c_x, int c_y, int range){
 	for_xy(x, y, map->w, map->h){
-		Tile * tile = getTile(map, x,y);
+		MapStateTile * tile = getTile(map, x,y);
 		tile->selected = (abs(c_x - x) + abs(c_y - y)) <= range;
 	}
 }
 
-void freeMap(Map * map){
+void freeMap(MapStateMap * map){
 	free(map->tiles);
 	free(map);
 }
 
-Tile * getTile(Map * map, int x, int y){
+MapStateTile * getTile(MapStateMap * map, int x, int y){
 	return &(map->tiles[y * map->w + x]);
 }
 
-Tile * getTileAtPx(MapState * state, float p_x, float p_y){
+MapStateTile * getTileAtPx(MapState * state, float p_x, float p_y){
 	// Account for the tile's diagonal edges
 	p_x -= state->tile_w / 4;
 	p_y -= state->tile_h / 4;
 
-	// Tile cell position
+	// MapStateTile cell position
 	int tx = p_x/state->tile_w + p_y/state->tile_h;
 	int ty = p_y/state->tile_h - p_x/state->tile_w;
 
@@ -288,13 +288,13 @@ void entitySetAnimation(Entity * entity, AnimationFrame * animation){
 }
 
 void entitySetTile(Entity * e, int x, int y, int layer){
-	Tile * old_tile = getTile(e->mapstate->map,x,y);
+	MapStateTile * old_tile = getTile(e->mapstate->map,x,y);
 
 	if(old_tile && old_tile->contents[layer] == e)
 		old_tile->contents[layer] = NULL;
 
 	e->x = x; e->y = y;
-	Tile * tile = getTile(e->mapstate->map,x,y);
+	MapStateTile * tile = getTile(e->mapstate->map,x,y);
 	tile->contents[layer] = e;
 }
 
@@ -420,7 +420,7 @@ void mapOnTick(EventHandler * h){
 			case OPEN_CRATE_ACTION:
 				matchCycle(match);
 				for_xy(x, y, state->map->w, state->map->h){
-					Tile * tile = getTile(state->map, x, y);
+					MapStateTile * tile = getTile(state->map, x, y);
 					CrateEntity * entity = CrateEntity(tile->contents[TILE_LAYER_CRATE]);
 
 					if(!entity || (entity->crate != action->crate))
@@ -742,7 +742,7 @@ void mapOnMouseDown(EventHandler * h, SDL_Event * e){
 	MatchContext * match = state->match;
 	SDL_MouseButtonEvent me = e->button;
 
-	Tile * t = getTileAtPx(
+	MapStateTile * t = getTileAtPx(
 			state,
 			me.x - state->camera_x,
 			me.y - state->camera_y
@@ -771,7 +771,7 @@ int iso_y(MapState * state, int x, int y){
 
 void mapOnDraw(EventHandler * h){
 	MapState * state = MapState(h);
-	Map * map = state->map;
+	MapStateMap * map = state->map;
 	MatchContext * match = state->match;
 	Hunter * active_player = match->characters[match->active_player];
 	
@@ -786,7 +786,7 @@ void mapOnDraw(EventHandler * h){
 
 	// Draw tiles
 	for_xy(x, y, map->w, map->h){
-		Tile * tile = getTile(map, x, y);
+		MapStateTile * tile = getTile(map, x, y);
 		
 		if(!tile->val)
 			continue;
@@ -811,7 +811,7 @@ void mapOnDraw(EventHandler * h){
 	
 	// Iterate through tiles and draw entities
 	for_xy(x, y, map->w, map->h){
-		Tile * tile = getTile(map, x, y);
+		MapStateTile * tile = getTile(map, x, y);
 
 		for(int e=0; e < TILE_ENTITY_LAYERS; e++){
 			Entity * entity = tile->contents[e];
