@@ -32,7 +32,7 @@ enum WindowColor {
 };
 
 
-typedef struct _Tile {
+typedef struct _MapStateTile {
 	int val;        // 0 if void, otherwise floor
 	int selected;
 
@@ -41,11 +41,11 @@ typedef struct _Tile {
 
 	uint8_t tint_r, tint_g, tint_b;
 	int x, y;
-} Tile;
+} MapStateTile;
 
 
 typedef struct _MapStateMap {
-	Tile * tiles;
+	MapStateTile * tiles;
 	int w, h;
 } MapStateMap;
 
@@ -176,7 +176,7 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h);
 
 MapStateMap * makeMap(int w, int h);
 void freeMap(MapStateMap * map);
-Tile * getTile(MapStateMap * map, int x, int y);
+MapStateTile * getTile(MapStateMap * map, int x, int y);
 
 /*
    Translates map cell coordinates the pixel coordinates of that cell's center.
@@ -185,9 +185,9 @@ int iso_x(MapState * state, int x, int y);
 int iso_y(MapState * state, int x, int y);
 
 /*
-   Returns the Tile at a given pixel position, or returns NULL if the position is outside the map's boundries.
+   Returns the MapStateTile at a given pixel position, or returns NULL if the position is outside the map's boundries.
 */
-Tile * getTileAtPx(MapState * state, float p_x, float p_y);
+MapStateTile * getTileAtPx(MapState * state, float p_x, float p_y);
 
 void entityOnDraw(EventHandler * h);
 
