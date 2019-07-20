@@ -485,6 +485,38 @@ void mapOnTick(EventHandler * h){
 				stats->mov + 1
 			);
 	}
+	else if(
+				pollAction("poll_combat_target") ||
+				(action->type == POLL_COMBAT_ACTION)
+			){
+		// Pan camera with arrow keys
+		if(keys[SDL_SCANCODE_UP])    state->camera_y += 10;
+		if(keys[SDL_SCANCODE_DOWN])  state->camera_y -= 10;
+		if(keys[SDL_SCANCODE_LEFT])  state->camera_x += 10;
+		if(keys[SDL_SCANCODE_RIGHT]) state->camera_x -= 10;
+		
+		// Select adjacent tiles which contain hunters
+
+		int x = action->actor->x, y = action->actor->y;
+		MapStateTile * tile;
+
+		tile = getTile(state->map, x, y-1);
+		if(tile)
+			tile->selected = (int) getHunterAt(match, x, y-1);
+
+		tile = getTile(state->map, x, y+1);
+		if(tile)
+			tile->selected = (int) getHunterAt(match, x, y+1);
+
+		tile = getTile(state->map, x-1, y);
+		if(tile)
+			tile->selected = (int) getHunterAt(match, x-1, y);
+
+		tile = getTile(state->map, x+1, y);
+		if(tile)
+			tile->selected = (int) getHunterAt(match, x+1, y);
+	}
+
 
 	EventHandler * menu_handler = EventHandler(state->menubar);
 	if(menu_handler && menu_handler->onTick)
@@ -671,13 +703,12 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 					break;
 
 				case SDL_SCANCODE_SPACE:
-
 					// Move action
 					if(state->menubar->selector == 0){
 						pushAction("poll_move_card_select");
 					}
 					else if (state->menubar->selector == 1){
-						// TODO: enter attack target selection
+						pushAction("poll_combat_target");
 					}
 					else if(state->menubar->selector == 2){
 						postTurnAction(match, REST_ACTION, NULL, NULL);
@@ -735,6 +766,20 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 		if(e->key.keysym.scancode == SDL_SCANCODE_ESCAPE)
 			nextAction(state);
 	}
+
+	else if(pollAction("poll_combat_target")){
+		if(e->key.keysym.scancode == SDL_SCANCODE_ESCAPE){
+			nextAction();
+			mapSelectNone(state->map);
+		}
+	}
+
+	else if(action->type == POLL_COMBAT_ACTION){
+		if(e->key.keysym.scancode == SDL_SCANCODE_ESCAPE){
+			postCombatAction(match, action->actor, NULL);
+			mapSelectNone(state->map);
+		}
+	}
 }
 
 void mapOnMouseDown(EventHandler * h, SDL_Event * e){
@@ -748,15 +793,21 @@ void mapOnMouseDown(EventHandler * h, SDL_Event * e){
 			me.y - state->camera_y
 		);
 
-	if(t){
-		//if(pollAction("poll_tile_select")){
+	if(t && t->selected && t->val){
 		if(match->action->type == POLL_MOVE_ACTION){
-			if((t->selected) && (t->val)){
-				postMoveAction(
-						match, NULL, t->x, t->y
-					);
-				mapSelectNone(state->map);
-			}
+			postMoveAction(
+					match, NULL, t->x, t->y
+				);
+			mapSelectNone(state->map);
+		}
+
+		else if(
+					(match->action->type == POLL_COMBAT_ACTION) ||
+					pollAction("poll_combat_target")
+				){
+			Hunter * target = getHunterAt(match, t->x, t->y);
+			postCombatAction(match, match->action->actor, target);
+			mapSelectNone(state->map);
 		}
 	}
 }

@@ -69,6 +69,10 @@ void enqueuePollMoveAction(MatchContext * context, Hunter * actor){
 	matchEnqueueActorAction(context, POLL_MOVE_ACTION, actor);
 }
 
+void enqueuePollCombatAction(MatchContext * context, Hunter * actor){
+	matchEnqueueActorAction(context, POLL_COMBAT_ACTION, actor);
+}
+
 void enqueueDrawCardAction(MatchContext * context, Hunter * hunter){
 	matchEnqueueActorAction(context, DRAW_CARD_ACTION, hunter);
 }
@@ -104,6 +108,11 @@ void enqueueExitCombatAction(MatchContext * context){
 
 void enqueueAttackAction(MatchContext * context, Hunter * attacker, Hunter * defender){
 	MatchAction * action =  matchEnqueueActorAction(context, ATTACK_ACTION, attacker);
+	action->target = defender;
+}
+
+void enqueueCombatAction(MatchContext * context, Hunter * attacker, Hunter * defender){
+	MatchAction * action =  matchEnqueueActorAction(context, COMBAT_ACTION, attacker);
 	action->target = defender;
 }
 

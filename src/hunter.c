@@ -189,8 +189,17 @@ void matchCycle(MatchContext * context){
 
 		case TELEPORT_ACTION:
 		case MOVE_STEP_ACTION:
+			context->map[
+					actor->x + context->map_w * actor->y
+				].hunter = NULL;
+
 			actor->x = action->x;
 			actor->y = action->y;
+
+			context->map[
+					actor->x + context->map_w * actor->y
+				].hunter = actor;
+
 			break;
 
 		case END_MOVE_ACTION:
@@ -201,8 +210,17 @@ void matchCycle(MatchContext * context){
 					enqueueOpenCrateAction(context, crate, actor);
 			}
 
+			// If a hunter ends a moves next to an enemy, poll for attacking
+			if(
+				getHunterAt(context, actor->x  , actor->y-1) ||
+				getHunterAt(context, actor->x  , actor->y+1) ||
+				getHunterAt(context, actor->x-1, actor->y)   ||
+				getHunterAt(context, actor->x+1, actor->y)
+			  )
+				enqueuePollCombatAction(context, actor);
+
 			// Exit tile handling
-			if(getHunterAt(context, context->exit_x, context->exit_y)){
+			if(hunterAt(actor, context->exit_x, context->exit_y)){
 				// TODO: End game if it's a hunter with the target item
 				// Otherwise teleport to random valid location
 				enqueueTeleportRandomAction(context, actor);
@@ -242,6 +260,11 @@ void matchCycle(MatchContext * context){
 			break;
 
 		case COMBAT_ACTION:
+			// Skip combat if there's no target
+			if(action->target == NULL)
+				break;
+
+			// General structure of a combat round
 			enqueueEnterCombatAction(context, actor, action->target);
 			enqueuePollDefenderAction(context, action->target);
 			enqueuePollAttackerCardAction(context, actor);
@@ -402,29 +425,13 @@ void printMatchAction(MatchAction * action){
 	printf("%s(", getMatchActionName(action->type));
 
 	switch(action->type){
-		// For these actions, print nothing inside the parenthesis, as the actions are either unimplemented or do not use any parameters
+		// For these actions, print nothing inside the parenthesis, as either printing their contents is unimplemented or they do not use any parameters
 		case DAMAGE_ACTION:
-		case POLL_DEFEND_ACTION:
-		case TELEPORT_ACTION:
-		case TELEPORT_RANDOM_ACTION:
-		case ENTER_COMBAT_ACTION:
 		case EXIT_COMBAT_ACTION:
-		case DEATH_CHECK_ACTION:
-		case COMBAT_ACTION:
-		case MOVE_ROLL_BONUS_ACTION:
-		case CATCH_ROLL_BONUS_ACTION:
-		case ESCAPE_ROLL_BONUS_ACTION:
-		case ATTACK_ROLL_BONUS_ACTION:
-		case DEFENSE_ROLL_BONUS_ACTION:
 		case REMOVE_RELIC_ACTION:
 		case ROLL_DICE_ACTION:
-		case EXECUTE_COMBAT_ACTION:
-			break;
-
 		case BEGIN_MATCH_ACTION:
-		case POLL_ATTACK_ACTION:
-		case POLL_COMBAT_CARD_ACTION:
-		case POLL_COMBAT_ACTION:
+		case EXECUTE_COMBAT_ACTION:
 		case DEFEND_ACTION:
 		case ESCAPE_ACTION:
 		case ATTACK_ACTION:
@@ -441,10 +448,28 @@ void printMatchAction(MatchAction * action){
 		case POLL_MOVE_ACTION:
 		case END_MOVE_ACTION:
 		case REST_ACTION:
+		case DEATH_CHECK_ACTION:
+		case TELEPORT_RANDOM_ACTION:
+		case POLL_DEFEND_ACTION:
+		case MOVE_ROLL_BONUS_ACTION:
+		case CATCH_ROLL_BONUS_ACTION:
+		case ESCAPE_ROLL_BONUS_ACTION:
+		case ATTACK_ROLL_BONUS_ACTION:
+		case DEFENSE_ROLL_BONUS_ACTION:
+		case POLL_COMBAT_ACTION:
+		case POLL_ATTACK_ACTION:
+		case POLL_COMBAT_CARD_ACTION:
 			printf("%s", action->actor->name);
 			break;
 
+		// Actions where one hunter targets another
+		case COMBAT_ACTION:
+		case ENTER_COMBAT_ACTION:
+			printf("%s, %s", action->actor->name, action->target ? action->target->name : NULL);
+			break;
+
 		// Actions with a special configuration of parameters
+		case TELEPORT_ACTION:
 		case MOVE_ACTION:
 		case MOVE_STEP_ACTION:
 			printf("%s, [%d, %d]", action->actor->name, action->x, action->y);
@@ -493,16 +518,23 @@ Hunter * getHunterAt(MatchContext * context, int x, int y){
 	return NULL;
 }
 
+uint8_t hunterAt(Hunter * hunter, int x, int y){
+	return (hunter->x == x) && (hunter->y == y);
+}
+
 void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
+	Hunter * opponent = hunter == context->attacker ? context->attacker : context->defender;
+
 	switch(card->type){
 		case MOVE_CARD:
 			hunter->turn_stats.mov += card->num;
 			break;
 
 		case MOVE_EXIT_CARD:
-			// enqueueTeleportAction();
-			//    --OR--
-			// enqueueEscapeCombatAction();
+			if(context->defender)
+				; // TODO: enqueueEscapeCombatAction();
+			else
+				enqueueTeleportRandomAction(context, hunter);
 			break;
 
 		case ATTACK_CARD:
@@ -512,7 +544,7 @@ void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
 			hunter->turn_stats.atk += hunter->base_stats.atk;
 
 		case ATTACK_COPY_CARD:
-			// TODO: figure out how to get the enemy hunter in combat
+			hunter->turn_stats.atk += opponent->base_stats.atk;
 			break;
 
 		default:
@@ -546,6 +578,25 @@ void rollDice(MatchContext * context){
 	context->dice_total2 = context->dice[2] + context->dice[3];
 }
 
+uint8_t postCombatAction(MatchContext * context, Hunter * attacker, Hunter * defender){
+	if(attacker == NULL)
+		attacker = context->characters[context->active_player];
+
+	// Don't post an action if we're not polling
+	if(context->polling == 0)
+		return 1;
+
+	// Check if we're polling for this type of action
+	if(
+			(context->action->type != POLL_TURN_ACTION)   && 
+			(context->action->type != POLL_COMBAT_ACTION)
+	  )
+		return 1;
+
+	enqueueCombatAction(context, attacker, defender);
+	return 0;
+}
+
 uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter * character, Card * card){
 	if(character == NULL)
 		character = context->characters[context->active_player];
@@ -569,9 +620,6 @@ uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter
 
 		case REST_ACTION:
 			enqueueRestAction(context, character);
-			break;
-
-		case ATTACK_ACTION:
 			break;
 
 		default:

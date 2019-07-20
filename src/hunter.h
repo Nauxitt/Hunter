@@ -229,6 +229,7 @@ typedef struct _MatchContext {
 
 Crate * getCrateAt(MatchContext * context, int x, int y);
 Hunter * getHunterAt(MatchContext * context, int x, int y);
+uint8_t hunterAt(Hunter * hunter, int x, int y);
 
 Statset * hunterStats(Hunter * h);
 Card * hunterPopCard(Hunter * h, int card_num);
@@ -246,6 +247,7 @@ uint8_t postMoveCardAction(MatchContext * context, Hunter * character, Card * ca
 uint8_t postMoveAction(MatchContext * context, Hunter * character, int x, int y);
 uint8_t postDefenderAction(MatchContext * context, enum MatchActionType type, Card * card);
 
+uint8_t postCombatAction(MatchContext * context, Hunter * attacker, Hunter * defender);
 uint8_t postAttackerCard(MatchContext * context, Card * card);
 void printMatchQueue(MatchContext * context);
 void printMatchAction(MatchAction * action);
