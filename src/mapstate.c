@@ -404,7 +404,6 @@ void mapOnTick(EventHandler * h){
 			case TELEPORT_ACTION:
 			case TELEPORT_RANDOM_ACTION:
 			case COMBAT_ACTION:
-			case ENTER_COMBAT_ACTION:
 			case EXIT_COMBAT_ACTION:
 			case EXECUTE_COMBAT_ACTION:
 			case DEATH_CHECK_ACTION:
@@ -435,6 +434,11 @@ void mapOnTick(EventHandler * h){
 				mapGiveRelic(action_hunter_entity, action->relic);
 				matchCycle(match);
 				return;
+
+			case ENTER_COMBAT_ACTION:
+				// mapEnterCombat();
+				matchCycle(match);
+				break;
 
 			case MOVE_STEP_ACTION:
 				mapMoveHunter(
@@ -684,6 +688,12 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 		state->statbox_view++;
 		if(state->statbox_view == STATBOX_VIEW_NONE + 1)
 			state->statbox_view = 0;
+	}
+
+	// Escape prints a debug message of the current match action
+	else if(e->key.keysym.scancode == SDL_SCANCODE_BACKSPACE){
+		printf("Backspace: ");
+		printMatchAction(match->action);
 	}
 
 	// Menubar arrow keys

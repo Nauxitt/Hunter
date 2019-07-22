@@ -36,6 +36,7 @@ void enqueueAttackRollBonusAction(MatchContext * context, Hunter * actor);
 void enqueueDefenseRollBonusAction(MatchContext * context, Hunter * actor);
 
 void enqueueCombatAction(MatchContext * context, Hunter * attacker, Hunter * defender);
+void enqueuePollMoveAction(MatchContext * context, Hunter * actor);
 void enqueuePollCombatAction(MatchContext * context, Hunter * actor);
 void enqueuePollDefenderAction(MatchContext * context, Hunter * actor);
 void enqueuePollAttackerCardAction(MatchContext * context, Hunter * actor);
