@@ -8,11 +8,23 @@
 #include "mapstate.h"
 #include "animations.h"
 #include "sprites.h"
+#include "draw.h"
+#include "entity.h"
+#include "menubar.h"
+#include "utils.h"
 
 extern Game game;
 extern MapState mapstate;
 extern MenubarState menubar;
 extern StatpanelState statpanel;
+
+int iso_x(MapState * state, int x, int y){
+	return state->camera_x + (x-y) * state->tile_w/2 + state->tile_w/2;
+};
+
+int iso_y(MapState * state, int x, int y){
+	return state->camera_y + (x+y) * state->tile_h/2 + state->tile_h/2;
+};
 
 MapStateMap * makeMap(int w, int h){
 	MapStateMap * ret = (MapStateMap*) malloc(sizeof(MapStateMap));
@@ -65,83 +77,6 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 	return mapstate;
 }
 
-void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest){
-	SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
-	SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 32);
-	// SDL_SetRenderDrawColor(game.renderer, 255-32, 255, 255, 32);
-	// active player background color ^
-	SDL_RenderFillRect(game.renderer, window_dest);
-	SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_NONE);
-	SDL_SetRenderDrawColor(game.renderer, 255, 255, 255, 255);
-	
-	// Panel inset border
-	SDL_Rect border = *window_dest;
-	border.x += 2; border.y += 2;
-	border.w -= 4; border.h -= 4;
-	SDL_RenderDrawRect(game.renderer, &border);
-
-	//Draw bar middle
-	SDL_Rect src;
-	getSpriteClip(&textures.statbox, 1,2+color, &src);
-	SDL_Rect dest = {window_dest->x, window_dest->y, window_dest->w, textures.statbox.h};
-	blit(textures.statbox.texture, &src, &dest);
-	
-	// Draw bar left
-	getSpriteClip(&textures.statbox, 0,2+color, &src);
-	dest.w = textures.statbox.w;
-	blit(textures.statbox.texture, &src, &dest);
-
-	// Draw bar right
-	getSpriteClip(&textures.statbox, 2,2+color, &src);
-	dest.x += window_dest->w - textures.statbox.w;
-	blit(textures.statbox.texture, &src, &dest);
-}
-
-void drawBigNumber(int x, int y, int n){
-	spritesheetBlit(&textures.statbox, n,0, x,y);
-}
-
-void drawCard(int x, int y, Card * card){
-	int sx, sy;
-
-	switch(card->type){
-		case NULL_CARD:
-
-		case MOVE_CARD:         
-		case MOVE_EXIT_CARD:    
-			sx = card->num;
-			sy = 0;
-			break;
-
-		case DEFENSE_ALL_CARD:  
-		case DEFENSE_DOUBLE_CARD:
-		case DEFENSE_CARD:      
-			sx = card->num;
-			sy = 1;
-			break;
-
-		case ATTACK_DOUBLE_CARD:
-		case ATTACK_COPY_CARD:  
-		case ATTACK_CARD:       
-			sx = card->num;
-			sy = 2;
-			break;
-
-		case EMPTY_TRAP_CARD:   
-		case STUN_TRAP_CARD:    
-		case DAMADE_TRAP_CARD:  
-		case LEG_DAMAGE_CARD:   
-			sx = 0;
-			sy = 3;
-			break;
-
-		case UNKNOWN_CARD:
-			break;
-	}
-
-	spritesheetBlit(&textures.cards, sx,sy, x,y);
-}
-
 void mapSetSelection(MapStateMap * map, int value){
 	for(int n=0; n < map->w*map->h; n++)
 		map->tiles[n].selected = value;
@@ -182,146 +117,32 @@ MapStateTile * getTileAtPx(MapState * state, float p_x, float p_y){
 	return getTile(state->map, tx, ty);
 }
 
-void entityOnDraw(EventHandler * h){
-	Entity * entity = Entity(h);
-	AnimationFrame * frame = entity->animation_frame;
-
-	if(frame == NULL)
-		frame = entity->animation_frame = entity->animation;
-
-	// Handle animation timing
-	if(frame){
-		uint32_t time = SDL_GetTicks();
-		
-		// If the entity has no animation timing data, create
-		// it and don't update to the next frame.
-		if(entity->last_frame == 0){
-			entity->last_frame = time;
-		}
-
-		// If it is time, update the frame, but only if there
-		// is a new frame to update to.
-		else if(time - entity->last_frame >= frame->duration){
-			if(entity->animation_frame->next)
-				entity->animation_frame = entity->animation_frame->next;
-			else if (entity->animation_loop){
-				frame = entity->animation_frame = entity->animation;
-			}
-			entity->last_frame = time;
-		}
-	}
-	
-	// Handle flips
-	uint8_t flip_v=0, flip_h=0;
-	flip_h = entity->flip_h;
-	flip_v = entity->flip_v;
-
-	if(frame){
-		flip_h ^= frame->flip_h;
-		flip_v ^= frame->flip_v;
-	}
-	
-	SDL_RendererFlip flip = SDL_FLIP_NONE;
-	if(flip_h) flip |= SDL_FLIP_HORIZONTAL;
-	if(flip_v) flip |= SDL_FLIP_VERTICAL;
-
-	// Handle source clipping
-	SDL_Rect * src = NULL;
-	if(frame)
-		src = &frame->clip;
-
-	// Rendering destination
-	int src_w = 1;
-	int src_h = 1;
-
-	if(src){
-		src_w = src->w;
-		src_h = src->h;
-	}
-	else {
-		SDL_QueryTexture(
-				entity->texture,
-				NULL, NULL,
-				&src_w, &src_h
-			);
-	}
-
-	SDL_Rect dest = {
-			0, 0, src_w*entity->scale_w, src_h*entity->scale_h
-		};
-
-	//    Map cell coordinates
-	dest.x = iso_x(entity->mapstate, entity->x, entity->y);
-	dest.y = iso_y(entity->mapstate, entity->x, entity->y);
-	
-	//    Entity sub-cell offset
-	// TODO: make sensitive to tile widths
-	dest.x += (entity->offset_x - entity->offset_y);
-	dest.y += (entity->offset_x + entity->offset_y)/2;
-
-	//    Frame center
-	if(frame){
-		dest.x -= frame->center_x * entity->scale_w;
-		dest.y -= frame->center_y * entity->scale_h;
-	}
-	else {
-		dest.x -= dest.w / 2;
-		dest.y -= dest.h;
-	}
-
-	dest.y += entity->offset_z;
-
-	// Render
-	SDL_RenderCopyEx(
-			game.renderer, entity->texture,
-			src, &dest,
-			0, NULL,  // Rotation not currently supported
-			flip
-		);
-}
-
-void entitySetAnimation(Entity * entity, AnimationFrame * animation){
-	if(entity->animation != animation){
-		entity->animation = animation;
-		entity->animation_frame = NULL;
-	}
-}
-
-void entitySetTile(Entity * e, int x, int y, int layer){
-	MapStateTile * old_tile = getTile(e->mapstate->map,x,y);
-
-	if(old_tile && old_tile->contents[layer] == e)
-		old_tile->contents[layer] = NULL;
-
-	e->x = x; e->y = y;
-	MapStateTile * tile = getTile(e->mapstate->map,x,y);
-	tile->contents[layer] = e;
-}
-
 void hunterSetTile(HunterEntity * e, int x, int y){
-	entitySetTile(Entity(e), x, y, TILE_LAYER_HUNTER);
+	tileEntitySetTile(TileEntity(e), x, y, TILE_LAYER_HUNTER);
 	e->hunter->x = x;
 	e->hunter->y = y;
 }
 
 void crateSetTile(CrateEntity * c, int x, int y){
-	entitySetTile(Entity(c), x, y, TILE_LAYER_CRATE);
+	tileEntitySetTile(TileEntity(c), x, y, TILE_LAYER_CRATE);
 	c->crate->x = x;
 	c->crate->y = y;
 }
 
-HunterEntity * initHunter(HunterEntity * hunter, MapState * state, SDL_Texture * texture){
+HunterEntity * initHunterEntity(HunterEntity * hunter, MapState * state, SDL_Texture * texture){
 	if(hunter == NULL)
 		hunter = HunterEntity(malloc(sizeof(HunterEntity)));
 	
 	Entity * e = Entity(hunter);
-	e->mapstate = state;
+	TileEntity * te = TileEntity(hunter);
+
+	te->mapstate = state;
 	e->texture = texture;
 	e->animation = (AnimationFrame*) &ANIM_HUNTER_STAND_S;
 	e->animation_loop = 1;
 	e->scale_w = 2;
 	e->scale_h = 2;
-	EventHandler(hunter)->onDraw = entityOnDraw;
+	EventHandler(hunter)->onDraw = tileEntityOnDraw;
 	return hunter;
 }
 
@@ -330,12 +151,13 @@ CrateEntity * initCrateEntity(CrateEntity * crate, MapState * state, SDL_Texture
 		crate = CrateEntity(calloc(sizeof(CrateEntity), 1));
 
 	Entity * e = Entity(crate);
-	e->mapstate = state;
+	TileEntity * te = TileEntity(crate);
+	te->mapstate = state;
 	e->texture = texture;
 	e->animation = NULL;
 	e->scale_w = 2;
 	e->scale_h = 2;
-	e->offset_z = state->tile_h / 2;
+	te->offset_z = state->tile_h / 2;
 
 	EventHandler(crate)->onDraw = crateOnDraw;
 	return crate;
@@ -343,7 +165,7 @@ CrateEntity * initCrateEntity(CrateEntity * crate, MapState * state, SDL_Texture
 
 void crateOnDraw(EventHandler * h){
 	if(CrateEntity(h)->crate->exists)
-		entityOnDraw(h);
+		tileEntityOnDraw(h);
 }
 
 
@@ -480,16 +302,6 @@ void mapOnTick(EventHandler * h){
 		menu_handler->onTick(menu_handler);
 }
 
-void prevStateOnDraw(EventHandler * h){
-	EventHandler * prev = EventHandler(GameState(h)->prevState);
-
-	if(prev == NULL)
-		return;
-
-	if(prev->onDraw)
-		prev->onDraw(prev);
-}
-
 void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed){
 	/*
 	   Pushes a new GameState on the stack, which redirects its draw events the the previous (MapState) state.  The new state's onTick event directs the hunter to the given target position, then pops the state upon completion.
@@ -521,52 +333,52 @@ void mapOnTickMoveHunter(EventHandler * h){
 	int target_x = action->target_x;
 	int target_y = action->target_y;
 	int speed = action->speed;
-	Entity * entity = action->entity;
+	TileEntity * entity = TileEntity(action->entity);
 
-	// Move Entity offset and cell position
+	// Move TileEntity offset and cell position
 	// Set running animation
 	
 	if(entity->x > target_x){
-		entity->direction = WEST; entity->flip_h = 1;
+		Entity(entity)->direction = WEST; Entity(entity)->flip_h = 1;
 
 		entity->offset_x -= speed;
 		if(entity->offset_x <= -state->tile_w/2)
 			entity->offset_x = 0, entity->x--;
 	}
 	else if(entity->x < target_x){
-		entity->direction = EAST; entity->flip_h = 1;
+		Entity(entity)->direction = EAST; Entity(entity)->flip_h = 1;
 
 		entity->offset_x += speed;
 		if(entity->offset_x >= state->tile_w/2)
 			entity->offset_x = 0, entity->x++;
 	}
 	else if(entity->y > target_y){
-		entity->direction = NORTH; entity->flip_h = 0;
+		Entity(entity)->direction = NORTH; Entity(entity)->flip_h = 0;
 
 		entity->offset_y -= speed;
 		if(entity->offset_y <= -state->tile_h)
 			entity->offset_y = 0, entity->y--;
 	}
 	else if(entity->y < target_y){
-		entity->direction = SOUTH; entity->flip_h = 0;
+		Entity(entity)->direction = SOUTH; Entity(entity)->flip_h = 0;
 
 		entity->offset_y += speed;
 		if(entity->offset_y >= state->tile_h)
 			entity->offset_y = 0, entity->y++;
 	}
 
-	switch(entity->direction){
+	switch(Entity(entity)->direction){
 		case NORTH:
 		case WEST:
 			entitySetAnimation(
-					entity, (AnimationFrame *) &ANIM_HUNTER_RUN_N
+					Entity(entity), (AnimationFrame *) &ANIM_HUNTER_RUN_N
 				);
 			break;
 
 		case SOUTH:
 		case EAST:
 			entitySetAnimation(
-					entity, (AnimationFrame *) &ANIM_HUNTER_RUN_S
+					Entity(entity), (AnimationFrame *) &ANIM_HUNTER_RUN_S
 				);
 			break;
 	}
@@ -613,9 +425,9 @@ void mapOnDrawGiveRelic(EventHandler * h){
 	
 	float drop_speed = 1.25;
 	int pause_duration = 120;
-	int x = iso_x(mapstate, Entity(hunter)->x, Entity(hunter)->y) - textures.items.w/2;
+	int x = iso_x(mapstate, TileEntity(hunter)->x, TileEntity(hunter)->y) - textures.items.w/2;
 	int y = duration * drop_speed;
-	int end_y = iso_y(mapstate, Entity(hunter)->x, Entity(hunter)->y) - 64 - textures.items.h;
+	int end_y = iso_y(mapstate, TileEntity(hunter)->x, TileEntity(hunter)->y) - 64 - textures.items.h;
 
 	if(y > end_y)
 		y = end_y;
@@ -738,7 +550,6 @@ void mapOnMouseDown(EventHandler * h, SDL_Event * e){
 		);
 
 	if(t){
-		//if(pollAction("poll_tile_select")){
 		if(match->action->type == POLL_MOVE_ACTION){
 			if((t->selected) && (t->val)){
 				postMoveAction(
@@ -749,14 +560,6 @@ void mapOnMouseDown(EventHandler * h, SDL_Event * e){
 		}
 	}
 }
-
-int iso_x(MapState * state, int x, int y){
-	return state->camera_x + (x-y) * state->tile_w/2 + state->tile_w/2;
-};
-
-int iso_y(MapState * state, int x, int y){
-	return state->camera_y + (x+y) * state->tile_h/2 + state->tile_h/2;
-};
 
 void mapOnDraw(EventHandler * h){
 	MapState * state = MapState(h);
@@ -803,7 +606,7 @@ void mapOnDraw(EventHandler * h){
 		MapStateTile * tile = getTile(map, x, y);
 
 		for(int e=0; e < TILE_ENTITY_LAYERS; e++){
-			Entity * entity = tile->contents[e];
+			TileEntity * entity = tile->contents[e];
 
 			if(entity == NULL)
 				continue;
@@ -866,181 +669,11 @@ void mapOnDraw(EventHandler * h){
 	}
 }
 
-void drawStatbox(Hunter * hunter, enum StatboxViews view, enum WindowColor color, int x, int y){
-	if(view == STATBOX_VIEW_NONE)
-		return;
-
-	// int panel_gutter = 4;
-	int panel_w = (game.w - 16*2 - 4*3) / 4;
-	
-	// Draw panel
-	SDL_Rect panel_rect = {x, y, panel_w, 160};
-	drawWindowPanel(color, &panel_rect);
-	
-	if(view == STATBOX_VIEW_STATS)
-		drawStatboxStats(hunter, x, y);
-	else if(view == STATBOX_VIEW_ITEMS)
-		drawStatboxItems(hunter, x, y);
-}
-
-void drawStatboxItems(Hunter * hunter, int x, int y){
-	int panel_w = (game.w - 16*2 - 4*3) / 4;
-	int element_margin = 18;
-	int element_gutter = (panel_w - 2*element_margin - 3*textures.items.w) / 2;
-
-	for(int r=0; r < INVENTORY_LIMIT; r++){
-		Relic * relic = hunter->inventory[r];
-		if(relic == NULL)
-			break;
-		
-		drawRelic(
-				relic, 
-				x + element_margin + (textures.items.w+element_gutter) * (r % 3),
-				y + 160 - element_margin + (textures.items.h + element_gutter) * (r/3 - 2)
-			);
-	}
-}
-
-void drawRelic(Relic * relic, int x, int y){
-	spritesheetBlit(&textures.items, relic->item_id,0, x, y);
-}
-
-void drawStatboxStats(Hunter * hunter, int x, int y){
-	Statset * stats = hunterStats(hunter);
-
-	int panel_w = (game.w - 16*2 - 4*3) / 4;
-	SDL_Rect panel_rect = {x, y, panel_w, 160};
-
-	int element_gutter = 8;
-	int element_margin = 18;
-
-	// Draw stat names
-	//    Mv. stat
-	SDL_Rect statname_src = {
-			0, textures.statbox.src_h,
-			textures.statbox.src_w * 2,     // takes up two tiles
-			textures.statbox.src_h
-		};
-
-	SDL_Rect statname_dest = {
-			panel_rect.x + element_margin,
-			panel_rect.y + (element_gutter + textures.statbox.h) * 2,
-			textures.statbox.w * 2,
-			textures.statbox.h
-		};
-
-	blit(textures.statbox.texture, &statname_src, &statname_dest);
-
-	//    Mv. +
-	SDL_Rect statval_src  = statname_src;
-	statval_src.x = textures.statbox.src_w * 8;
-	statval_src.w = textures.statbox.src_w;
-
-	SDL_Rect statval_dest = statname_dest;
-	statval_dest.y += textures.statbox.h + 2;
-	statval_dest.w = textures.statbox.w;
-	blit(textures.statbox.texture, &statval_src, &statval_dest);
-
-	//    Mv. #
-	statval_dest.x += textures.statbox.w;
-	statval_src.y = 0;
-	statval_src.x = stats->mov * textures.statbox.src_w;
-
-	drawBigNumber(statval_dest.x, statval_dest.y, stats->mov);
-
-	//    At. stat label
-	statname_src.x += textures.statbox.src_w * 2;
-	statname_dest.x += textures.statbox.w*2 + element_gutter;
-	blit(textures.statbox.texture, &statname_src, &statname_dest);
-
-	//    At. stat 10's digit
-	statval_dest.x = statname_dest.x;
-	if(stats->atk / 10){
-		statval_src.x = (stats->atk/10) * textures.statbox.src_w;
-		blit(textures.statbox.texture, &statval_src, &statval_dest);
-	}
-	//    At. stat 1's digit
-	statval_dest.x += textures.statbox.w;
-	drawBigNumber(statval_dest.x, statval_dest.y, stats->atk % 10);
-
-	//    Df. stat label
-	statname_dest.x += textures.statbox.w*2 + element_gutter;
-	blit(textures.statbox.texture, &statname_src, &statname_dest);
-
-	//    Df. stat 10's digit
-	statval_dest.x = statname_dest.x;
-	if(stats->def / 10){
-		drawBigNumber(statval_dest.x, statval_dest.y, stats->def / 10);
-	}
-	//    Df. stat 1's digit
-	statval_dest.x += textures.statbox.w;
-	drawBigNumber(statval_dest.x, statval_dest.y, stats->def % 10);
-	
-
-	// Draw player hand
-	int card_y = panel_rect.y + panel_rect.h - element_margin/2 - textures.cards.h;
-	
-	for(int c = hunterHandSize(hunter)-1; c >= 0; c--){
-		Card * card = hunter->hand[c];
-		int card_x = panel_rect.x + element_margin/2 + c * textures.cards.w/2;
-
-		drawCard(card_x, card_y, card);
-	}
-}
-
-void menuOnDraw(EventHandler * h){
-	MenubarState * menu = MenubarState(h);
-
-	// Render menubar background
-	SDL_Rect src = {0, 0, 1, 64};
-	SDL_Rect dest = {0, 0, game.w, 64};
-	
-	blit(textures.menu_gradient.texture, &src, &dest);
-	
-	// Render left icons
-	src.w  = 16; src.h  = 16;
-	dest.y = 64 - 32 - 8;
-	dest.w = 32; dest.h = 32;
-
-	for(int i=0; i<5; i++){
-		src.x = i * 16;
-		dest.x = i * 38 + 32;
-		spritesheetBlit(&textures.menu_icons, i,0, dest.x, dest.y);
-	}
-
-	// Draw deck icon
-	src.x = 5 * 16;
-	dest.x = game.w - 32 * 4;
-	spritesheetBlit(&textures.menu_icons, 5,0, dest.x, dest.y);
-
-	// Draw scroling text window
-	src.x = 0; src.y = 16;
-	src.w = 144;
-	src.h = 16;
-	dest.x = 5 * 38 + 32;
-	dest.w = 144*2;
-	blit(textures.menu_icons.texture, &src, &dest);
-
-	// Draw selector feather
-	if(pollAction("poll_turn_action")){
-		src.x = 0; src.y = 32;
-		src.w = 32; src.h = 32;
-		
-		if(menu->selector != -1){
-			dest.x = menu->selector * 38 + 32;
-			dest.w = 64; dest.h = 64;
-			blit(textures.menu_icons.texture, &src, &dest);
-		}
-	}
-}
-
-
 ActionQueueEntity * makeEntityAction(char * type){
 	ActionQueueEntity * ret = (ActionQueueEntity *) malloc(sizeof(ActionQueueEntity));
 	ActionQueue(ret)->type = type;
 	return ret;
 }
-
 
 ActionQueueEntity * pushEntityAction(Entity * entity, char * type){
 	ActionQueueEntity * new_action = makeEntityAction(type);
@@ -1049,4 +682,35 @@ ActionQueueEntity * pushEntityAction(Entity * entity, char * type){
 	new_action->entity = entity;
 	game.action = ActionQueue(new_action);
 	return new_action;
+}
+
+void tileEntityOnDraw(EventHandler * h){
+	/*
+	   Uses TileEntity isometric coordinates and reference to the MapState's camera data to set Entity's on-screen position.
+	*/
+
+	TileEntity * te = TileEntity(h);
+	Entity * e = Entity(h);
+
+	e->x = iso_x(te->mapstate, te->x, te->y);
+	e->y = iso_y(te->mapstate, te->x, te->y);
+	
+	//    Entity sub-cell offset
+	// TODO: make sensitive to tile widths
+	e->x += (te->offset_x - te->offset_y);
+	e->y += (te->offset_x + te->offset_y)/2;
+	e->y += te->offset_z;
+
+	entityOnDraw(h);
+}
+
+void tileEntitySetTile(TileEntity * e, int x, int y, int layer){
+	MapStateTile * old_tile = getTile(e->mapstate->map,x,y);
+
+	if(old_tile && old_tile->contents[layer] == e)
+		old_tile->contents[layer] = NULL;
+
+	e->x = x; e->y = y;
+	MapStateTile * tile = getTile(e->mapstate->map,x,y);
+	tile->contents[layer] = e;
 }

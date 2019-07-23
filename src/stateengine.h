@@ -93,4 +93,6 @@ void blit(SDL_Texture * texture, SDL_Rect * src, SDL_Rect * dest);
 void onTick(EventHandler * h);
 void onDraw(EventHandler * h);
 
+void prevStateOnDraw(EventHandler * h);
+
 #endif

@@ -9,12 +9,11 @@
 #include "hunter.h"
 #include <stdint.h>
 #include <stdio.h>
+#include "entity.h"
+#include "menubar.h"
+#include "draw.h"
 
 typedef struct _Entity Entity;
-
-enum Direction {
-	NORTH, EAST, SOUTH, WEST
-};
 
 #define TILE_LAYER_TILESELECTOR 0
 #define TILE_LAYER_TRAPS 1
@@ -24,20 +23,19 @@ enum Direction {
 #define TILE_LAYER_OVERHEADSELECTOR 6
 #define TILE_ENTITY_LAYERS 7
 
-enum WindowColor {
-	WINDOW_BLUE,
-	WINDOW_RED,
-	WINDOW_ORANGE,
-	WINDOW_GREEN
-};
-
+typedef struct _TileEntity {
+	Entity entity;
+	struct _MapState * mapstate;
+	int x, y;
+	int offset_x, offset_y, offset_z;
+} TileEntity;
 
 typedef struct _MapStateTile {
 	int val;        // 0 if void, otherwise floor
 	int selected;
 
 	int contents_len;
-	Entity * contents[TILE_ENTITY_LAYERS];
+	TileEntity * contents[TILE_ENTITY_LAYERS];
 
 	uint8_t tint_r, tint_g, tint_b;
 	int x, y;
@@ -50,69 +48,23 @@ typedef struct _MapStateMap {
 } MapStateMap;
 
 
-typedef struct _MenubarState {
-	GameState state;
-	SDL_Texture * background_texture;
-	SDL_Texture * buttons_texture;
-	MatchContext * match;
-	uint8_t selector;  // Index of the item being selected
-	uint8_t active;    // Whether the menubar is selecting anything
-} MenubarState;
-
-
 typedef struct _StatpanelState {
 	GameState state;
 } StatpanelState;
 
-
-typedef struct _AnimationFrame {
-	SDL_Rect clip;
-	int render_w, render_h;
-	int center_x, center_y;
-	uint8_t flip_h, flip_v;
-	uint32_t duration;
-	struct _AnimationFrame * next;
-} AnimationFrame;
-
-
-typedef struct _Entity {
-	EventHandler handler;
-	struct _MapState * mapstate;
-
-	enum Direction direction;
-	int x, y;
-	int offset_x, offset_y, offset_z;
-
-	SDL_Texture * texture;
-	AnimationFrame * animation;
-	AnimationFrame * animation_frame;
-	uint8_t animation_loop;
-	int flip_h, flip_v;
-	uint32_t last_frame;
-	float scale_w, scale_h;
-} Entity;
-
-
 typedef struct _HunterEntity {
-	Entity entity;
+	TileEntity entity;
 	Hunter * hunter;
 } HunterEntity;
 
 
 typedef struct _CrateEntity {
-	Entity entity;
+	TileEntity entity;
 	Crate * crate;
 } CrateEntity;
 
 
 #define HUNTERS_COUNT 4
-
-
-enum StatboxViews {
-	STATBOX_VIEW_STATS,
-	STATBOX_VIEW_ITEMS,
-	STATBOX_VIEW_NONE
-};
 
 
 typedef struct _MapState {
@@ -159,18 +111,11 @@ ActionQueueEntity * pushEntityAction(Entity * entity, char * type);
 ActionQueueEntity * makeEntityAction(char * type);
 
 // Convenience macros for casting to EventHandler subtype pointers
-#define MapState(M) ((MapState *) M)
-#define MenubarState(M) ((MenubarState *) M)
+#define MapState(S) ((MapState *) S)
 #define StatpanelState(S) ((StatepanelState *) S)
-#define Entity(E) ((Entity *) E)
+#define TileEntity(E) ((TileEntity *) E)
 #define HunterEntity(E) ((HunterEntity *) E)
 #define CrateEntity(E) ((CrateEntity *) E)
-
-/*
-   Macro which makes 2D for loops, where X and Y are names of integers that for_xy defines, and where W and H are the bounds iterated over.
-*/
-#define for_xy(X, Y, W, H) \
-	for(int X=0; X<(W); X++) for(int Y=0; Y<(H); Y++)
 
 MapState * makeMapState(MapState * mapstate, int map_w, int map_h);
 
@@ -189,20 +134,15 @@ int iso_y(MapState * state, int x, int y);
 */
 MapStateTile * getTileAtPx(MapState * state, float p_x, float p_y);
 
-void entityOnDraw(EventHandler * h);
-
-/*
-   Sets the Entity's animation, but only if the animation provided is different from the one already contained.  This allows the same animation to be set every frame without resetting the animation.
-*/
-void entitySetAnimation(Entity * entity, AnimationFrame * animation);
-void entitySetTile(Entity * e, int x, int y, int layer);
-
-HunterEntity * initHunter(HunterEntity * hunter, MapState * state, SDL_Texture * texture);
+void tileEntityOnDraw(EventHandler * h);
+HunterEntity * initHunterEntity(HunterEntity * hunter, MapState * state, SDL_Texture * texture);
 CrateEntity * initCrateEntity(CrateEntity * hunter, MapState * state, SDL_Texture * texture);
 void crateOnDraw(EventHandler * h);
 
-void hunterSetTile(HunterEntity * e, int x, int y);
+void tileEntitySetTile(TileEntity * e, int x, int y, int layer);
+void hunterSetTile(HunterEntity * h, int x, int y);
 void crateSetTile(CrateEntity * c, int x, int y);
+
 
 /*
    MapState event hooks
@@ -217,13 +157,5 @@ void mapOnDrawGiveRelic(EventHandler * h);
 
 void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed);
 void mapOnTickMoveHunter(EventHandler * h);
-
-void menuOnDraw(EventHandler * h);
-
-void drawRelic(Relic * relic, int x, int y);
-void drawStatboxItems(Hunter * hunter, int x, int y);
-void drawStatbox(Hunter * hunter, enum StatboxViews view, enum WindowColor color, int x, int y);
-void drawStatboxStats(Hunter * hunter, int x, int y);
-void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest);
 
 #endif
