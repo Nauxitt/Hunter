@@ -175,3 +175,13 @@ void nextAction(){
 	game.action = game.action->next;
 	free(pop);
 }
+
+void prevStateOnDraw(EventHandler * h){
+	EventHandler * prev = EventHandler(GameState(h)->prevState);
+
+	if(prev == NULL)
+		return;
+
+	if(prev->onDraw)
+		prev->onDraw(prev);
+}

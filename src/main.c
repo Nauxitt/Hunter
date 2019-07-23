@@ -156,7 +156,7 @@ int main(){
 	}
 
 	for(int n=0; n < 4; n++){
-		initHunter(&mapstate->hunters[n], mapstate, textures.daniel.texture);
+		initHunterEntity(&mapstate->hunters[n], mapstate, textures.daniel.texture);
 		mapstate->hunters[n].hunter = &hunters[n];
 		hunterSetTile(&mapstate->hunters[n], hunters[n].x, hunters[n].y);
 	}
