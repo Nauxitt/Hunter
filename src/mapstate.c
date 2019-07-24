@@ -6,6 +6,7 @@
 
 #include "stateengine.h"
 #include "mapstate.h"
+#include "combatstate.h"
 #include "animations.h"
 #include "sprites.h"
 #include "draw.h"
@@ -258,8 +259,7 @@ void mapOnTick(EventHandler * h){
 				return;
 
 			case ENTER_COMBAT_ACTION:
-				// mapEnterCombat();
-				matchCycle(match);
+				mapEnterCombat(state);
 				break;
 
 			case MOVE_STEP_ACTION:
@@ -786,4 +786,12 @@ void tileEntitySetTile(TileEntity * e, int x, int y, int layer){
 	e->x = x; e->y = y;
 	MapStateTile * tile = getTile(e->mapstate->map,x,y);
 	tile->contents[layer] = e;
+}
+
+void mapEnterCombat(MapState * state){
+	CombatState * combat = makeCombatState(NULL, state->match);
+	combat->menubar = state->menubar;
+	combat->menubar->selector = -1;
+	matchCycle(state->match);
+	gamePushState(GameState(combat));
 }

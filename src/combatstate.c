@@ -13,28 +13,16 @@ CombatState * makeCombatState(CombatState * state, MatchContext * match){
 	e->onTick = combatOnTick;
 	e->onDraw = combatOnDraw;
 	e->onKeyUp = combatOnKeyUp;
-
+	
 	return state;
 }
 
 void combatOnEnter(EventHandler * h){
 	CombatState * state = CombatState(h);
-	
-	Entity(state->attacker_entity)->x = 0;
-	Entity(state->attacker_entity)->y = 0;
-	
-	Entity(state->defender_entity)->x = 0;
-	Entity(state->defender_entity)->y = 0;
 }
 
 void combatOnExit(EventHandler * h){
 	CombatState * state = CombatState(h);
-	
-	Entity(state->attacker_entity)->x = state->attacker_entity->hunter->x;
-	Entity(state->attacker_entity)->y = state->attacker_entity->hunter->y;
-	
-	Entity(state->defender_entity)->x = state->defender_entity->hunter->x;
-	Entity(state->defender_entity)->y = state->defender_entity->hunter->y;
 }
 
 void combatOnTick(EventHandler * h){
@@ -98,12 +86,36 @@ void combatOnTick(EventHandler * h){
 	}
 }
 
-void combatOnKeyUp(EventHandler * h, SDL_Event * e){
-	// CombatState * state = CombatState(h);
-	// MatchContext * match = state->match;
+void combatOnDraw(EventHandler * h){
+	CombatState * state = CombatState(h);
+	MatchContext * match = state->match;
+
+	int panel_gutter = 4;
+	int panel_w = (game.w - 16*2 - 4*3) / 4;
+
+	drawStatbox(
+			match->attacker,
+			(enum StatboxViews) 0,
+			(enum WindowColor) 0,
+			16,
+			game.h-160-panel_gutter
+		);
+
+	drawStatbox(
+			match->defender,
+			(enum StatboxViews) 0,
+			(enum WindowColor) 0,
+			16 + (panel_w+panel_gutter) * 3,
+			game.h-160-panel_gutter
+		);
+
+	// Forward event to menubar
+	EventHandler * menu_handler = EventHandler(state->menubar);
+	if(menu_handler && menu_handler->onDraw)
+		menu_handler->onDraw(menu_handler);
 }
 
-void combatOnDraw(EventHandler * h){
+void combatOnKeyUp(EventHandler * h, SDL_Event * e){
 	// CombatState * state = CombatState(h);
 	// MatchContext * match = state->match;
 }

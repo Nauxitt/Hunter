@@ -9,11 +9,13 @@
 
 #include "stateengine.h"
 #include "mapstate.h"
+#include "menubar.h"
 
 typedef struct _CombatState {
 	GameState state;
 
 	MatchContext * match;
+	MenubarState * menubar;
 	HunterEntity * attacker_entity;
 	HunterEntity * defender_entity;
 } CombatState;

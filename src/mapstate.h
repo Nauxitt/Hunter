@@ -154,6 +154,7 @@ void mapOnDraw(EventHandler * h);
 
 void mapGiveRelic(HunterEntity * hunter, Relic * relic);
 void mapOnDrawGiveRelic(EventHandler * h);
+void mapEnterCombat(MapState * state);
 
 void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed);
 void mapOnTickMoveHunter(EventHandler * h);
