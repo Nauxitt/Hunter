@@ -786,9 +786,24 @@ void tileEntitySetTile(TileEntity * e, int x, int y, int layer){
 }
 
 void mapEnterCombat(MapState * state){
-	CombatState * combat = makeCombatState(NULL, state->match);
+	MatchContext * match = state->match;
+	matchCycle(match);
+
+	CombatState * combat = makeCombatState(NULL, match);
 	combat->menubar = state->menubar;
 	combat->menubar->selector = -1;
-	matchCycle(state->match);
+
+	for(int n = 0; n < 4; n++)
+		if(state->hunters[n].hunter == match->attacker){
+			combat->attacker_entity = &state->hunters[n];
+			break;
+		}
+
+	for(int n = 0; n < 4; n++)
+		if(state->hunters[n].hunter == match->defender){
+			combat->defender_entity = &state->hunters[n];
+			break;
+		}
+
 	gamePushState(GameState(combat));
 }

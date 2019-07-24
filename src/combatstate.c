@@ -18,11 +18,11 @@ CombatState * makeCombatState(CombatState * state, MatchContext * match){
 }
 
 void combatOnEnter(EventHandler * h){
-	CombatState * state = CombatState(h);
+	// CombatState * state = CombatState(h);
 }
 
 void combatOnExit(EventHandler * h){
-	CombatState * state = CombatState(h);
+	// CombatState * state = CombatState(h);
 }
 
 void combatOnTick(EventHandler * h){
@@ -116,6 +116,35 @@ void combatOnDraw(EventHandler * h){
 }
 
 void combatOnKeyUp(EventHandler * h, SDL_Event * e){
-	// CombatState * state = CombatState(h);
-	// MatchContext * match = state->match;
+	CombatState * state = CombatState(h);
+	MatchContext * match = state->match;
+
+	// Escape prints a debug message of the current match action
+	if(e->key.keysym.scancode == SDL_SCANCODE_BACKSPACE){
+		printf("Backspace: ");
+		printMatchAction(match->action);
+	}
+
+	if(match->action->type == POLL_DEFEND_ACTION){
+		switch(e->key.keysym.scancode){
+			case SDL_SCANCODE_LEFT:
+				state->selector--;
+				if(state->selector < 0)
+					state->selector = 3;
+				break;
+
+			case SDL_SCANCODE_RIGHT:
+				state->selector++;
+				if(state->selector >= 4)
+					state->selector = 0;
+				break;
+
+			case SDL_SCANCODE_RETURN:
+				state->selector = 0;
+				break;
+
+			default:
+				break;
+		}
+	}
 }

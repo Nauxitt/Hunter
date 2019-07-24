@@ -18,6 +18,8 @@ typedef struct _CombatState {
 	MenubarState * menubar;
 	HunterEntity * attacker_entity;
 	HunterEntity * defender_entity;
+
+	int selector;
 } CombatState;
 
 #define CombatState(ptr) ((CombatState*) ptr)
