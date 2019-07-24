@@ -435,6 +435,10 @@ void mapOnDrawGiveRelic(EventHandler * h){
 		y = end_y;
 
 	onDraw(EventHandler(mapstate));
+
+	SDL_Rect clip = {0, 64, game.w, game.h-64};
+	SDL_RenderSetClipRect(game.renderer, &clip);
+
 	drawRelic(relic, x, y);
 
 	if(duration >= duration/drop_speed + pause_duration){
@@ -443,6 +447,8 @@ void mapOnDrawGiveRelic(EventHandler * h){
 		free(action);
 		free(giveState);
 	}
+
+	SDL_RenderSetClipRect(game.renderer, NULL);
 }
 
 void mapOnKeyUp(EventHandler * h, SDL_Event * e){
