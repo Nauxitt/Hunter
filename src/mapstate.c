@@ -44,12 +44,15 @@ MapStateMap * makeMap(int w, int h){
 	return ret;
 }
 
-MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
+MapState * makeMapState(MapState * mapstate, MatchContext * match){
 	if(mapstate == NULL)
 		mapstate = MapState(calloc(sizeof(MapState), 1));
 
-	mapstate->map = makeMap(map_w, map_h);
+	mapstate->match = match;
+
+	mapstate->map = makeMap(match->map_w, match->map_h);
 	mapstate->menubar = MenubarState(calloc(sizeof(MenubarState), 1));
+	mapstate->menubar->match = match;
 
 	mapstate->tile_w = 64;
 	mapstate->tile_h = 32;
@@ -62,7 +65,6 @@ MapState * makeMapState(MapState * mapstate, int map_w, int map_h){
 	mapstate->camera_y = 125;
 
 	// Load some textures
-	// TODO: move texture loading to its own file
 	mapstate->tiles_texture = textures.tiles.texture;
 	textures.menu_gradient.texture = textures.menu_gradient.texture;
 	textures.menu_icons.texture = textures.menu_icons.texture;
@@ -720,11 +722,6 @@ void mapOnDraw(EventHandler * h){
 	EventHandler * menu_handler = EventHandler(state->menubar);
 	if(menu_handler && menu_handler->onDraw)
 		menu_handler->onDraw(menu_handler);
-
-	// Draw deck card count
-	// TODO: move this into menubar's draw handler
-	drawBigNumber(game.w - 16*6, 32-2, match->deck_len / 10);
-	drawBigNumber(game.w - 16*5, 32-2, match->deck_len % 10);
 
 	// Draw stat windows, character stats
 	int panel_gutter = 4;
