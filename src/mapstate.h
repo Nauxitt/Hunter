@@ -117,7 +117,7 @@ ActionQueueEntity * makeEntityAction(char * type);
 #define HunterEntity(E) ((HunterEntity *) E)
 #define CrateEntity(E) ((CrateEntity *) E)
 
-MapState * makeMapState(MapState * mapstate, int map_w, int map_h);
+MapState * makeMapState(MapState * mapstate, MatchContext * match);
 
 MapStateMap * makeMap(int w, int h);
 void freeMap(MapStateMap * map);

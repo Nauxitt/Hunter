@@ -148,9 +148,11 @@ int main(){
 		.map = map
 	};
 
+	initMatch(&context);
+
 	// Make mapstate
 
-	MapState * mapstate = makeMapState(NULL, w, h);
+	MapState * mapstate = makeMapState(NULL, &context);
 	for(int n=0; n < w*h; n++){
 		mapstate->map->tiles[n].val = map[n].exists;
 	}
@@ -171,8 +173,6 @@ int main(){
 	crateSetTile(&crate_entities[0], crates[0].x, crates[0].y);
 	crateSetTile(&crate_entities[1], crates[1].x, crates[1].y);
 	
-	mapstate->match = &context;
-	initMatch(&context);
 
 	gamePushState(GameState(mapstate));
 	gameMainLoop();

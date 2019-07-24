@@ -2,9 +2,11 @@
 #include "stateengine.h"
 #include "hunter.h"
 #include "sprites.h"
+#include "draw.h"
 
 void menuOnDraw(EventHandler * h){
 	MenubarState * menu = MenubarState(h);
+	MatchContext * match = menu->match;
 
 	// Render menubar background
 	SDL_Rect src = {0, 0, 1, 64};
@@ -47,4 +49,9 @@ void menuOnDraw(EventHandler * h){
 			blit(textures.menu_icons.texture, &src, &dest);
 		}
 	}
+
+	// Draw deck card count
+	// TODO: move this into menubar's draw handler
+	drawBigNumber(game.w - 16*6, 32-2, match->deck_len / 10);
+	drawBigNumber(game.w - 16*5, 32-2, match->deck_len % 10);
 }
