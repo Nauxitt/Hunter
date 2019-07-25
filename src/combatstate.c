@@ -90,6 +90,9 @@ void combatOnDraw(EventHandler * h){
 	CombatState * state = CombatState(h);
 	MatchContext * match = state->match;
 
+	onDraw(EventHandler(&state->attacker_entity));
+	onDraw(EventHandler(&state->defender_entity));
+
 	int panel_gutter = 4;
 	int panel_w = (game.w - 16*2 - 4*3) / 4;
 

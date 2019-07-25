@@ -761,9 +761,15 @@ void tileEntityOnDraw(EventHandler * h){
 
 	TileEntity * te = TileEntity(h);
 	Entity * e = Entity(h);
-
-	e->x = iso_x(te->mapstate, te->x, te->y);
-	e->y = iso_y(te->mapstate, te->x, te->y);
+	
+	if(te->mapstate == NULL){
+		e->x = te->x - te->y;
+		e->y = (te->x + te->y)/2;
+	}
+	else {
+		e->x = iso_x(te->mapstate, te->x, te->y);
+		e->y = iso_y(te->mapstate, te->x, te->y);
+	}
 	
 	//    Entity sub-cell offset
 	// TODO: make sensitive to tile widths
@@ -792,16 +798,22 @@ void mapEnterCombat(MapState * state){
 	CombatState * combat = makeCombatState(NULL, match);
 	combat->menubar = state->menubar;
 	combat->menubar->selector = -1;
-
+	
 	for(int n = 0; n < 4; n++)
 		if(state->hunters[n].hunter == match->attacker){
-			combat->attacker_entity = &state->hunters[n];
+			HunterEntity * hunter = &state->hunters[n];
+			HunterEntity * dest = &combat->attacker_entity;
+			memcpy(dest, hunter, sizeof(HunterEntity));
+			EventHandler(dest)->onDraw = entityOnDraw;
 			break;
 		}
 
 	for(int n = 0; n < 4; n++)
 		if(state->hunters[n].hunter == match->defender){
-			combat->defender_entity = &state->hunters[n];
+			HunterEntity * hunter = &state->hunters[n];
+			HunterEntity * dest = &combat->defender_entity;
+			memcpy(dest, hunter, sizeof(HunterEntity));
+			EventHandler(dest)->onDraw = entityOnDraw;
 			break;
 		}
 

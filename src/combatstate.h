@@ -16,8 +16,8 @@ typedef struct _CombatState {
 
 	MatchContext * match;
 	MenubarState * menubar;
-	HunterEntity * attacker_entity;
-	HunterEntity * defender_entity;
+	HunterEntity attacker_entity;
+	HunterEntity defender_entity;
 
 	int selector;
 } CombatState;
