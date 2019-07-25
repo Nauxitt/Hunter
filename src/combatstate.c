@@ -168,6 +168,12 @@ void combatOnKeyUp(EventHandler * h, SDL_Event * e){
 
 			case SDL_SCANCODE_RETURN:
 				state->selector = 0;
+				switch(state->selector){
+					case 0: postDefenderAction(match, ATTACK_ACTION, NULL); break;
+					case 1: postDefenderAction(match, DEFEND_ACTION, NULL); break;
+					case 2: postDefenderAction(match, ESCAPE_ACTION, NULL); break;
+					case 3: state->selector = 3; break;
+				}
 				break;
 
 			default:

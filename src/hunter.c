@@ -597,6 +597,41 @@ uint8_t postCombatAction(MatchContext * context, Hunter * attacker, Hunter * def
 	return 0;
 }
 
+uint8_t postDefenderAction(MatchContext * context, enum MatchActionType type, Card * card){
+	if(context->polling == 0)
+		return 1;
+
+	if(context->action->type != POLL_DEFEND_ACTION)
+		return 1;
+	
+	MatchAction * new = (MatchAction*) calloc(sizeof(MatchAction), 1);
+
+	switch(type){
+		case SURRENDER_ACTION:
+			if(card != NULL)
+				return 1;
+		case ATTACK_ACTION:
+		case DEFEND_ACTION:
+		case ESCAPE_ACTION:
+			break;
+
+		default:
+			free(new);
+			return 1;
+	}
+	new->type = type;
+	new->actor = context->defender;
+	new->card = card;
+
+	context->defender_action = new;
+
+	context->polling = 0;
+	MatchAction * a = context->action;
+	context->action = a->next;
+	free(a);
+	return 0;
+}
+
 uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter * character, Card * card){
 	if(character == NULL)
 		character = context->characters[context->active_player];
