@@ -6,6 +6,7 @@
 #define __stateengine_h
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 typedef struct _Game Game;
 typedef struct _EventHandler EventHandler;
@@ -25,6 +26,7 @@ struct _Game {
 	
 	SDL_Window   * window;
 	SDL_Renderer * renderer;
+	TTF_Font * font;
 };
 
 

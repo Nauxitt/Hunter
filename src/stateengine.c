@@ -1,12 +1,21 @@
 #include "stateengine.h"
 #include <stdlib.h>
+#include <SDL2/SDL_ttf.h>
 #include <time.h>
 
 int initGame(){
 	// Initialize random numbers
 	srand(time(NULL));
-	
-	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+
+	if(TTF_Init() != 0)
+		return 1;
+
+	if((game.font = TTF_OpenFont("resources/Ubuntu-M.ttf", 24)) == NULL){
+		printf("Could not load font.\n");
+		return 1;
+	}
+
+	if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
 		return 1;
 
 	// TODO: allow different window sizes

@@ -1,5 +1,6 @@
 #include "combatstate.h"
 #include "hunter.h"
+#include <SDL2/SDL_ttf.h>
 
 CombatState * makeCombatState(CombatState * state, MatchContext * match){
 	if(state == NULL)
@@ -111,6 +112,29 @@ void combatOnDraw(EventHandler * h){
 			16 + (panel_w+panel_gutter) * 3,
 			game.h-160-panel_gutter
 		);
+
+	if(match->action->type == POLL_DEFEND_ACTION){
+		SDL_Color white = {255, 255, 255};
+
+		char * actionName;
+		switch(state->selector){
+			case 0: actionName = "Defender Action:  Attack";    break;
+			case 1: actionName = "Defender Action:  Defend";    break;
+			case 2: actionName = "Defender Action:  Run";       break;
+			case 3: actionName = "Defender Action:  Surrender"; break;
+		}
+
+		SDL_Surface * surfaceMessage = TTF_RenderText_Solid(game.font, actionName, white);
+		SDL_Texture * messageTexture = SDL_CreateTextureFromSurface(game.renderer, surfaceMessage);
+		SDL_Rect dest = {100, 100, 0, 0};
+		SDL_QueryTexture(
+				messageTexture,
+				NULL, NULL,
+				&dest.w, &dest.h
+			);
+
+		SDL_RenderCopy(game.renderer, messageTexture, NULL, &dest);
+	}
 
 	// Forward event to menubar
 	EventHandler * menu_handler = EventHandler(state->menubar);
