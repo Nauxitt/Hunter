@@ -49,10 +49,12 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 		mapstate = MapState(calloc(sizeof(MapState), 1));
 
 	mapstate->match = match;
-
+	
+	// TODO: move menubar initialization into menubar.c
 	mapstate->map = makeMap(match->map_w, match->map_h);
 	mapstate->menubar = MenubarState(calloc(sizeof(MenubarState), 1));
 	mapstate->menubar->match = match;
+	EventHandler(mapstate->menubar)->type = "MenubarState";
 
 	mapstate->tile_w = 64;
 	mapstate->tile_h = 32;
@@ -69,6 +71,7 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 	textures.menu_gradient.texture = textures.menu_gradient.texture;
 	textures.menu_icons.texture = textures.menu_icons.texture;
 
+	EventHandler(mapstate)->type = "MapState";
 	EventHandler(mapstate)->onTick = mapOnTick;
 	EventHandler(mapstate)->onMouseDown = mapOnMouseDown;
 	EventHandler(mapstate)->onDraw = mapOnDraw;
@@ -145,6 +148,7 @@ HunterEntity * initHunterEntity(HunterEntity * hunter, MapState * state, SDL_Tex
 	e->animation_loop = 1;
 	e->scale_w = 2;
 	e->scale_h = 2;
+	EventHandler(hunter)->type = "HunterEntity";
 	EventHandler(hunter)->onDraw = tileEntityOnDraw;
 	return hunter;
 }
@@ -162,6 +166,7 @@ CrateEntity * initCrateEntity(CrateEntity * crate, MapState * state, SDL_Texture
 	e->scale_h = 2;
 	te->offset_z = state->tile_h / 2;
 
+	EventHandler(crate)->type = "CrateEntity";
 	EventHandler(crate)->onDraw = crateOnDraw;
 	return crate;
 }
@@ -365,6 +370,7 @@ void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int sp
 	action->target_y = y;
 	action->speed = 6;
 
+	EventHandler(moveState)->type = "MapState.mapMoveHunter";
 	EventHandler(moveState)->data = action;
 	EventHandler(moveState)->onDraw = prevStateOnDraw;
 	EventHandler(moveState)->onTick = mapOnTickMoveHunter;
@@ -459,6 +465,7 @@ void mapGiveRelic(HunterEntity * hunter, Relic * relic){
 	action->relic = relic;
 	action->entity = Entity(hunter);
 
+	EventHandler(giveState)->type = "MapState.mapGiveRelic";
 	EventHandler(giveState)->data = action;
 	EventHandler(giveState)->onDraw = mapOnDrawGiveRelic;
 }
@@ -482,6 +489,10 @@ void mapOnDrawGiveRelic(EventHandler * h){
 		y = end_y;
 
 	onDraw(EventHandler(mapstate));
+
+	SDL_Rect clip = {0, 64, game.w, game.h-64};
+	SDL_RenderSetClipRect(game.renderer, &clip);
+
 	drawRelic(relic, x, y);
 
 	if(duration >= duration/drop_speed + pause_duration){
@@ -490,6 +501,8 @@ void mapOnDrawGiveRelic(EventHandler * h){
 		free(action);
 		free(giveState);
 	}
+
+	SDL_RenderSetClipRect(game.renderer, NULL);
 }
 
 void mapOnKeyUp(EventHandler * h, SDL_Event * e){

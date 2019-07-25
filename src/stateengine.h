@@ -35,6 +35,7 @@ struct _Game {
 */
 struct _EventHandler {
 	void* data;  // user-defined convenience pointer. Allows an event handler or any struct in which one is an initial member to be cast into any pointer type
+	char * type;  // A string which can be used for simple type-checking or debugging purposes
 	
 	// Triggered by gamePushState and gamePopState
 	void (*onEnter)     (EventHandler * handler);
