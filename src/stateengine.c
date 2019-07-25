@@ -37,11 +37,15 @@ int initGame(){
 }
 
 GameState * makeGameState(){
-	return (GameState *) calloc(sizeof(GameState), 1);
+	GameState * ret = (GameState *) calloc(sizeof(GameState), 1);
+	EventHandler(ret)->type = "GameState";
+	return ret;
 }
 
 EventHandler * makeEventHandler(){
-	return (EventHandler *) calloc(sizeof(EventHandler), 1);
+	EventHandler * ret = (EventHandler *) calloc(sizeof(EventHandler), 1);
+	ret->type = "EventHandler";
+	return ret;
 }
 
 GameState * gamePushState(GameState * state){
