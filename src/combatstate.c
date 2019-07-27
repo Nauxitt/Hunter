@@ -1,6 +1,8 @@
-#include "combatstate.h"
-#include "hunter.h"
 #include <SDL2/SDL_ttf.h>
+
+#include "hunter.h"
+#include "combatstate.h"
+#include "handstate.h"
 
 CombatState * makeCombatState(CombatState * state, MatchContext * match){
 	if(state == NULL)
@@ -19,7 +21,8 @@ CombatState * makeCombatState(CombatState * state, MatchContext * match){
 }
 
 void combatOnEnter(EventHandler * h){
-	// CombatState * state = CombatState(h);
+	CombatState * state = CombatState(h);
+	state->menubar->active = 0;
 }
 
 void combatOnExit(EventHandler * h){
@@ -35,11 +38,26 @@ void combatOnTick(EventHandler * h){
 		MatchAction * action = match->action;
 
 		switch(action->type){
-			case POLL_ATTACK_ACTION:
 			case POLL_DEFEND_ACTION:
 			case POLL_COMBAT_CARD_ACTION:
 			case POLL_COMBAT_ACTION:
 				breaker = 0;
+				matchCycle(match);
+				break;
+
+			case POLL_ATTACK_ACTION:
+				if(state->card_selected == NULL){
+					breaker = 0;
+					HandState * handState = makeHandState(NULL, action->actor, 32, 72);
+					handState->card_target = &state->card_selected;
+					gamePushState(handState);
+					return;
+				}
+				else {
+					postAttackerCard(match, state->card_selected);
+				}
+				matchCycle(match);
+				break;
 
 			case ENTER_COMBAT_ACTION:
 			case DAMAGE_ACTION:
@@ -81,7 +99,6 @@ void combatOnTick(EventHandler * h){
 
 			case EXIT_COMBAT_ACTION:
 				gamePopState();
-				onTick(EventHandler(game.state));
 				return;
 		}
 	}

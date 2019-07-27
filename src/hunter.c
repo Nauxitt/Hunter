@@ -613,6 +613,21 @@ uint8_t postCombatAction(MatchContext * context, Hunter * attacker, Hunter * def
 	return 0;
 }
 
+uint8_t postAttackerCard(MatchContext * context, Card * card){
+	if(context->polling == 0)
+		return 1;
+
+	if(context->action->type != POLL_ATTACK_ACTION)
+		return 1;
+	
+	context->attacker_card = card;
+	context->polling = 0;
+	MatchAction * a = context->action;
+	context->action = a->next;
+	free(a);
+	return 0;
+}
+
 uint8_t postDefenderAction(MatchContext * context, enum MatchActionType type, Card * card){
 	if(context->polling == 0)
 		return 1;

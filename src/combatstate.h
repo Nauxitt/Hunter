@@ -20,6 +20,7 @@ typedef struct _CombatState {
 	HunterEntity defender_entity;
 
 	int selector;
+	Card * card_selected;
 } CombatState;
 
 #define CombatState(ptr) ((CombatState*) ptr)
