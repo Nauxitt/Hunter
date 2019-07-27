@@ -4,6 +4,38 @@
 #include "sprites.h"
 #include "draw.h"
 
+MenubarState * initMenu(MenubarState * state, MatchContext * match){
+	if(state == NULL)
+		state = MenubarState(calloc(sizeof(MenubarState), 1));
+
+	state->match = match;
+
+	EventHandler(state)->type = "MenubarState";
+	EventHandler(state)->onDraw = menuOnDraw;
+	EventHandler(state)->onKeyUp = menuOnKeyUp;
+
+	return state;
+}
+
+void menuOnKeyUp(EventHandler * h, SDL_Event * e){
+	MenubarState * state = MenubarState(h);
+
+	switch(e->key.keysym.scancode){
+		case SDL_SCANCODE_LEFT:
+			if(--state->selector < 0)
+				state->selector = 4;
+			break;
+
+		case SDL_SCANCODE_RIGHT:
+			if(++state->selector >= 5)
+				state->selector = 0;
+			break;
+
+		default:
+			break;
+	}
+}
+
 void menuOnDraw(EventHandler * h){
 	MenubarState * menu = MenubarState(h);
 	MatchContext * match = menu->match;

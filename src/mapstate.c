@@ -48,13 +48,11 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 	if(mapstate == NULL)
 		mapstate = MapState(calloc(sizeof(MapState), 1));
 
+	mapstate->menubar = initMenu(NULL, match);
 	mapstate->match = match;
 	
 	// TODO: move menubar initialization into menubar.c
 	mapstate->map = makeMap(match->map_w, match->map_h);
-	mapstate->menubar = MenubarState(calloc(sizeof(MenubarState), 1));
-	mapstate->menubar->match = match;
-	EventHandler(mapstate->menubar)->type = "MenubarState";
 
 	mapstate->tile_w = 64;
 	mapstate->tile_h = 32;
@@ -68,16 +66,12 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 
 	// Load some textures
 	mapstate->tiles_texture = textures.tiles.texture;
-	textures.menu_gradient.texture = textures.menu_gradient.texture;
-	textures.menu_icons.texture = textures.menu_icons.texture;
 
 	EventHandler(mapstate)->type = "MapState";
 	EventHandler(mapstate)->onTick = mapOnTick;
 	EventHandler(mapstate)->onMouseDown = mapOnMouseDown;
 	EventHandler(mapstate)->onDraw = mapOnDraw;
 	EventHandler(mapstate)->onKeyUp = mapOnKeyUp;
-
-	EventHandler(mapstate->menubar)->onDraw = menuOnDraw;
 
 	pushAction("poll_turn_action");
 	return mapstate;
@@ -483,15 +477,8 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 		if(pollAction("poll_turn_action")){
 			switch(e->key.keysym.scancode){
 				case SDL_SCANCODE_LEFT:
-					state->menubar->selector--;
-					if(state->menubar->selector == -1)
-						state->menubar->selector = 4;
-					break;
-
 				case SDL_SCANCODE_RIGHT:
-					state->menubar->selector++;
-					if(state->menubar->selector >= 5)
-						state->menubar->selector = 0;
+					onKeyUp(state->menubar, e);
 					break;
 
 				case SDL_SCANCODE_SPACE:

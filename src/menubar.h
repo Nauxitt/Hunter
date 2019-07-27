@@ -9,12 +9,14 @@ typedef struct _MenubarState {
 	SDL_Texture * background_texture;
 	SDL_Texture * buttons_texture;
 	MatchContext * match;
-	uint8_t selector;  // Index of the item being selected
+	int8_t selector;  // Index of the item being selected
 	uint8_t active;    // Whether the menubar is selecting anything
 } MenubarState;
 
 #define MenubarState(M) ((MenubarState *) M)
 
+MenubarState * initMenu(MenubarState * state, MatchContext * match);
 void menuOnDraw(EventHandler * h);
+void menuOnKeyUp(EventHandler * h, SDL_Event * e);
 
 #endif
