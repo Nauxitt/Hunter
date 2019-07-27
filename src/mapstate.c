@@ -226,7 +226,6 @@ void mapOnTick(EventHandler * h){
 			case ESCAPE_ROLL_BONUS_ACTION:
 			case ATTACK_ROLL_BONUS_ACTION:
 			case DEFENSE_ROLL_BONUS_ACTION:
-			case TELEPORT_ACTION:
 			case TELEPORT_RANDOM_ACTION:
 			case COMBAT_ACTION:
 			case EXIT_COMBAT_ACTION:
@@ -236,6 +235,10 @@ void mapOnTick(EventHandler * h){
 			case DAMAGE_ACTION:
 				matchCycle(match);
 				break;
+
+			case TELEPORT_ACTION:
+				hunterSetTile(action_hunter_entity, action->x, action->y);
+				matchCycle(match);
 
 			case ROLL_DICE_ACTION:
 				matchCycle(match);
@@ -269,7 +272,6 @@ void mapOnTick(EventHandler * h){
 						state, action_hunter_entity,
 						action->x, action->y, 6
 					);
-				onTick(EventHandler(game.state));
 				return;
 
 			case END_MOVE_ACTION:

@@ -496,9 +496,24 @@ void printMatchAction(MatchAction * action){
 	printf(")\n");
 }
 
-void getRandomTile(MatchContext * context, int * x, int * y){ // TODO
+void getRandomTile(MatchContext * context, int * x, int * y){
 	*x = 0;
 	*y = 0;
+	int tiles = 1;
+	for(int n=0; n < context->map_h * context->map_w; n++)
+		if(context->map[n].exists) tiles++;
+
+	int target = rand() % tiles;
+	for(int n=0; n < context->map_h * context->map_w; n++)
+		if(context->map[n].exists){
+			target--;
+
+			if(target == 0){
+				*x = n % context->map_w;
+				*y = n / context->map_w;
+				return;
+			}
+		}
 }
 
 Crate * getCrateAt(MatchContext * context, int x, int y){
