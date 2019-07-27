@@ -43,8 +43,6 @@ void drawCard(int x, int y, Card * card){
 	int sx, sy;
 
 	switch(card->type){
-		case NULL_CARD:
-
 		case MOVE_CARD:         
 		case MOVE_EXIT_CARD:    
 			sx = card->num;
@@ -73,6 +71,7 @@ void drawCard(int x, int y, Card * card){
 			sy = 3;
 			break;
 
+		case NO_CARD:
 		case UNKNOWN_CARD:
 			break;
 	}

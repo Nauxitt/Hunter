@@ -433,6 +433,18 @@ Crate * getCrateAt(MatchContext * context, int x, int y){
 }
 
 void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
+	// Remove card from hand, if there
+	int card_num = -1;
+	for(int n=0; n < HAND_LIMIT; n++)
+		if(hunter->hand[n] == card){
+			card_num = n;
+			break;
+		}
+
+	if(card_num >= 0)
+		hunterPopCard(hunter, card_num);
+
+	// Perform card action
 	switch(card->type){
 		case MOVE_CARD:
 			hunter->turn_stats.mov += card->num;
