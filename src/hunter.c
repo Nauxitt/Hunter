@@ -59,6 +59,10 @@ void initMatch(MatchContext * context){
 	context->deck_len = DECK_SIZE;
 	context->active_player = 0;
 
+	// Assign hunters numeric id's
+	for(int n=0; n < 4; n++)
+		context->characters[n]->id = n;
+
 	enqueueBeginMatch(context);
 	matchQueueUpdate(context);
 }

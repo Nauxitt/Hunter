@@ -13,6 +13,7 @@ HandState * makeHandState(HandState * state, Hunter * hunter, int x, int y){
 		state = (HandState*) calloc(sizeof(HandState), 1);
 
 	state->hunter = hunter;
+	state->color = (enum WindowColor) hunter->id;
 	state->x = x;
 	state->y = y;
 

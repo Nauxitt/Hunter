@@ -39,6 +39,7 @@ typedef struct _Relic {
 #define INVENTORY_LIMIT 6
 
 typedef struct _Hunter {
+	int id;
 	Statset stats;
 	Statset turn_stats;
 	Statset dice_stats;
