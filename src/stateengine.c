@@ -135,8 +135,13 @@ void gameCycle(){
 	uint32_t time = SDL_GetTicks();
 	game.state->duration = time - game.state->enterTime;
 	
-	if(game.state->events.onTick)
-		game.state->events.onTick((EventHandler*) game.state);
+	// Run gamestate tick handler, as well as those of any new GameStates which gets pushed onto the GameState stack from a prior tick handler.
+	GameState * tickedState;
+	do {
+		tickedState = game.state;
+		onTick(EventHandler(game.state));
+	} while(game.state != tickedState);
+
 
 	SDL_SetRenderDrawColor(game.renderer,0,0,0,255);
 	SDL_RenderClear(game.renderer);
@@ -158,6 +163,10 @@ void gameMainLoop(){
 
 void onTick(EventHandler * h){ if(h->onTick) h->onTick(h); }
 void onDraw(EventHandler * h){ if(h->onDraw) h->onDraw(h); }
+void onKeyUp(EventHandler * h, SDL_Event * e){ if(h->onKeyUp) h->onKeyUp(h, e); }
+void onKeyDown(EventHandler * h, SDL_Event * e){ if(h->onKeyUp) h->onKeyUp(h, e); }
+void onMouseUp(EventHandler * h, SDL_Event * e){ if(h->onMouseUp) h->onMouseUp(h, e); }
+void onMouseDown(EventHandler * h, SDL_Event * e){ if(h->onMouseUp) h->onMouseUp(h, e); }
 
 ActionQueue * makeAction(char * type){
 	ActionQueue * ret = (ActionQueue*) malloc(sizeof(ActionQueue));

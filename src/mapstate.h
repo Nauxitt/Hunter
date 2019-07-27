@@ -74,12 +74,12 @@ typedef struct _MapState {
 	int camera_x;
 	int camera_y;
 
-	int card_selected;
-
 	int crates_len;
 	CrateEntity * crates;
 
 	enum StatboxViews statbox_view;
+
+	Card * card_selected;
 	
 	MapStateMap * map;
 	MenubarState * menubar;

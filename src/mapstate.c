@@ -13,6 +13,7 @@
 #include "entity.h"
 #include "menubar.h"
 #include "utils.h"
+#include "handstate.h"
 
 extern Game game;
 extern MapState mapstate;
@@ -48,13 +49,11 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 	if(mapstate == NULL)
 		mapstate = MapState(calloc(sizeof(MapState), 1));
 
+	mapstate->menubar = initMenu(NULL, match);
 	mapstate->match = match;
 	
 	// TODO: move menubar initialization into menubar.c
 	mapstate->map = makeMap(match->map_w, match->map_h);
-	mapstate->menubar = MenubarState(calloc(sizeof(MenubarState), 1));
-	mapstate->menubar->match = match;
-	EventHandler(mapstate->menubar)->type = "MenubarState";
 
 	mapstate->tile_w = 64;
 	mapstate->tile_h = 32;
@@ -68,16 +67,12 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 
 	// Load some textures
 	mapstate->tiles_texture = textures.tiles.texture;
-	textures.menu_gradient.texture = textures.menu_gradient.texture;
-	textures.menu_icons.texture = textures.menu_icons.texture;
 
 	EventHandler(mapstate)->type = "MapState";
 	EventHandler(mapstate)->onTick = mapOnTick;
 	EventHandler(mapstate)->onMouseDown = mapOnMouseDown;
 	EventHandler(mapstate)->onDraw = mapOnDraw;
 	EventHandler(mapstate)->onKeyUp = mapOnKeyUp;
-
-	EventHandler(mapstate->menubar)->onDraw = menuOnDraw;
 
 	pushAction("poll_turn_action");
 	return mapstate;
@@ -351,6 +346,13 @@ void mapOnTick(EventHandler * h){
 	}
 
 
+	// Select card
+	else if(pollAction("poll_move_card_select")){
+		if(state->card_selected != NULL)
+			postTurnAction(match, MOVE_ACTION, NULL, state->card_selected);
+		nextAction();
+	}
+
 	EventHandler * menu_handler = EventHandler(state->menubar);
 	if(menu_handler && menu_handler->onTick)
 		menu_handler->onTick(menu_handler);
@@ -528,69 +530,32 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 		if(pollAction("poll_turn_action")){
 			switch(e->key.keysym.scancode){
 				case SDL_SCANCODE_LEFT:
-					state->menubar->selector--;
-					if(state->menubar->selector == -1)
-						state->menubar->selector = 4;
-					break;
-
 				case SDL_SCANCODE_RIGHT:
-					state->menubar->selector++;
-					if(state->menubar->selector >= 5)
-						state->menubar->selector = 0;
+					onKeyUp(state->menubar, e);
 					break;
 
 				case SDL_SCANCODE_SPACE:
 					// Move action
 					if(state->menubar->selector == 0){
+						HandState * handState = makeHandState(NULL, active_player, 32, 72);
+
+						handState->card_target = &state->card_selected;
+
 						pushAction("poll_move_card_select");
+						gamePushState((GameState*) handState);
 					}
+
+					// Combat Action
 					else if (state->menubar->selector == 1){
 						pushAction("poll_combat_target");
 					}
+
+					// Rest Action
 					else if(state->menubar->selector == 2){
 						postTurnAction(match, REST_ACTION, NULL, NULL);
 					}
 
 					state->menubar->selector = 0;
-					state->card_selected = 0;
-					break;
-
-				default:
-					break;
-			}
-		}
-	
-		// Select card
-		else if(pollAction("poll_move_card_select")){
-
-			// Calculate hand size
-			int hand_size = hunterHandSize(active_player);
-			Card * card = NULL;
-			
-			switch(e->key.keysym.scancode){
-				case SDL_SCANCODE_LEFT:
-					state->card_selected--;
-					if(state->card_selected == -1)
-						state->card_selected = hand_size - 1;
-					break;
-
-				case SDL_SCANCODE_RIGHT:
-					state->card_selected++;
-					if(state->card_selected >= hand_size)
-						state->card_selected = 0;
-					break;
-
-				case SDL_SCANCODE_SPACE:
-
-					// Lock in a move action with the chosen card
-					card = hunterPopCard(active_player, state->card_selected);
-					// active_player->turn_stats.mov = card->num;
-					nextAction(state);
-					postTurnAction(match, MOVE_ACTION, NULL, card);
-					break;
-
-				case SDL_SCANCODE_ESCAPE:
-					nextAction(state);
 					break;
 
 				default:
@@ -652,8 +617,6 @@ void mapOnMouseDown(EventHandler * h, SDL_Event * e){
 void mapOnDraw(EventHandler * h){
 	MapState * state = MapState(h);
 	MapStateMap * map = state->map;
-	MatchContext * match = state->match;
-	Hunter * active_player = match->characters[match->active_player];
 	
 	SDL_Rect srcrect  = {0, 0, state->tile_src_w, state->tile_img_h};
 
@@ -705,31 +668,6 @@ void mapOnDraw(EventHandler * h){
 	}
 
 	// TODO: draw screen tint
-
-	if(pollAction("poll_move_card_select")){
-
-		// Draw card select
-		SDL_Rect window_panel = {32, 76, 16 + textures.cards.w * 7, 64};
-		drawWindowPanel(WINDOW_BLUE, &window_panel);
-
-		for(int c=0; c < HAND_LIMIT; c++){
-			Card * card = active_player->hand[c];
-			
-			if(card == NULL)
-				break;
-
-			SDL_Rect dest = {
-					window_panel.x + 8 + c*textures.cards.w,
-					window_panel.y + 16,
-					textures.cards.w, textures.cards.h
-				};
-
-			if(state->card_selected == c)
-				dest.y += 8;
-			
-			drawCard(dest.x, dest.y, card);
-		}
-	}
 	
 	// Forward event to menubar
 	EventHandler * menu_handler = EventHandler(state->menubar);

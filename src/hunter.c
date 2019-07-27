@@ -60,6 +60,10 @@ void initMatch(MatchContext * context){
 	context->deck_len = DECK_SIZE;
 	context->active_player = 0;
 
+	// Assign hunters numeric id's
+	for(int n=0; n < 4; n++)
+		context->characters[n]->id = n;
+
 	enqueueBeginMatchAction(context);
 	matchQueueUpdate(context);
 }
@@ -525,6 +529,18 @@ uint8_t hunterAt(Hunter * hunter, int x, int y){
 void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
 	Hunter * opponent = hunter == context->attacker ? context->attacker : context->defender;
 
+	// Remove card from hand, if there
+	int card_num = -1;
+	for(int n=0; n < HAND_LIMIT; n++)
+		if(hunter->hand[n] == card){
+			card_num = n;
+			break;
+		}
+
+	if(card_num >= 0)
+		hunterPopCard(hunter, card_num);
+
+	// Perform card action
 	switch(card->type){
 		case MOVE_CARD:
 			hunter->turn_stats.mov += card->num;
