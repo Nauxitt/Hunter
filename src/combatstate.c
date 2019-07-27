@@ -100,7 +100,7 @@ void combatOnDraw(EventHandler * h){
 	drawStatbox(
 			match->attacker,
 			(enum StatboxViews) 0,
-			(enum WindowColor) 0,
+			(enum WindowColor) match->attacker->id,
 			16,
 			game.h-160-panel_gutter
 		);
@@ -108,7 +108,7 @@ void combatOnDraw(EventHandler * h){
 	drawStatbox(
 			match->defender,
 			(enum StatboxViews) 0,
-			(enum WindowColor) 0,
+			(enum WindowColor) match->defender->id,
 			16 + (panel_w+panel_gutter) * 3,
 			game.h-160-panel_gutter
 		);
