@@ -27,7 +27,8 @@ Textures textures = {
 	SHEET(cards         , "resources/cards.png", 16,18),
 	SHEET(menu_gradient , "resources/menubar-gradient.png", 0,0),
 	SHEET(menu_icons    , "resources/menu-battle-icons.png", 16,16),
-	SHEET(crate         , "resources/crate.png", 0,0)
+	SHEET(crate         , "resources/crate.png", 0,0),
+	SHEET(dice          , "resources/dice.png", 37, 48)
 };
 
 

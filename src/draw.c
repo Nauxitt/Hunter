@@ -1,3 +1,4 @@
+#include <SDL2/SDL.h>
 #include "draw.h"
 #include "stateengine.h"
 #include "hunter.h"
@@ -199,4 +200,22 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 
 		drawCard(card_x, card_y, card);
 	}
+}
+
+void drawDiceBack(SDL_Rect * dest){
+	SDL_Rect src;
+	getSpriteClip(&textures.dice, 6,0, &src);
+	blit(textures.dice.texture, &src, dest);
+}
+
+void drawDamageDice(int num, int x, int y){
+	spritesheetBlit(&textures.dice, num,2, x,y);
+}
+
+void drawMoveDice(int num, int x, int y){
+	spritesheetBlit(&textures.dice, num,0, x,y);
+}
+
+void drawDefenseDice(int num, int x, int y){
+	spritesheetBlit(&textures.dice, num,1, x,y);
 }
