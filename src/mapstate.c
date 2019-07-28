@@ -12,7 +12,9 @@
 #include "entity.h"
 #include "menubar.h"
 #include "utils.h"
+
 #include "handstate.h"
+#include "dicestate.h"
 
 extern Game game;
 extern MapState mapstate;
@@ -220,11 +222,18 @@ void mapOnTick(EventHandler * h){
 			case ESCAPE_ACTION:
 			case SURRENDER_ACTION:
 			case USE_CARD_ACTION:
-			case ROLL_MOVE_DICE_ACTION:
 			case ROLL_ATTACK_DICE_ACTION:
 			case ROLL_DEFENSE_DICE_ACTION:
 				matchCycle(match);
 				break;
+
+			case ROLL_MOVE_DICE_ACTION:
+				gamePushState(GameState(initDiceState(
+						NULL, match, match->dice[0],
+						game.w/2,
+						game.h/2 - textures.dice.h/2
+					)));
+				return;
 
 			case OPEN_CRATE_ACTION:
 				matchCycle(match);

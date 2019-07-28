@@ -31,4 +31,9 @@ void drawStatboxItems(Hunter * hunter, int x, int y);
 void drawRelic(Relic * relic, int x, int y);
 void drawStatboxStats(Hunter * hunter, int x, int y);
 
+void drawDiceBack(SDL_Rect * dest);
+void drawDamageDice(int num, int x, int y);
+void drawMoveDice(int num, int x, int y);
+void drawDefenseDice(int num, int x, int y);
+
 #endif
