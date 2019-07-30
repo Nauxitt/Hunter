@@ -85,6 +85,8 @@ typedef struct _MapState {
 	MenubarState * menubar;
 	StatpanelState * statpanel;
 
+	SDL_Color tint;
+
 	SDL_Texture * tiles_texture;
 	int tile_w,     tile_h;
 	int tile_src_w, tile_src_h;
@@ -93,6 +95,11 @@ typedef struct _MapState {
 	HunterEntity * daniel;
 	HunterEntity hunters[HUNTERS_COUNT];
 } MapState;
+
+
+typedef struct _MapFlashState {
+	GameState state;
+} MapFlashState;
 
 
 /*
@@ -158,4 +165,6 @@ void mapOnDrawGiveRelic(EventHandler * h);
 void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed);
 void mapOnTickMoveHunter(EventHandler * h);
 
+void mapStateFlash(MapState * mapstate);
+void mapStateOnDrawFlash(EventHandler * h);
 #endif
