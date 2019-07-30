@@ -13,7 +13,9 @@
 #include "entity.h"
 #include "menubar.h"
 #include "utils.h"
+
 #include "handstate.h"
+#include "dicestate.h"
 
 extern Game game;
 extern MapState mapstate;
@@ -221,7 +223,6 @@ void mapOnTick(EventHandler * h){
 			case ESCAPE_ACTION:
 			case SURRENDER_ACTION:
 			case USE_CARD_ACTION:
-			case MOVE_ROLL_BONUS_ACTION:
 			case CATCH_ROLL_BONUS_ACTION:
 			case ESCAPE_ROLL_BONUS_ACTION:
 			case ATTACK_ROLL_BONUS_ACTION:
@@ -233,16 +234,23 @@ void mapOnTick(EventHandler * h){
 			case DEATH_CHECK_ACTION:
 			case REMOVE_RELIC_ACTION:
 			case DAMAGE_ACTION:
+			case ROLL_DICE_ACTION:
 				matchCycle(match);
 				break;
 
 			case TELEPORT_ACTION:
 				hunterSetTile(action_hunter_entity, action->x, action->y);
 				matchCycle(match);
-
-			case ROLL_DICE_ACTION:
 				matchCycle(match);
 				break;
+
+			case MOVE_ROLL_BONUS_ACTION:
+				gamePushState(GameState(initDiceState(
+						NULL, match, match->dice[0],
+						game.w/2,
+						game.h/2 - textures.dice.h/2
+					)));
+				return;
 
 			case OPEN_CRATE_ACTION:
 				matchCycle(match);
@@ -301,6 +309,11 @@ void mapOnTick(EventHandler * h){
 	MatchAction * action = match->action;
 
 	if(action->type == POLL_MOVE_ACTION){
+		if(!pollAction("poll_move_action")){
+			pushAction("poll_move_action");
+			mapStateFlash(state);
+		}
+		
 		// Pan camera with arrow keys
 		if(keys[SDL_SCANCODE_UP])    state->camera_y += 10;
 		if(keys[SDL_SCANCODE_DOWN])  state->camera_y -= 10;
@@ -533,7 +546,7 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 			switch(e->key.keysym.scancode){
 				case SDL_SCANCODE_LEFT:
 				case SDL_SCANCODE_RIGHT:
-					onKeyUp(state->menubar, e);
+					onKeyUp(EventHandler(state->menubar), e);
 					break;
 
 				case SDL_SCANCODE_SPACE:
@@ -599,6 +612,9 @@ void mapOnMouseDown(EventHandler * h, SDL_Event * e){
 
 	if(t && t->selected && t->val){
 		if(match->action->type == POLL_MOVE_ACTION){
+			if(pollAction("poll_move_action"))
+				nextAction();
+
 			postMoveAction(
 					match, NULL, t->x, t->y
 				);
@@ -653,6 +669,21 @@ void mapOnDraw(EventHandler * h){
 		
 		blit(state->tiles_texture, &srcrect, &destrect);
 	}
+
+	// Draw screen tint
+	if(state->tint.a > 0){
+		SDL_Rect dest = {0, 0, game.w, game.h};
+		SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
+		SDL_SetRenderDrawColor(
+				game.renderer,
+				state->tint.r,
+				state->tint.g,
+				state->tint.b,
+				state->tint.a
+			);
+		SDL_RenderFillRect(game.renderer, &dest);
+		SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_NONE);
+	}
 	
 	// Iterate through tiles and draw entities
 	for_xy(x, y, map->w, map->h){
@@ -664,17 +695,13 @@ void mapOnDraw(EventHandler * h){
 			if(entity == NULL)
 				continue;
 
-			if(EventHandler(entity))
-				EventHandler(entity)->onDraw(EventHandler(entity));
+			onDraw(EventHandler(entity));
 		}
 	}
-
-	// TODO: draw screen tint
 	
 	// Forward event to menubar
-	EventHandler * menu_handler = EventHandler(state->menubar);
-	if(menu_handler && menu_handler->onDraw)
-		menu_handler->onDraw(menu_handler);
+	if(state->menubar)
+		onDraw(EventHandler(state->menubar));
 
 	// Draw stat windows, character stats
 	int panel_gutter = 4;
@@ -771,4 +798,44 @@ void mapEnterCombat(MapState * state){
 		}
 
 	gamePushState(GameState(combat));
+}
+
+void mapStateFlash(MapState * mapstate){
+	/*
+	   Pushes a state onto the stack which causes the MapState under it to draw a single white flash
+	*/
+
+	GameState * flashState = makeGameState();
+
+	mapstate->tint.r = 255;
+	mapstate->tint.g = 255;
+	mapstate->tint.b = 255;
+
+	EventHandler(flashState)->type = "MapState.flash";
+	EventHandler(flashState)->onDraw = mapStateOnDrawFlash;
+	gamePushState(flashState);
+}
+
+void mapStateOnDrawFlash(EventHandler * h){
+	GameState * state = GameState(h);
+	MapState * mapstate = MapState(state->prevState);
+
+	int flash_duration = 75;
+	int fade_duration = 250;
+	int total_duration = flash_duration + fade_duration;
+
+	if(state->duration <= flash_duration){
+		mapstate->tint.a = state->duration * 255 / flash_duration;
+	}
+	else if(state->duration <= total_duration){
+		int t = state->duration - flash_duration;
+		mapstate->tint.a = (fade_duration - t) * 255 / fade_duration;
+	}
+	else {
+		mapstate->tint.a = 0;
+		gamePopState();
+		free(h);
+	}
+
+	prevStateOnDraw(h);
 }
