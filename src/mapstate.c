@@ -325,7 +325,7 @@ void mapOnTick(EventHandler * h){
 				state->map,
 				active_player->x,
 				active_player->y,
-				stats->mov + 1
+				stats->mov
 			);
 	}
 	else if(
