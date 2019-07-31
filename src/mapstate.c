@@ -228,6 +228,7 @@ void mapOnTick(EventHandler * h){
 				break;
 
 			case ROLL_MOVE_DICE_ACTION:
+				matchCycle(match);
 				gamePushState(GameState(initDiceState(
 						NULL, match, match->dice[0],
 						game.w/2,
@@ -309,7 +310,7 @@ void mapOnTick(EventHandler * h){
 				state->map,
 				active_player->x,
 				active_player->y,
-				stats->mov + 1
+				stats->mov
 			);
 	}
 

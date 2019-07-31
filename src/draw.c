@@ -209,13 +209,13 @@ void drawDiceBack(SDL_Rect * dest){
 }
 
 void drawDamageDice(int num, int x, int y){
-	spritesheetBlit(&textures.dice, num,2, x,y);
+	spritesheetBlit(&textures.dice, num-1,2, x,y);
 }
 
 void drawMoveDice(int num, int x, int y){
-	spritesheetBlit(&textures.dice, num,0, x,y);
+	spritesheetBlit(&textures.dice, num-1,0, x,y);
 }
 
 void drawDefenseDice(int num, int x, int y){
-	spritesheetBlit(&textures.dice, num,1, x,y);
+	spritesheetBlit(&textures.dice, num-1,1, x,y);
 }
