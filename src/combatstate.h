@@ -1,7 +1,7 @@
 /*
    combatstate.h
 
-   Defines a GameState which acts as an interfce to a MatchContext's combat actions.
+   GameState which acts as an interface to a MatchContext's combat actions.
 */
 
 #ifndef __combatstate_h

@@ -154,9 +154,8 @@ void combatOnDraw(EventHandler * h){
 	}
 
 	// Forward event to menubar
-	EventHandler * menu_handler = EventHandler(state->menubar);
-	if(menu_handler && menu_handler->onDraw)
-		menu_handler->onDraw(menu_handler);
+	if(state->menubar)
+		onDraw(EventHandler(state->menubar));
 }
 
 void combatOnKeyUp(EventHandler * h, SDL_Event * e){
