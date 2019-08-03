@@ -31,5 +31,7 @@ extern AnimationFrame ANIM_HUNTER_STAND_S[];
 extern AnimationFrame ANIM_HUNTER_STAND_N[];
 extern AnimationFrame ANIM_HUNTER_RUN_S[];
 extern AnimationFrame ANIM_HUNTER_RUN_N[];
+extern AnimationFrame ANIM_HUNTER_DAMAGE_N[];
+extern AnimationFrame ANIM_HUNTER_DAMAGE_S[];
 
 #endif

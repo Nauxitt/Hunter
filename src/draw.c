@@ -39,6 +39,12 @@ void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest){
 void drawBigNumber(int x, int y, int n){
 	spritesheetBlit(&textures.statbox, n,0, x,y);
 }
+		
+void drawBigRedNumber(int x, int y, int n){
+	SDL_SetTextureColorMod(textures.statbox.texture, 255, 0, 0);
+	drawBigNumber(x, y, n);
+	SDL_SetTextureColorMod(textures.statbox.texture, 255, 255, 255);
+}
 
 void drawCard(int x, int y, Card * card){
 	int sx, sy;

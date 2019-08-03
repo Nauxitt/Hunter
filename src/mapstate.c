@@ -528,6 +528,7 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 	MatchAction * action = match->action;
 	Hunter * active_player = match->characters[match->active_player];
 
+	// Toggle statboxron TAB
 	if(e->key.keysym.scancode == SDL_SCANCODE_TAB){
 		state->statbox_view++;
 		if(state->statbox_view == STATBOX_VIEW_NONE + 1)
@@ -838,4 +839,103 @@ void mapStateOnDrawFlash(EventHandler * h){
 	}
 
 	prevStateOnDraw(h);
+}
+
+HunterEntityDamageState * makeHunterEntityDamageState(HunterEntityDamageState * state, HunterEntity * hunter, int damage){
+	if(state == NULL)
+		state = (HunterEntityDamageState *) calloc(sizeof(HunterEntityDamageState), 1);
+
+	state->hunter = hunter;
+	state->damage = damage;
+	state->old_animation = Entity(state->hunter)->animation;
+	state->old_animation_loop = Entity(state->hunter)->animation_loop;
+	state->bounce_duration = 250;
+	state->bounce_height = 32;
+	state->show_duration = 350;
+	state->fade_duration = 150;
+
+	EventHandler(state)->onEnter = hunterEntityDamageStateOnEnter;
+	EventHandler(state)->onExit = hunterEntityDamageStateOnExit;
+	EventHandler(state)->onDraw = hunterEntityDamageStateOnDraw;
+
+	return state;
+}
+
+void hunterEntityDamageStateOnEnter(EventHandler * h){
+	HunterEntityDamageState * state = (HunterEntityDamageState *) h;
+
+	AnimationFrame * animation = (AnimationFrame*) &ANIM_HUNTER_DAMAGE_S;
+	
+	entitySetAnimation(Entity(state->hunter), animation);
+	Entity(state->hunter)->animation_loop = 0;
+	state->hit_end_time = animationGetDuration(animation);
+}
+
+void hunterEntityDamageStateOnExit(EventHandler * h){
+	HunterEntityDamageState * state = (HunterEntityDamageState *) h;
+	entitySetAnimation(Entity(state->hunter), state->old_animation);
+
+	Entity(state->hunter)->animation_loop = state->old_animation_loop;
+}
+	
+void hunterEntityDamageStateOnDraw(EventHandler * h){
+	prevStateOnDraw(h);
+
+	HunterEntityDamageState * state = (HunterEntityDamageState *) h;
+	HunterEntity * hunter = state->hunter;
+
+	// If the hit animation is done, draw damage
+	if(GameState(h)->duration > state->hit_end_time){
+		int number_time = GameState(h)->duration - state->hit_end_time;
+		int number_duration = state->bounce_duration + state->show_duration;
+
+		// Calculate number of digits to draw
+		int digits = 0;
+		for(int n=state->damage; n > 0; n/=10)
+			digits++;
+
+		if(digits == 0)
+			digits = 1;
+
+		// Horizontally center
+		int x = Entity(hunter)->x + (digits-2)*textures.statbox.w/2;
+
+		// Bounce digit
+		int y = Entity(hunter)->y - 16;
+		
+		int bounce_time = GameState(h)->duration - state->hit_end_time;
+		if(bounce_time < state->bounce_duration){
+			float q = (float) bounce_time * 2 / (float) state->bounce_duration;
+			y += state->bounce_height * (q*q - 2*q);
+		}
+
+		// Fade out digits after bouncing
+		else {
+			int fade_start = number_duration - state->fade_duration;
+			if(number_time > fade_start){
+				SDL_SetTextureAlphaMod(
+						textures.statbox.texture,
+						255 - 255 * (number_time - fade_start) / state->fade_duration
+						);
+			}
+		}
+		
+		// Draw digits, right-to-left
+		int n = state->damage;
+
+		for(int p=digits; p > 0; p--){
+			if(state->damage == 0)
+				drawBigNumber(x, y, n % 10);
+			else
+				drawBigRedNumber(x, y, n % 10);
+			n /= 10;
+			x -= textures.statbox.w;
+		}
+		
+		SDL_SetTextureAlphaMod(textures.statbox.texture, 255);
+		
+		// Is it time to exit this state?
+		if(number_time > number_duration)
+			free(gamePopState());
+	}
 }

@@ -97,9 +97,27 @@ typedef struct _MapState {
 } MapState;
 
 
-typedef struct _MapFlashState {
+/*
+   Draws previous state, but takes the HunterEntity in the hutner property and animates it recieving the amount of damage denoted by the damage property.
+*/
+typedef struct _HunterEntityDamageState {
 	GameState state;
-} MapFlashState;
+	HunterEntity * hunter;
+	AnimationFrame * old_animation;
+	uint8_t old_animation_loop;
+	int damage;
+
+	int hit_end_time;
+	int bounce_duration;
+	int bounce_height;
+	int show_duration;
+	int fade_duration;
+} HunterEntityDamageState;
+
+HunterEntityDamageState * makeHunterEntityDamageState(HunterEntityDamageState * state, HunterEntity * hunter, int damage);
+void hunterEntityDamageStateOnEnter(EventHandler * h);
+void hunterEntityDamageStateOnExit(EventHandler * h);
+void hunterEntityDamageStateOnDraw(EventHandler * h);
 
 
 /*
@@ -168,4 +186,5 @@ void mapOnTickMoveHunter(EventHandler * h);
 
 void mapStateFlash(MapState * mapstate);
 void mapStateOnDrawFlash(EventHandler * h);
+
 #endif
