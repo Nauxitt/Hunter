@@ -8,6 +8,8 @@ void entityOnDraw(EventHandler * h){
 		frame = entity->animation_frame = entity->animation;
 
 	// Handle animation timing
+	entity->animation_finished = 0;
+
 	if(frame){
 		uint32_t time = SDL_GetTicks();
 		
@@ -20,11 +22,19 @@ void entityOnDraw(EventHandler * h){
 		// If it is time, update the frame, but only if there
 		// is a new frame to update to.
 		else if(time - entity->last_frame >= frame->duration){
+			
+			// next frame?
 			if(entity->animation_frame->next)
 				entity->animation_frame = entity->animation_frame->next;
-			else if (entity->animation_loop){
-				frame = entity->animation_frame = entity->animation;
+
+			// animation end
+			else {
+				entity->animation_finished = 1;
+			
+				if (entity->animation_loop)
+					frame = entity->animation_frame = entity->animation;
 			}
+
 			entity->last_frame = time;
 		}
 	}
@@ -96,4 +106,13 @@ void entitySetAnimation(Entity * entity, AnimationFrame * animation){
 		entity->animation = animation;
 		entity->animation_frame = NULL;
 	}
+}
+
+uint32_t animationGetDuration(AnimationFrame * animation){
+	uint32_t duration = 0;
+
+	for(AnimationFrame * frame = animation; frame != NULL; frame = frame->next)
+		duration += frame->duration;
+
+	return duration;
 }

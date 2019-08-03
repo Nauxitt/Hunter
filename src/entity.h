@@ -29,7 +29,9 @@ typedef struct _Entity {
 	SDL_Texture * texture;
 	AnimationFrame * animation;
 	AnimationFrame * animation_frame;
+	uint8_t animation_finished;
 	uint8_t animation_loop;
+
 	int flip_h, flip_v;
 	uint32_t last_frame;
 	float scale_w, scale_h;
@@ -43,5 +45,6 @@ void entityOnDraw(EventHandler * h);
    Sets the Entity's animation, but only if the animation provided is different from the one already contained.  This allows the same animation to be set every frame without resetting the animation.
 */
 void entitySetAnimation(Entity * entity, AnimationFrame * animation);
+uint32_t animationGetDuration(AnimationFrame * animation);
 
 #endif
