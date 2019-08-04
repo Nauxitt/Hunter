@@ -9,8 +9,7 @@
 #define DICE_SHOW_DURATION 750
 #define DICE_SPIN_DURATION   5
 
-
-DiceState * initDiceState(DiceState * state, MatchContext * match, int num, int x, int y){
+DiceState * initDiceState(DiceState * state, MatchContext * match, int num, int x, int y, enum DiceColor color){
 	if(state == NULL)
 		state = (DiceState*) calloc(sizeof(DiceState), 1);
 
@@ -18,6 +17,7 @@ DiceState * initDiceState(DiceState * state, MatchContext * match, int num, int 
 	state->num = num;
 	state->x = x;
 	state->y = y;
+	state->color = color;
 
 	EventHandler(state)->type = "DiceState";
 	EventHandler(state)->onDraw = diceStateOnDraw;
@@ -58,7 +58,16 @@ void diceStateOnDraw(EventHandler * h){
 	}
 
 	else if(duration < DICE_FLIP_DURATION + DICE_SHOW_DURATION){
-		drawMoveDice(
+		void (*drawDice)(int n, int x, int y) = NULL;
+
+		switch(state->color){
+			case MOVE_DICE_COLOR: drawDice = drawMoveDice; break;
+			case DAMAGE_DICE_COLOR: drawDice = drawDamageDice; break;
+			case DEFENSE_DICE_COLOR: drawDice = drawDefenseDice; break;
+			case HEAL_DICE_COLOR: drawDice = NULL; break;
+		}
+
+		drawDice(
 				state->num,
 				state->x - textures.dice.w/2,
 				state->y
