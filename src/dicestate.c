@@ -9,11 +9,10 @@
 #define DICE_SHOW_DURATION 750
 #define DICE_SPIN_DURATION   5
 
-DiceState * initDiceState(DiceState * state, MatchContext * match, int num, int x, int y, enum DiceColor color){
+DiceState * initDiceState(DiceState * state, int num, int x, int y, enum DiceColor color){
 	if(state == NULL)
 		state = (DiceState*) calloc(sizeof(DiceState), 1);
 
-	state->match = match;
 	state->num = num;
 	state->x = x;
 	state->y = y;
@@ -21,20 +20,8 @@ DiceState * initDiceState(DiceState * state, MatchContext * match, int num, int 
 
 	EventHandler(state)->type = "DiceState";
 	EventHandler(state)->onDraw = diceStateOnDraw;
-	EventHandler(state)->onTick = diceStateOnTick;
 
 	return state;
-}
-
-void diceStateOnTick(EventHandler * h){
-	DiceState * state = DiceState(h);
-	int duration = GameState(state)->duration;
-
-	if(duration >= DICE_FLIP_DURATION + DICE_SHOW_DURATION){
-		gamePopState();
-		free(state);
-		matchCycle(state->match);
-	}
 }
 
 void diceStateOnDraw(EventHandler * h){
@@ -48,8 +35,8 @@ void diceStateOnDraw(EventHandler * h){
 		float hscale = (float)(duration % DICE_SPIN_DURATION)/(float) DICE_SPIN_DURATION * scale;
 		
 		SDL_Rect dest = {
-				game.w/2 - textures.dice.w/2 * hscale,
-				state->y * (2 - scale),
+				state->x - textures.dice.w/2 * hscale,
+				(float) state->y * (2 - scale),
 				textures.dice.w * hscale,
 				textures.dice.h * scale
 			};
@@ -73,4 +60,7 @@ void diceStateOnDraw(EventHandler * h){
 				state->y
 			);
 	} 
+	else {
+		free(gamePopState());
+	}
 }

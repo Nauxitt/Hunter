@@ -133,7 +133,11 @@ void gameCycle(){
 	}
 
 	uint32_t time = SDL_GetTicks();
-	game.state->duration = time - game.state->enterTime;
+	GameState * state = game.state;
+	while(state != NULL){
+		state->duration = time - state->enterTime;
+		state = state->prevState;
+	}
 	
 	// Run gamestate tick handler, as well as those of any new GameStates which gets pushed onto the GameState stack from a prior tick handler.
 	GameState * tickedState;

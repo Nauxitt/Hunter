@@ -4,6 +4,8 @@
 #include "combatstate.h"
 #include "handstate.h"
 #include "mapstate.h"
+#include "dicestate.h"
+#include "sprites.h"
 
 CombatState * makeCombatState(CombatState * state, MatchContext * match){
 	if(state == NULL)
@@ -74,10 +76,37 @@ void combatOnTick(EventHandler * h){
 				matchCycle(match);
 				return;
 
+			case ROLL_DICE_ACTION:
+				matchCycle(match);
+				gamePushState((GameState*) initDiceState(
+							NULL, match->dice[0],
+							game.w/2 - textures.dice.w*3/2,
+							game.h - textures.dice.h *3/2,
+							DAMAGE_DICE_COLOR
+						));
+				gamePushState((GameState*) initDiceState(
+							NULL, match->dice[1],
+							game.w/2 - textures.dice.w/2,
+							game.h - textures.dice.h *3/2,
+							DAMAGE_DICE_COLOR
+						));
+				gamePushState((GameState*) initDiceState(
+							NULL, match->dice[2],
+							game.w/2 + textures.dice.w/2,
+							game.h - textures.dice.h *3/2,
+							DEFENSE_DICE_COLOR
+						));
+				gamePushState((GameState*) initDiceState(
+							NULL, match->dice[3],
+							game.w/2 + textures.dice.w*3/2,
+							game.h - textures.dice.h *3/2,
+							DEFENSE_DICE_COLOR
+						));
+				return;
+
 			case USE_CARD_ACTION:
 			case ATTACK_DAMAGE_ACTION:
 			case ENTER_COMBAT_ACTION:
-			case ROLL_DICE_ACTION:
 			case MOVE_ROLL_BONUS_ACTION:
 			case CATCH_ROLL_BONUS_ACTION:
 			case ESCAPE_ROLL_BONUS_ACTION:

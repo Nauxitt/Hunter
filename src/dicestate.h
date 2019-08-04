@@ -14,7 +14,6 @@ enum DiceColor {
 
 typedef struct _DiceState {
 	GameState state;
-	MatchContext * match;
 	int num;
 	int x, y;
 	enum DiceColor color;
@@ -22,7 +21,7 @@ typedef struct _DiceState {
 
 #define DiceState(d) ((DiceState*) d)
 
-DiceState * initDiceState(DiceState * state, MatchContext * match, int num, int x, int y, enum DiceColor color);
+DiceState * initDiceState(DiceState * state, int num, int x, int y, enum DiceColor color);
 void diceStateOnTick(EventHandler * e);
 void diceStateOnDraw(EventHandler * e);
 
