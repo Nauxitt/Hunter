@@ -232,7 +232,8 @@ void mapOnTick(EventHandler * h){
 				gamePushState(GameState(initDiceState(
 						NULL, match, match->dice[0],
 						game.w/2,
-						game.h/2 - textures.dice.h/2
+						game.h/2 - textures.dice.h/2,
+						MOVE_DICE_COLOR
 					)));
 				return;
 
