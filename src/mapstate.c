@@ -235,6 +235,7 @@ void mapOnTick(EventHandler * h){
 			case REMOVE_RELIC_ACTION:
 			case DAMAGE_ACTION:
 			case ROLL_DICE_ACTION:
+			case ATTACK_DAMAGE_ACTION:
 				matchCycle(match);
 				break;
 

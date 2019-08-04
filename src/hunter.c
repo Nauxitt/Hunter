@@ -14,13 +14,16 @@ void hunterClearBonus(Hunter * h){
 }
 
 Statset * hunterStats(Hunter * h){
+	if(h == NULL)
+		return NULL;
+
 	h->stats.atk = h->base_stats.atk + h->turn_stats.atk;
 	h->stats.def = h->base_stats.def/2 + h->turn_stats.def;
 	h->stats.mov = h->base_stats.mov/3 + h->turn_stats.mov;
 	h->stats.hp = h->base_stats.hp;
 
 	// TODO: max HP penalties from respawn
-	h->stats.max_hp = h->base_stats.max_hp;
+	h->stats.max_hp = h->base_stats.max_hp * 3 + 10;
 	return &h->stats;
 }
 
@@ -61,8 +64,10 @@ void initMatch(MatchContext * context){
 	context->active_player = 0;
 
 	// Assign hunters numeric id's
-	for(int n=0; n < 4; n++)
+	for(int n=0; n < 4; n++){
 		context->characters[n]->id = n;
+		context->characters[n]->base_stats.hp = context->characters[n]->base_stats.max_hp;
+	}
 
 	enqueueBeginMatchAction(context);
 	matchQueueUpdate(context);
@@ -110,6 +115,8 @@ void matchCycle(MatchContext * context){
 		actor = context->characters[context->active_player];
 
 	Statset * active_stats = hunterStats(actor);
+	Statset * actor_stats;
+	Statset * target_stats;
 
 	Crate * crate;
 
@@ -160,9 +167,9 @@ void matchCycle(MatchContext * context){
 			break;
 
 		case DAMAGE_ACTION:
-			actor->base_stats.hp -= action->value;
-			if(actor->base_stats.hp < 0)
-				actor->base_stats.hp = 0;
+			action->target->base_stats.hp -= action->value;
+			if(action->target->base_stats.hp < 0)
+				action->target->base_stats.hp = 0;
 			break;
 
 		case MOVE_ACTION:
@@ -355,6 +362,18 @@ void matchCycle(MatchContext * context){
 
 		case ATTACK_ACTION:
 			enqueueRollDiceAction(context);
+			enqueueAttackDamageAction(context, action->actor, action->target);
+			break;
+
+		case ATTACK_DAMAGE_ACTION:
+			actor_stats = hunterStats(action->actor);
+			target_stats = hunterStats(action->target);
+
+			enqueueDamageAction(
+					context, action->target,
+					context->dice_total + actor_stats->atk -
+					context->dice_total2 - target_stats->def
+				);
 			break;
 
 		case OPEN_CRATE_ACTION:
@@ -430,7 +449,6 @@ void printMatchAction(MatchAction * action){
 
 	switch(action->type){
 		// For these actions, print nothing inside the parenthesis, as either printing their contents is unimplemented or they do not use any parameters
-		case DAMAGE_ACTION:
 		case EXIT_COMBAT_ACTION:
 		case REMOVE_RELIC_ACTION:
 		case ROLL_DICE_ACTION:
@@ -438,7 +456,6 @@ void printMatchAction(MatchAction * action){
 		case EXECUTE_COMBAT_ACTION:
 		case DEFEND_ACTION:
 		case ESCAPE_ACTION:
-		case ATTACK_ACTION:
 		case SURRENDER_ACTION:
 			break;
 		
@@ -446,7 +463,6 @@ void printMatchAction(MatchAction * action){
 		case TURN_START_ACTION:
 		case TURN_END_ACTION:
 		case DRAW_CARD_ACTION:
-		case HEAL_ACTION:
 		case POLL_TURN_ACTION:
 		case POLL_MOVE_CARD_ACTION:
 		case POLL_MOVE_ACTION:
@@ -465,10 +481,18 @@ void printMatchAction(MatchAction * action){
 		case POLL_COMBAT_CARD_ACTION:
 			printf("%s", action->actor->name);
 			break;
+		
+		// Actions who's parameters are a hunter and an integer value
+		case DAMAGE_ACTION:
+		case HEAL_ACTION:
+			printf("%s, %d", action->actor->name, action->value);
+			break;
 
 		// Actions where one hunter targets another
+		case ATTACK_ACTION:
 		case COMBAT_ACTION:
 		case ENTER_COMBAT_ACTION:
+		case ATTACK_DAMAGE_ACTION:
 			printf("%s, %s", action->actor->name, action->target ? action->target->name : NULL);
 			break;
 
@@ -746,6 +770,7 @@ const char * getMatchActionName(enum MatchActionType type){
 		case MOVE_ACTION: return "MOVE_ACTION";
 		case END_MOVE_ACTION: return "END_MOVE_ACTION";
 		case ATTACK_ACTION: return "ATTACK_ACTION";
+		case ATTACK_DAMAGE_ACTION: return "ATTACK_DAMAGE_ACTION";
 		case REST_ACTION: return "REST_ACTION";
 		case DEFEND_ACTION: return "DEFEND_ACTION";
 		case ESCAPE_ACTION: return "ESCAPE_ACTION";

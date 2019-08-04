@@ -3,6 +3,7 @@
 #include "hunter.h"
 #include "combatstate.h"
 #include "handstate.h"
+#include "mapstate.h"
 
 CombatState * makeCombatState(CombatState * state, MatchContext * match){
 	if(state == NULL)
@@ -37,6 +38,13 @@ void combatOnTick(EventHandler * h){
 	while((breaker == 1) && (match->action)){
 		MatchAction * action = match->action;
 
+		HunterEntity * actor_entity = &state->attacker_entity;
+		HunterEntity * target_entity = &state->defender_entity;
+		if(actor_entity->hunter != action->actor){
+			actor_entity = &state->defender_entity;
+			target_entity = &state->attacker_entity;
+		}
+
 		switch(action->type){
 			case POLL_DEFEND_ACTION:
 			case POLL_COMBAT_CARD_ACTION:
@@ -50,7 +58,7 @@ void combatOnTick(EventHandler * h){
 					breaker = 0;
 					HandState * handState = makeHandState(NULL, action->actor, 32, 72);
 					handState->card_target = &state->card_selected;
-					gamePushState(handState);
+					gamePushState(GameState(handState));
 					return;
 				}
 				else {
@@ -59,8 +67,16 @@ void combatOnTick(EventHandler * h){
 				matchCycle(match);
 				break;
 
-			case ENTER_COMBAT_ACTION:
 			case DAMAGE_ACTION:
+				gamePushState((GameState*) makeHunterEntityDamageState(
+						NULL, target_entity, action->value
+					));
+				matchCycle(match);
+				return;
+
+			case USE_CARD_ACTION:
+			case ATTACK_DAMAGE_ACTION:
+			case ENTER_COMBAT_ACTION:
 			case ROLL_DICE_ACTION:
 			case MOVE_ROLL_BONUS_ACTION:
 			case CATCH_ROLL_BONUS_ACTION:
@@ -82,7 +98,6 @@ void combatOnTick(EventHandler * h){
 			case TURN_START_ACTION:
 			case TURN_END_ACTION:
 			case DRAW_CARD_ACTION:
-			case USE_CARD_ACTION:
 			case HEAL_ACTION:
 			case POLL_TURN_ACTION:
 			case POLL_MOVE_CARD_ACTION:
@@ -182,6 +197,7 @@ void combatOnKeyUp(EventHandler * h, SDL_Event * e){
 					state->selector = 0;
 				break;
 
+			case SDL_SCANCODE_SPACE:
 			case SDL_SCANCODE_RETURN:
 				state->selector = 0;
 				switch(state->selector){

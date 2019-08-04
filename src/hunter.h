@@ -113,6 +113,7 @@ enum MatchActionType {
 	ENTER_COMBAT_ACTION,
 	EXIT_COMBAT_ACTION,
 	EXECUTE_COMBAT_ACTION,
+	ATTACK_DAMAGE_ACTION,
 	
 	//  User-selected combat actions
 	ATTACK_ACTION,
