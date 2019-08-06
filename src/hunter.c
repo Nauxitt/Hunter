@@ -60,8 +60,10 @@ void initMatch(MatchContext * context){
 	context->active_player = 0;
 
 	// Assign hunters numeric id's
-	for(int n=0; n < 4; n++)
+	for(int n=0; n < 4; n++){
 		context->characters[n]->id = n;
+		context->characters[n]->base_stats.hp = context->characters[n]->base_stats.max_hp;
+	}
 
 	enqueueBeginMatch(context);
 	matchQueueUpdate(context);

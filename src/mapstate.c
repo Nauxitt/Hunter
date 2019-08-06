@@ -488,6 +488,12 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 		if(state->statbox_view == STATBOX_VIEW_NONE + 1)
 			state->statbox_view = 0;
 	}
+	
+	// 1-key deincrements health.  TODO: remove
+	else if(e->key.keysym.scancode == SDL_SCANCODE_1){
+		if(--active_player->base_stats.hp == 0)
+			active_player->base_stats.hp = active_player->base_stats.max_hp;
+	}
 
 	// Menubar arrow keys
 	if(action->type == POLL_TURN_ACTION){

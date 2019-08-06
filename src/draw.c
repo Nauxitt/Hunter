@@ -206,6 +206,43 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 
 		drawCard(card_x, card_y, card);
 	}
+
+	// Healthbar right edge
+	statval_dest.y = card_y - textures.statbox.h - 2;
+	statval_dest.x = panel_rect.x + panel_rect.w - element_margin/2 - textures.statbox.w;
+	spritesheetBlit(
+			&textures.statbox,
+			5 + ((hunter->stats.hp < hunter->stats.max_hp) ? 3:0), 2,
+			statval_dest.x, statval_dest.y
+		);
+
+	// Healthbar left edge
+	statval_dest.x = panel_rect.x + element_margin/2;
+	spritesheetBlit(
+			&textures.statbox,
+			3 + ((hunter->stats.hp == 0) ? 3:0), 2,
+			statval_dest.x, statval_dest.y
+		);
+	
+	// Healthbar middle
+	int middle_w = panel_rect.w - element_margin - textures.statbox.w*2;
+
+	SDL_Rect statbar_src;
+	statval_dest.x += textures.statbox.w;
+	statval_dest.w = middle_w;
+	getSpriteClip(&textures.statbox, 7, 2, &statbar_src);
+	blit(textures.statbox.texture, &statbar_src, &statval_dest);
+	
+	// The first and last HP points are drawn by the left and right edge blits respectively, so draw the middle portion of the healthbar in proportion of health to max health, precluding representation of those values.
+	if(hunter->base_stats.hp <= 1)
+		statval_dest.w = 0;
+	else if(hunter->base_stats.hp >= hunter->base_stats.max_hp - 1)
+		statval_dest.w = middle_w;
+	else
+		statval_dest.w = middle_w * hunter->base_stats.hp / (hunter->base_stats.max_hp-1);
+
+	getSpriteClip(&textures.statbox, 4, 2, &statbar_src);
+	blit(textures.statbox.texture, &statbar_src, &statval_dest);
 }
 
 void drawDiceBack(SDL_Rect * dest){
