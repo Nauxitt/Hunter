@@ -24,6 +24,7 @@ enum StatboxViews {
 };
 
 void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest);
+void drawSmallNumber(int x, int y, int n);
 void drawBigNumber(int x, int y, int n);
 void drawBigRedNumber(int x, int y, int n);
 void drawCard(int x, int y, Card * card);

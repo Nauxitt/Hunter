@@ -3,6 +3,7 @@
 #include "stateengine.h"
 #include "hunter.h"
 #include "sprites.h"
+#include "utils.h"
 
 void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest){
 	SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
@@ -34,6 +35,10 @@ void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest){
 	getSpriteClip(&textures.statbox, 2,2+color, &src);
 	dest.x += window_dest->w - textures.statbox.w;
 	blit(textures.statbox.texture, &src, &dest);
+}
+
+void drawSmallNumber(int x, int y, int n){
+	spritesheetBlit(&textures.small_numbers, n,0, x,y);
 }
 
 void drawBigNumber(int x, int y, int n){
@@ -131,7 +136,7 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	int panel_w = (game.w - 16*2 - 4*3) / 4;
 	SDL_Rect panel_rect = {x, y, panel_w, 160};
 
-	int element_gutter = 8;
+	int element_gutter = 4;
 	int element_margin = 18;
 
 	// Draw stat names
@@ -243,6 +248,51 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 
 	getSpriteClip(&textures.statbox, 4, 2, &statbar_src);
 	blit(textures.statbox.texture, &statbar_src, &statval_dest);
+
+	// Draw HP number: max HP 1's
+	statval_dest.y -= textures.small_numbers.h - 4;
+	statval_dest.x = panel_rect.x + panel_rect.w - element_margin/2 - textures.small_numbers.w;
+
+	drawSmallNumber(
+			XY(&statval_dest), hunter->base_stats.max_hp % 10
+		);
+
+	
+	// Draw HP number: max HP 10's
+	statval_dest.x -= textures.small_numbers.w;
+	drawSmallNumber(
+			XY(&statval_dest), hunter->base_stats.max_hp / 10
+		);
+
+	// Draw HP number: slash
+	statval_dest.x -= textures.statbox.w;
+	spritesheetBlit(
+			&textures.statbox, 9, 1,
+			statval_dest.x, statval_dest.y - 6
+		);
+
+	// Draw HP number: current HP 1's
+	statval_dest.x -= textures.small_numbers.w;
+	drawSmallNumber(
+			XY(&statval_dest), hunter->base_stats.hp % 10
+		);
+
+	// Draw HP number: current HP 10's
+	statval_dest.x -= textures.small_numbers.w;
+	drawSmallNumber(
+			XY(&statval_dest), hunter->base_stats.hp / 10
+		);
+
+	// Draw HP number: HP label
+	statval_dest.x = panel_rect.x + element_margin/2;
+	statval_dest.y -= 6;
+	statval_dest.w = textures.statbox.w * 2;
+	statval_dest.h = textures.statbox.h;
+
+	getSpriteClip(&textures.statbox, 6,1, &statval_src);
+	statval_src.w *= 2;
+	
+	blit(textures.statbox.texture, &statval_src, &statval_dest);
 }
 
 void drawDiceBack(SDL_Rect * dest){
