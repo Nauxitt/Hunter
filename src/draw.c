@@ -217,7 +217,7 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	statval_dest.x = panel_rect.x + panel_rect.w - element_margin/2 - textures.statbox.w;
 	spritesheetBlit(
 			&textures.statbox,
-			5 + ((hunter->stats.hp < hunter->stats.max_hp) ? 3:0), 2,
+			5 + ((hunter->base_stats.hp < hunter->base_stats.max_hp) ? 3:0), 2,
 			statval_dest.x, statval_dest.y
 		);
 
@@ -225,7 +225,7 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	statval_dest.x = panel_rect.x + element_margin/2;
 	spritesheetBlit(
 			&textures.statbox,
-			3 + ((hunter->stats.hp == 0) ? 3:0), 2,
+			3 + ((hunter->base_stats.hp == 0) ? 3:0), 2,
 			statval_dest.x, statval_dest.y
 		);
 	
