@@ -20,15 +20,16 @@ void spritesheetBlit(SpriteSheet * sheet, int sx, int sy, int x, int y){
 #define SHEET(name, path, w, h) .name = {NULL, path, w*2, h*2, w, h}
 
 Textures textures = {
-	SHEET(tiles         , "resources/hunter-tile.png", 32,16),
-	SHEET(items         , "resources/items.png", 16,16),
-	SHEET(daniel        , "resources/daniel.png", 0,0),
-	SHEET(statbox       , "resources/statbox.png", 8,9),
-	SHEET(cards         , "resources/cards.png", 16,18),
-	SHEET(menu_gradient , "resources/menubar-gradient.png", 0,0),
-	SHEET(menu_icons    , "resources/menu-battle-icons.png", 16,16),
-	SHEET(crate         , "resources/crate.png", 0,0),
-	SHEET(dice          , "resources/dice.png", 37, 48)
+	SHEET(tiles          , "resources/hunter-tile.png", 32,16),
+	SHEET(items          , "resources/items.png", 16,16),
+	SHEET(daniel         , "resources/daniel.png", 0,0),
+	SHEET(statbox        , "resources/statbox.png", 8,9),
+	SHEET(cards          , "resources/cards.png", 16,18),
+	SHEET(menu_gradient  , "resources/menubar-gradient.png", 0,0),
+	SHEET(menu_icons     , "resources/menu-battle-icons.png", 16,16),
+	SHEET(crate          , "resources/crate.png", 0,0),
+	SHEET(dice           , "resources/dice.png", 37, 48),
+	SHEET(small_numbers  , "resources/small-numbers.png", 5, 6)
 };
 
 

@@ -10,3 +10,5 @@ void printRect(SDL_Rect * rect);
 	for(int X=0; X<(W); X++) for(int Y=0; Y<(H); Y++)
 
 #endif
+
+#define XY(ptr) (ptr)->x, (ptr)->y

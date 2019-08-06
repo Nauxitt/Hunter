@@ -19,19 +19,19 @@ int main(){
 
 	Hunter hunters[] = {
 		{	.name = "Daniel",
-			.base_stats={.atk = 2, .mov = 3, .def = 6},
+			.base_stats={.atk = 2, .mov = 3, .def = 6, .max_hp=10},
 			.type = "hunter"
 		},
 		{	.name = "Dave",
-			.base_stats = {.mov = 3, .atk = 4, .def = 4},
+			.base_stats = {.mov = 3, .atk = 4, .def = 4, .max_hp=10},
 			.type = "hunter"
 		},
 		{	.name = "Stan",
-			.base_stats = {.atk = 2, .mov = 1, .def = 8},
+			.base_stats = {.atk = 2, .mov = 1, .def = 8, .max_hp=10},
 			.type = "hunter"
 		},
 		{	.name = "Tim",
-			.base_stats = {.atk = 9, .mov = 1, .def = 1},
+			.base_stats = {.atk = 9, .mov = 1, .def = 1, .max_hp=10},
 			.type = "hunter"
 		}
 	};
