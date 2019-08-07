@@ -212,7 +212,6 @@ void mapOnTick(EventHandler * h){
 				breaker = 0;
 
 			case BEGIN_MATCH_ACTION:
-			case TURN_START_ACTION:
 			case TURN_END_ACTION:
 			case DRAW_CARD_ACTION:
 			case HEAL_ACTION:
@@ -236,6 +235,12 @@ void mapOnTick(EventHandler * h){
 			case DAMAGE_ACTION:
 			case ROLL_DICE_ACTION:
 			case ATTACK_DAMAGE_ACTION:
+				matchCycle(match);
+				break;
+
+			case TURN_START_ACTION:
+				state->menubar->active = 1;
+				state->menubar->selector = 0;
 				matchCycle(match);
 				break;
 
@@ -629,6 +634,9 @@ void mapOnMouseDown(EventHandler * h, SDL_Event * e){
 					(match->action->type == POLL_COMBAT_ACTION) ||
 					pollAction("poll_combat_target")
 				){
+			if(pollAction("poll_combat_target"))
+				nextAction();
+
 			Hunter * target = getHunterAt(match, t->x, t->y);
 			postCombatAction(match, match->action->actor, target);
 			mapSelectNone(state->map);
@@ -782,7 +790,9 @@ void mapEnterCombat(MapState * state){
 	CombatState * combat = makeCombatState(NULL, match);
 	combat->menubar = state->menubar;
 	combat->menubar->selector = -1;
+	combat->menubar->active = 0;
 	
+	// Copy HunterEntities into CombatState
 	for(int n = 0; n < 4; n++)
 		if(state->hunters[n].hunter == match->attacker){
 			HunterEntity * hunter = &state->hunters[n];
