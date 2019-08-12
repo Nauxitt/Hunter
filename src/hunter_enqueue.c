@@ -133,6 +133,10 @@ void enqueueDeathCheckAction(MatchContext * context, Hunter * hunter){
 }
 
 void enqueueEscapeAttemptAction(MatchContext * context){
+	matchEnqueueAction(context, ESCAPE_ATTEMPT_ACTION);
+}
+
+void enqueueEscapeAction(MatchContext * context){
 	matchEnqueueAction(context, ESCAPE_ACTION);
 }
 

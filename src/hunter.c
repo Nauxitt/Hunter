@@ -290,6 +290,8 @@ void matchCycle(MatchContext * context){
 		case ENTER_COMBAT_ACTION:
 			context->attacker = action->actor;
 			context->defender = action->target;
+			hunterClearBonus(context->attacker);
+			hunterClearBonus(context->defender);
 			break;
 
 		case EXIT_COMBAT_ACTION:
@@ -329,7 +331,15 @@ void matchCycle(MatchContext * context){
 				insert->next = new;
 			}
 			else if(context->defender_action->type == ESCAPE_ACTION){
-				enqueueEscapeAttemptAction(context);
+				if(context->defender_card)
+					enqueueUseCardAction(context, context->defender, context->defender_card);
+
+				if(context->attacker_card)
+					enqueueUseCardAction(context, context->attacker, context->attacker_card);
+
+				enqueueRollDiceAction(context);
+				enqueueEscapeAttemptAction(context);  // Potentially skips actions between this and EXIT_COMBAT_ACTION
+				enqueueAttackAction(context, context->attacker, context->defender);
 			}
 			else {
 				// A defend action will double the user's base DEF stat.
@@ -352,8 +362,22 @@ void matchCycle(MatchContext * context){
 			}
 			break;
 
-		case DEFEND_ACTION:
 		case ESCAPE_ACTION:
+			for(MatchAction* a = context->action; a->type != EXIT_COMBAT_ACTION; a = context->action){
+				context->action = a->next;
+				free(a);
+			}
+			break;
+
+		case ESCAPE_ATTEMPT_ACTION:
+			if(
+					context->defender->turn_stats.mov + context->dice_total2 >
+					context->attacker->turn_stats.mov + context->dice_total
+			)
+				enqueueEscapeAction(context);
+			break;
+
+		case DEFEND_ACTION:
 		case SURRENDER_ACTION:
 			/*
 			   These actions are not directly handled by matchCycle or the action stack.
@@ -456,6 +480,7 @@ void printMatchAction(MatchAction * action){
 		case EXECUTE_COMBAT_ACTION:
 		case DEFEND_ACTION:
 		case ESCAPE_ACTION:
+		case ESCAPE_ATTEMPT_ACTION:
 		case SURRENDER_ACTION:
 			break;
 		
@@ -680,15 +705,18 @@ uint8_t postDefenderAction(MatchContext * context, enum MatchActionType type, Ca
 		case SURRENDER_ACTION:
 			if(card != NULL)
 				return 1;
+
+		case ESCAPE_ACTION:
+		case ESCAPE_ATTEMPT_ACTION:
 		case ATTACK_ACTION:
 		case DEFEND_ACTION:
-		case ESCAPE_ACTION:
 			break;
 
 		default:
 			free(new);
 			return 1;
 	}
+
 	new->type = type;
 	new->actor = context->defender;
 	new->card = card;
@@ -774,6 +802,7 @@ const char * getMatchActionName(enum MatchActionType type){
 		case REST_ACTION: return "REST_ACTION";
 		case DEFEND_ACTION: return "DEFEND_ACTION";
 		case ESCAPE_ACTION: return "ESCAPE_ACTION";
+		case ESCAPE_ATTEMPT_ACTION: return "ESCAPE_ATTEMPT_ACTION";
 		case SURRENDER_ACTION: return "SURRENDER_ACTION";
 		case OPEN_CRATE_ACTION: return "OPEN_CRATE_ACTION";
 		case GIVE_RELIC_ACTION: return "GIVE_RELIC_ACTION";

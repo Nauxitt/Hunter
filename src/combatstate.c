@@ -39,13 +39,14 @@ void combatOnTick(EventHandler * h){
 	int breaker = 1;
 	while((breaker == 1) && (match->action)){
 		MatchAction * action = match->action;
-
+		
 		HunterEntity * actor_entity = &state->attacker_entity;
-		HunterEntity * target_entity = &state->defender_entity;
-		if(actor_entity->hunter != action->actor){
+		if(actor_entity->hunter != action->actor)
 			actor_entity = &state->defender_entity;
-			target_entity = &state->attacker_entity;
-		}
+		
+		HunterEntity * target_entity = &state->attacker_entity;
+		if(target_entity->hunter != action->target)
+			target_entity = &state->defender_entity;
 
 		switch(action->type){
 			case POLL_DEFEND_ACTION:
@@ -116,6 +117,7 @@ void combatOnTick(EventHandler * h){
 			case ATTACK_ACTION:
 			case DEFEND_ACTION:
 			case ESCAPE_ACTION:
+			case ESCAPE_ATTEMPT_ACTION:
 			case SURRENDER_ACTION:
 			case GIVE_RELIC_ACTION:
 			case REMOVE_RELIC_ACTION:
@@ -228,13 +230,13 @@ void combatOnKeyUp(EventHandler * h, SDL_Event * e){
 
 			case SDL_SCANCODE_SPACE:
 			case SDL_SCANCODE_RETURN:
-				state->selector = 0;
 				switch(state->selector){
 					case 0: postDefenderAction(match, ATTACK_ACTION, NULL); break;
 					case 1: postDefenderAction(match, DEFEND_ACTION, NULL); break;
 					case 2: postDefenderAction(match, ESCAPE_ACTION, NULL); break;
 					case 3: state->selector = 3; break;
 				}
+				state->selector = 0;
 				break;
 
 			default:
