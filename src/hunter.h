@@ -211,6 +211,8 @@ int hunterHandSize(Hunter * h);
 void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card);
 int hunterInventoryLength(Hunter * hunter);
 int hunterAddRelic(Hunter * hunter, Relic * relic);
+Relic * hunterRemoveRelicAt(Hunter * hunter, int index);
+int hunterRemoveRelic(Hunter * hunter, Relic * relic);
 
 void initMatch(MatchContext * context);
 void matchCycle(MatchContext * context);

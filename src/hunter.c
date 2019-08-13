@@ -188,6 +188,7 @@ void matchCycle(MatchContext * context){
 			if(actor->stats.hp <= 0){
 				actor->stats.hp = 0;
 				enqueueTeleportRandomAction(context, actor);
+				enqueueEndMoveAction(context, actor);
 			}
 			break;
 
@@ -261,9 +262,6 @@ void matchCycle(MatchContext * context){
 
 		case DEFENSE_ROLL_BONUS_ACTION:
 			action->actor->turn_stats.def += context->dice_total2;
-			break;
-
-		case REMOVE_RELIC_ACTION:
 			break;
 
 		case USE_CARD_ACTION:
@@ -406,8 +404,14 @@ void matchCycle(MatchContext * context){
 			break;
 
 		case GIVE_RELIC_ACTION:
-			// TODO: check if hunter successfully received the item, or if we need to poll for whether they wish to discard another item to make room.
-			hunterAddRelic(actor, action->relic);
+			if(hunterAddRelic(actor, action->relic) == 1){
+				// TODO: check if hunter successfully received the item, or if we need to poll for whether they wish to discard another item to make room.
+				// enqueuePromptReplaceItem
+			}
+			break;
+
+		case REMOVE_RELIC_ACTION:
+			hunterRemoveRelic(actor, action->relic);
 			break;
 
 		case POLL_MOVE_CARD_ACTION:
@@ -650,6 +654,42 @@ int hunterAddRelic(Hunter * hunter, Relic * relic){
 	hunter->inventory[len] = relic;
 	return 1;
 }
+
+Relic * hunterRemoveRelicAt(Hunter * hunter, int index){
+	Relic * ret = hunter->inventory[index];
+	int n;
+
+	// Shift items back, overwriting removed relic
+	for(n = index + 1; n < INVENTORY_LIMIT; n++){
+		hunter->inventory[n-1] = hunter->inventory[n];
+		if(hunter->inventory[n] == NULL)
+			break;
+	}
+
+	// Ensure zero-indexing of a previously-full inventory.
+	hunter->inventory[INVENTORY_LIMIT - 1] = NULL;
+
+	return ret;
+}
+
+int hunterRemoveRelic(Hunter * hunter, Relic * relic){
+	int index = -1;
+	
+	// Search hunter's inventory for relic
+	for(int n = 0; n < INVENTORY_LIMIT; n++)
+		if(hunter->inventory[n] == relic){
+			index = n;
+			break;
+		}
+
+	// Error if not found
+	if(index == -1)
+		return 1;
+	
+	hunterRemoveRelicAt(hunter, index);
+	return 0;
+}
+
 
 void rollDice(MatchContext * context){
 	for(int x=0; x < 4; x++)
