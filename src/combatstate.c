@@ -2,7 +2,7 @@
 
 #include "hunter.h"
 #include "combatstate.h"
-#include "handstate.h"
+#include "selectorpanel.h"
 #include "mapstate.h"
 #include "dicestate.h"
 #include "sprites.h"
@@ -59,8 +59,8 @@ void combatOnTick(EventHandler * h){
 			case POLL_ATTACK_ACTION:
 				if(state->card_selected == NULL){
 					breaker = 0;
-					HandState * handState = makeHandState(NULL, action->actor, 32, 72);
-					handState->card_target = &state->card_selected;
+					SelectorPanelState * handState = makeCardSelectState(NULL, action->actor, 32, 72);
+					handState->target = (void*) &state->card_selected;
 					gamePushState(GameState(handState));
 					return;
 				}

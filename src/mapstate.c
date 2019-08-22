@@ -14,7 +14,7 @@
 #include "menubar.h"
 #include "utils.h"
 
-#include "handstate.h"
+#include "selectorpanel.h"
 #include "dicestate.h"
 
 extern Game game;
@@ -561,9 +561,9 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 				case SDL_SCANCODE_SPACE:
 					// Move action
 					if(state->menubar->selector == 0){
-						HandState * handState = makeHandState(NULL, active_player, 32, 72);
+						SelectorPanelState * handState = makeCardSelectState(NULL, active_player, 32, 72);
 
-						handState->card_target = &state->card_selected;
+						handState->target = (void*) &state->card_selected;
 
 						pushAction("poll_move_card_select");
 						gamePushState((GameState*) handState);
