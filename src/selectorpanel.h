@@ -36,6 +36,7 @@ typedef struct _SelectorPanelState {
 
 SelectorPanelState * makeSelectorPanelState(SelectorPanelState * state);
 SelectorPanelState * makeCardSelectState(SelectorPanelState * state, Hunter * hunter, int x, int y);
+SelectorPanelState * makeInventorySelectState(SelectorPanelState * state, Hunter * hunter, int x, int y);
 
 void selectorPanelOnTick(EventHandler * h);
 void selectorPanelOnDraw(EventHandler * h);
@@ -43,7 +44,8 @@ void selectorPanelOnKeyUp(EventHandler * h, SDL_Event * e);
 void selectorPanelOnMouseUp(EventHandler * h, SDL_Event * e);
 
 void cardSelectDrawIcon (SelectorPanelState * state, int n, int x, int y);
-void relicSelectDrawIcon(SelectorPanelState * state, int n, int x, int y);
 void cardSelectOnChoose(SelectorPanelState * state, int n);
+void relicSelectDrawIcon(SelectorPanelState * state, int n, int x, int y);
+void relicSelectOnChoose(SelectorPanelState * state, int n);
 
 #endif

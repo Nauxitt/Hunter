@@ -35,6 +35,14 @@ void combatOnExit(EventHandler * h){
 void combatOnTick(EventHandler * h){
 	CombatState * state = CombatState(h);
 	MatchContext * match = state->match;
+	
+	// Handle relic selection
+	if(pollAction("surrender_relic_select")){
+		nextAction();
+		if(state->relic_selected != NULL){
+			postSurrenderAction(match, state->relic_selected);
+		}
+	}
 
 	int breaker = 1;
 	while((breaker == 1) && (match->action)){
@@ -215,6 +223,8 @@ void combatOnKeyUp(EventHandler * h, SDL_Event * e){
 	}
 
 	if(match->action->type == POLL_DEFEND_ACTION){
+		SelectorPanelState * relicSelect;
+
 		switch(e->key.keysym.scancode){
 			case SDL_SCANCODE_LEFT:
 				state->selector--;
@@ -234,7 +244,13 @@ void combatOnKeyUp(EventHandler * h, SDL_Event * e){
 					case 0: postDefenderAction(match, ATTACK_ACTION, NULL); break;
 					case 1: postDefenderAction(match, DEFEND_ACTION, NULL); break;
 					case 2: postDefenderAction(match, ESCAPE_ACTION, NULL); break;
-					case 3: state->selector = 3; break;
+					case 3:
+						relicSelect = makeInventorySelectState(NULL, state->defender_entity.hunter, 32, 72);
+						relicSelect->target = (void*) &state->relic_selected;
+						gamePushState(relicSelect);
+						pushAction("surrender_relic_select");
+
+						break;
 				}
 				state->selector = 0;
 				break;

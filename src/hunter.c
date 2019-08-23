@@ -478,7 +478,6 @@ void printMatchAction(MatchAction * action){
 	switch(action->type){
 		// For these actions, print nothing inside the parenthesis, as either printing their contents is unimplemented or they do not use any parameters
 		case EXIT_COMBAT_ACTION:
-		case REMOVE_RELIC_ACTION:
 		case ROLL_DICE_ACTION:
 		case BEGIN_MATCH_ACTION:
 		case EXECUTE_COMBAT_ACTION:
@@ -537,6 +536,7 @@ void printMatchAction(MatchAction * action){
 			printf("%s", action->actor->name);
 			break;
 
+		case REMOVE_RELIC_ACTION:
 		case GIVE_RELIC_ACTION:
 			printf("%s, %s", action->actor->name, action->relic->name);
 			break;
@@ -760,6 +760,28 @@ uint8_t postDefenderAction(MatchContext * context, enum MatchActionType type, Ca
 	new->type = type;
 	new->actor = context->defender;
 	new->card = card;
+
+	context->defender_action = new;
+
+	context->polling = 0;
+	MatchAction * a = context->action;
+	context->action = a->next;
+	free(a);
+	return 0;
+}
+
+uint8_t postSurrenderAction(MatchContext * context, Relic * relic){
+	if(context->polling == 0)
+		return 1;
+
+	if(context->action->type != POLL_DEFEND_ACTION)
+		return 1;
+	
+	MatchAction * new = (MatchAction*) calloc(sizeof(MatchAction), 1);
+	new->type = SURRENDER_ACTION;
+	new->actor = context->defender;
+	new->target = context->attacker;
+	new->relic = relic;
 
 	context->defender_action = new;
 

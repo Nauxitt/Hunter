@@ -222,6 +222,7 @@ uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter
 uint8_t postMoveCardAction(MatchContext * context, Hunter * character, Card * card);
 uint8_t postMoveAction(MatchContext * context, Hunter * character, int x, int y);
 uint8_t postDefenderAction(MatchContext * context, enum MatchActionType type, Card * card);
+uint8_t postSurrenderAction(MatchContext * context, Relic * relic);
 
 uint8_t postCombatAction(MatchContext * context, Hunter * attacker, Hunter * defender);
 uint8_t postAttackerCard(MatchContext * context, Card * card);

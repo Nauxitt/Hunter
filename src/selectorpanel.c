@@ -62,6 +62,27 @@ SelectorPanelState * makeCardSelectState(SelectorPanelState * state, Hunter * hu
 	return state;
 }
 
+SelectorPanelState * makeInventorySelectState(SelectorPanelState * state, Hunter * hunter, int x, int y){
+	if(state == NULL)
+		state = (SelectorPanelState*) calloc(sizeof(SelectorPanelState), 1);
+
+	state->color = (enum WindowColor) hunter->id;
+	state->length = hunterInventoryLength(hunter);
+	state->source = hunter->inventory;
+	state->rect.x = x;
+	state->rect.y = y;
+	state->icon.w = textures.items.w;
+	state->icon.h = textures.items.h;
+	state->select_none = 1;
+
+	makeSelectorPanelState(state);
+	EventHandler(state)->type = "CardSelectState";
+	state->drawIcon = relicSelectDrawIcon;
+	state->onChoose = relicSelectOnChoose;
+	
+	return state;
+}
+
 void selectorPanelOnKeyUp(EventHandler * h, SDL_Event * e){
 	SelectorPanelState * state = SelectorPanelState(h);
 	
@@ -158,4 +179,12 @@ void cardSelectDrawIcon(SelectorPanelState * state, int n, int x, int y){
 
 void cardSelectOnChoose(SelectorPanelState * state, int n){
 	*state->target = ((Card**) state->source)[n];
+}
+
+void relicSelectDrawIcon(SelectorPanelState * state, int n, int x, int y){
+	drawRelic(((Relic**)state->source)[n], x, y);
+}
+
+void relicSelectOnChoose(SelectorPanelState * state, int n){
+	*state->target = ((Relic**)state->source)[n];
 }

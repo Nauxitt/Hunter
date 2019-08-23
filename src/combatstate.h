@@ -21,6 +21,8 @@ typedef struct _CombatState {
 
 	int selector;
 	Card * card_selected;
+
+	Relic * relic_selected;
 } CombatState;
 
 #define CombatState(ptr) ((CombatState*) ptr)
