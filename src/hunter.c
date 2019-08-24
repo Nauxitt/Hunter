@@ -276,7 +276,6 @@ void matchCycle(MatchContext * context){
 			// General structure of a combat round
 			enqueueEnterCombatAction(context, actor, action->target);
 			enqueuePollDefenderAction(context, action->target);
-			enqueuePollAttackerCardAction(context, actor);
 			enqueueExecuteCombatAction(context);
 			enqueueExitCombatAction(context);
 
@@ -329,6 +328,8 @@ void matchCycle(MatchContext * context){
 				insert->next = new;
 			}
 			else if(context->defender_action->type == ESCAPE_ACTION){
+				enqueuePollAttackerCardAction(context, actor);
+
 				if(context->defender_card)
 					enqueueUseCardAction(context, context->defender, context->defender_card);
 
@@ -340,6 +341,8 @@ void matchCycle(MatchContext * context){
 				enqueueAttackAction(context, context->attacker, context->defender);
 			}
 			else {
+				enqueuePollAttackerCardAction(context, actor);
+
 				// A defend action will double the user's base DEF stat.
 				if(context->defender_action->type == DEFEND_ACTION){
 					context->defender->turn_stats.def += context->defender->base_stats.def/2;

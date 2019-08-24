@@ -133,7 +133,7 @@ void selectorPanelOnDraw(EventHandler *h){
 
 	SDL_Rect window_panel = {
 			state->rect.x, state->rect.y,
-			state->panel_margin*2 + (state->icon.w + state->item_gutter) * state->length - state->item_gutter,
+			state->panel_margin*2 + (state->icon.w+state->item_gutter) * state->length - state->item_gutter,
 			state->panel_margin*2 + state->icon.h
 		};
 
@@ -170,7 +170,6 @@ void selectorPanelOnDraw(EventHandler *h){
 
 		state->drawIcon(state, n, x, y);
 	}
-	//printf("\n");
 }
 
 void cardSelectDrawIcon(SelectorPanelState * state, int n, int x, int y){
