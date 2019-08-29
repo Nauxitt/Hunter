@@ -6,6 +6,7 @@
 #include "hunter.h"
 #include "sprites.h"
 #include "draw.h"
+#include "cards.h"
 
 SelectorPanelState * makeSelectorPanelState(SelectorPanelState * state){
 	if(state == NULL)
@@ -85,24 +86,31 @@ SelectorPanelState * makeInventorySelectState(SelectorPanelState * state, Hunter
 
 void selectorPanelOnKeyUp(EventHandler * h, SDL_Event * e){
 	SelectorPanelState * state = SelectorPanelState(h);
+
+	int max = state->length;
+	if(state->select_none)
+		max++;
 	
 	switch(e->key.keysym.scancode){
 		case SDL_SCANCODE_LEFT:
 			state->selector--;
 			if(state->selector == -1)
-				state->selector = state->length - 1;
+				state->selector = max - 1;
 			break;
 
 		case SDL_SCANCODE_RIGHT:
 			state->selector++;
-			if(state->selector >= state->length)
+			if(state->selector >= max)
 				state->selector = 0;
 			break;
 
 		case SDL_SCANCODE_SPACE:
 		case SDL_SCANCODE_RETURN:
 			// TODO: handle NO_CARD
-			state->onChoose(state, state->selector);
+			if(state->selector == state->length)
+				state->onChoose(state, -1);
+			else
+				state->onChoose(state, state->selector);
 			
 			gamePopState();
 			free(state);
@@ -170,6 +178,23 @@ void selectorPanelOnDraw(EventHandler *h){
 
 		state->drawIcon(state, n, x, y);
 	}
+
+	// If this mode is on, draw no item selection button.
+	if(state->select_none){
+		// TODO: blit cancel button from a spritesheet
+		SDL_Rect dest = {
+			state->rect.x + state->panel_margin + state->length * (state->icon.w+state->item_gutter),
+			state->rect.y + state->panel_margin,
+			state->icon.w,
+			state->icon.h
+		};
+
+		if(state->selector == state->length)
+			dest.y += 8;
+
+		SDL_SetRenderDrawColor(game.renderer, 255,0,0,255);
+		SDL_RenderFillRect(game.renderer, &dest);
+	}
 }
 
 void cardSelectDrawIcon(SelectorPanelState * state, int n, int x, int y){
@@ -177,7 +202,10 @@ void cardSelectDrawIcon(SelectorPanelState * state, int n, int x, int y){
 }
 
 void cardSelectOnChoose(SelectorPanelState * state, int n){
-	*state->target = ((Card**) state->source)[n];
+	if(n == -1)
+		*state->target = &no_card;
+	else
+		*state->target = ((Card**) state->source)[n];
 }
 
 void relicSelectDrawIcon(SelectorPanelState * state, int n, int x, int y){
@@ -185,5 +213,8 @@ void relicSelectDrawIcon(SelectorPanelState * state, int n, int x, int y){
 }
 
 void relicSelectOnChoose(SelectorPanelState * state, int n){
-	*state->target = ((Relic**)state->source)[n];
+	if(n == -1)
+		*state->target = NULL;
+	else
+		*state->target = ((Relic**)state->source)[n];
 }

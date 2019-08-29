@@ -20,3 +20,7 @@ Card CARDS[DECK_SIZE] = {
 	{.type = MOVE_CARD, .num = 3}, {.type = MOVE_CARD, .num = 3},
 	{.type = MOVE_CARD, .num = 3}, {.type = MOVE_CARD, .num = 3}
 };
+
+Card no_card = {
+	.type = NO_CARD
+};

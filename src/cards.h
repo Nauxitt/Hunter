@@ -32,5 +32,6 @@ typedef struct _Card {
 } Card;
 
 extern Card CARDS[DECK_SIZE];
+extern Card no_card;
 
 #endif
