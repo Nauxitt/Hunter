@@ -26,6 +26,7 @@ typedef struct _Textures {
 	SpriteSheet crate;
 	SpriteSheet dice;
 	SpriteSheet small_numbers;
+	SpriteSheet target_relic_panel;
 } Textures;
 
 extern Textures textures;

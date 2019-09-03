@@ -715,19 +715,37 @@ void mapOnDraw(EventHandler * h){
 	if(state->menubar)
 		onDraw(EventHandler(state->menubar));
 
-	// Draw stat windows, character stats
-	int panel_gutter = 4;
-	int panel_w = (game.w - 16*2 - 4*3) / 4;
-	for(int h=0; h < HUNTERS_COUNT; h++){
-		Hunter * hunter = state->hunters[h].hunter;
+	// Draw stat windows and target relic
+	if(state->statbox_view != STATBOX_VIEW_NONE){
+		if(state->match->action->type == POLL_TURN_ACTION){
+			// target relic
+			SDL_Rect dest = {
+				game.w - textures.target_relic_panel.w - 32,
+				game.h - textures.target_relic_panel.h - 160 - 16,
+				textures.target_relic_panel.w,
+				textures.target_relic_panel.h
+			};
 
-		drawStatbox(
-				hunter,
-				(enum StatboxViews) state->statbox_view,
-				(enum WindowColor) h,
-				16 + (panel_w+panel_gutter)*h,
-				game.h-160-panel_gutter
+			blit(
+				textures.target_relic_panel.texture,
+				NULL, &dest
 			);
+		}
+
+		// statboxes
+		int panel_gutter = 4;
+		int panel_w = (game.w - 16*2 - 4*3) / 4;
+		for(int h=0; h < HUNTERS_COUNT; h++){
+			Hunter * hunter = state->hunters[h].hunter;
+
+			drawStatbox(
+					hunter,
+					(enum StatboxViews) state->statbox_view,
+					(enum WindowColor) h,
+					16 + (panel_w+panel_gutter)*h,
+					game.h-160-panel_gutter
+				);
+		}
 	}
 }
 

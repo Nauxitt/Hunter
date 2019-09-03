@@ -180,7 +180,7 @@ typedef struct _MatchContext {
 
 	int exit_x, exit_y;
 
-	Relic * target_item;
+	Relic * target_relic;
 
 	int crates_len;
 	Crate * crates;

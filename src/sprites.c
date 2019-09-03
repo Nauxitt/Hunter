@@ -29,7 +29,8 @@ Textures textures = {
 	SHEET(menu_icons     , "resources/menu-battle-icons.png", 16,16),
 	SHEET(crate          , "resources/crate.png", 0,0),
 	SHEET(dice           , "resources/dice.png", 37, 48),
-	SHEET(small_numbers  , "resources/small-numbers.png", 5, 6)
+	SHEET(small_numbers  , "resources/small-numbers.png", 5, 6),
+	SHEET(target_relic_panel        , "resources/target-relic-panel.png", 0, 0)
 };
 
 
@@ -38,5 +39,17 @@ void loadSprites(){
 	for(int x = sizeof(textures)/sizeof(SpriteSheet)-1; x >= 0; x--){
 		SpriteSheet * sheet = ((SpriteSheet *) &textures) + x;
 		sheet->texture = IMG_LoadTexture(game.renderer, sheet->path);
+		
+		// If the sheet has unspecified dimensions, query the texture and generate scaled size data.
+		if(sheet->w == 0 || sheet->h == 0){
+			SDL_QueryTexture(
+					sheet->texture,
+					NULL, NULL,
+					&sheet->src_w,
+					&sheet->src_h
+				);
+			sheet->w = sheet->src_w * 2;
+			sheet->h = sheet->src_h * 2;
+		}
 	}
 }

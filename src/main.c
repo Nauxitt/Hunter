@@ -141,6 +141,7 @@ int main(){
 		},
 		.crates_len = 2,
 		.crates = crates,
+		.target_relic = &floppy,
 		.exit_x = exit_x,
 		.exit_y = exit_y,
 		.map_w = w,
