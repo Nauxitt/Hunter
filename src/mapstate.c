@@ -718,7 +718,7 @@ void mapOnDraw(EventHandler * h){
 	// Draw stat windows and target relic
 	if(state->statbox_view != STATBOX_VIEW_NONE){
 		if(state->match->action->type == POLL_TURN_ACTION){
-			// target relic
+			// target relic panel location and size
 			SDL_Rect dest = {
 				game.w - textures.target_relic_panel.w - 32,
 				game.h - textures.target_relic_panel.h - 160 - 16,
@@ -726,10 +726,20 @@ void mapOnDraw(EventHandler * h){
 				textures.target_relic_panel.h
 			};
 
+			// Blit panel background
 			blit(
 				textures.target_relic_panel.texture,
 				NULL, &dest
 			);
+			
+			// Blit target
+			drawRelic(
+					state->match->target_relic,
+					dest.x + 18 + 48/2 - textures.items.w/2,
+					dest.y + 36 + 48/2 - textures.items.h/2
+				);
+			
+			// TODO: blit relic level
 		}
 
 		// statboxes
