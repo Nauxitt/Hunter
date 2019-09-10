@@ -6,6 +6,7 @@
 #include "hunter.h"
 #include "hunter_enqueue.h"
 #include "cards.h"
+#include "score.h"
 
 void hunterClearBonus(Hunter * h){
 	h->turn_stats.atk = 0;
@@ -69,6 +70,12 @@ void initMatch(MatchContext * context){
 		context->characters[n]->base_stats.hp = context->characters[n]->base_stats.max_hp;
 	}
 
+	// initialize scores
+	// TODO: detect whether scoresets are already created
+	Scoreset * scores = (Scoreset*) calloc(sizeof(Scoreset), PLAYERS_LENGTH);
+	for(int n=0; n < PLAYERS_LENGTH; n++)
+		context->scores[n] = scores + n;
+
 	enqueueBeginMatchAction(context);
 	matchQueueUpdate(context);
 }
@@ -93,6 +100,11 @@ int matchQueueLength(MatchContext * context){
 	return n;
 }
 
+void freeAction(MatchAction * a){
+	if(a->score)
+		free(a->score);
+	free(a);
+}
 
 void matchCycle(MatchContext * context){
 	/*
@@ -103,7 +115,7 @@ void matchCycle(MatchContext * context){
 	context->action = action->next;
 
 	if(context->polling != 0 && context->enqueue != NULL){
-		free(action);
+		freeAction(action);
 		matchQueueUpdate(context);
 		context->polling = 0;
 		action = context->action;
@@ -119,6 +131,13 @@ void matchCycle(MatchContext * context){
 	Statset * target_stats;
 
 	Crate * crate;
+
+	// Handle scoring, stored in MatchAction
+	matchActionAssignScore(context->scoring_context, action);
+	if(action->score && action->actor){
+		Scoreset * hunterScore = context->scores[action->actor->id];
+		scoresetAdd(hunterScore, action->score);
+	}
 
 	switch(action->type){
 		case BEGIN_MATCH_ACTION:
@@ -366,7 +385,7 @@ void matchCycle(MatchContext * context){
 		case ESCAPE_ACTION:
 			for(MatchAction* a = context->action; a->type != EXIT_COMBAT_ACTION; a = context->action){
 				context->action = a->next;
-				free(a);
+				freeAction(a);
 			}
 			break;
 
@@ -456,7 +475,7 @@ void matchCycle(MatchContext * context){
 	}
 	
 	if(context->polling == 0)
-		free(action);
+		freeAction(action);
 }
 
 void printMatchQueue(MatchContext * context){
@@ -731,7 +750,7 @@ uint8_t postAttackerCard(MatchContext * context, Card * card){
 	context->polling = 0;
 	MatchAction * a = context->action;
 	context->action = a->next;
-	free(a);
+	freeAction(a);
 	return 0;
 }
 
@@ -756,7 +775,7 @@ uint8_t postDefenderAction(MatchContext * context, enum MatchActionType type, Ca
 			break;
 
 		default:
-			free(new);
+			freeAction(new);
 			return 1;
 	}
 
@@ -769,7 +788,7 @@ uint8_t postDefenderAction(MatchContext * context, enum MatchActionType type, Ca
 	context->polling = 0;
 	MatchAction * a = context->action;
 	context->action = a->next;
-	free(a);
+	freeAction(a);
 	return 0;
 }
 
@@ -791,7 +810,7 @@ uint8_t postSurrenderAction(MatchContext * context, Relic * relic){
 	context->polling = 0;
 	MatchAction * a = context->action;
 	context->action = a->next;
-	free(a);
+	freeAction(a);
 	return 0;
 }
 

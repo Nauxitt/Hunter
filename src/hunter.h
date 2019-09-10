@@ -5,13 +5,25 @@
 #ifndef __hunter_h
 #define __hunter_h
 
-#include <stdint.h>
-#include "cards.h"
-
+// Declare types before includes for two-way dependency
 typedef struct _Statset Statset;
 typedef struct _Hunter Hunter;
 typedef struct _Relic Relic;
 typedef struct _Card Card;
+typedef struct _Statset Statset;
+typedef struct _Hunter Hunter;
+typedef struct _Relic Relic;
+typedef struct _Crate Crate;
+typedef struct _Tile Tile;
+typedef struct _Agent Agent;
+typedef struct _MatchAction MatchAction;
+typedef struct _MatchContext MatchContext;
+
+#include <stdint.h>
+#include "cards.h"
+#include "score.h"
+
+#define PLAYERS_LENGTH 4
 
 typedef struct _Statset {
 	uint8_t hp;
@@ -31,6 +43,7 @@ typedef struct _Relic {
 	Statset (*statModifier)(Hunter * hunter);
 	int item_id;
 	int target_item;
+	int player_item;  // Denotes whether the relic the game through a player's inventory, which means it is not scored.
 } Relic;
 
 #define CHARACTER_TYPE_MAX_LENGTH 8
@@ -148,6 +161,7 @@ typedef struct _MatchAction {
 	Card * card;
 	Crate * crate;
 	Relic * relic;
+	Scoreset * score;
 	int x, y;
 	int value;
 } MatchAction;
@@ -171,7 +185,7 @@ typedef struct _MatchContext {
 
 		NOTE: this number will be increased from four to account for the enemies which can spawn on the map, as well as for Gon.  This will require looking into the turn order.  If the enemies take their turns in between players, since the ordering of this array reflects turn order, space needs to be reserved in between elements denoting player characters, with NULL pointers being skipped over in the case of enemies which haven't spawned yet.
 	*/
-	Hunter * characters [4 + 1];
+	Hunter * characters [PLAYERS_LENGTH + 1];
 	int active_player;
 	
 	int dice[4];      // The values of each rolled die
@@ -199,6 +213,10 @@ typedef struct _MatchContext {
 	Card * defender_card;
 
 	MatchAction * defender_action;
+
+	// Scoring context: determines how points are awarded.
+	ScoringContext * scoring_context;
+	Scoreset * scores[PLAYERS_LENGTH];
 } MatchContext;
 
 Crate * getCrateAt(MatchContext * context, int x, int y);
@@ -215,6 +233,7 @@ Relic * hunterRemoveRelicAt(Hunter * hunter, int index);
 int hunterRemoveRelic(Hunter * hunter, Relic * relic);
 
 void initMatch(MatchContext * context);
+void freeAction(MatchAction * a);
 void matchCycle(MatchContext * context);
 void rollDice(MatchContext * context);
 

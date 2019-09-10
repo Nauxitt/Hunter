@@ -10,6 +10,7 @@
 #include "mapstate.h"
 #include "hunter.h"
 #include "sprites.h"
+#include "score.h"
 
 Game game;
 
@@ -146,7 +147,8 @@ int main(){
 		.exit_y = exit_y,
 		.map_w = w,
 		.map_h = h,
-		.map = map
+		.map = map,
+		.scoring_context = &DEFAULT_SCORING_CONTEXT
 	};
 
 	initMatch(&context);
