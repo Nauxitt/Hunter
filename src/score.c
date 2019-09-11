@@ -5,7 +5,9 @@
 ScoringContext DEFAULT_SCORING_CONTEXT = {
 	.relic_award = 1000,
 	.target_relic_award = 5000,
-	.movement_award = 10
+	.movement_award = 15,
+	.damage_award = 25,
+	.flag_award = 250
 };
 
 void scoresetAdd(Scoreset * dest, Scoreset * add){
@@ -61,5 +63,7 @@ void matchActionAssignScore(ScoringContext * scoring_context, MatchAction * acti
 int totalScore(Scoreset * score){
 	return
 		score->relic_bonus.value +
-		score->movement_bonus.value;
+		score->movement_bonus.value +
+		score->damage_bonus.value +
+		score->flag_bonus.value;
 }

@@ -19,17 +19,20 @@ typedef struct _Score {
 } Score;
 
 typedef struct _Scoreset {
+	Score level_handicap;
 	Score relic_bonus;
 	Score movement_bonus;
-	// Score combat_bonus
-	// Score flag_bonus
+	Score damage_bonus;
+	Score flag_bonus;
 } Scoreset;
 
 typedef struct _ScoringContext {
+	int level_handicap;
 	int relic_award;         // pts for each discovered relic held at match end
 	int target_relic_award;  // pts for ending with target relic
 	int movement_award;      // pts per tile
-	// int flag_bonus;
+	int damage_award;        // pts per damage dealt
+	int flag_award;          // pts per flag captured
 } ScoringContext;
 
 extern ScoringContext DEFAULT_SCORING_CONTEXT;
