@@ -8,7 +8,6 @@
 // Declare types before includes for two-way dependency
 typedef struct _Statset Statset;
 typedef struct _Hunter Hunter;
-typedef struct _Relic Relic;
 typedef struct _Card Card;
 typedef struct _Statset Statset;
 typedef struct _Hunter Hunter;
@@ -86,6 +85,7 @@ typedef struct _Tile {
 
 enum MatchActionType {
 	BEGIN_MATCH_ACTION,
+	END_MATCH_ACTION,
 	TURN_START_ACTION,
 	TURN_END_ACTION,
 	
@@ -155,6 +155,8 @@ typedef struct _Agent {
 typedef struct _MatchAction {
 	enum MatchActionType type;
 	struct _MatchAction * next;
+	struct _MatchContext * context;
+
 	Hunter * actor;
 	Hunter * target;
 
@@ -227,6 +229,7 @@ Statset * hunterStats(Hunter * h);
 Card * hunterPopCard(Hunter * h, int card_num);
 int hunterHandSize(Hunter * h);
 void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card);
+int hunterHasRelic(Hunter * hunter, Relic * relic);
 int hunterInventoryLength(Hunter * hunter);
 int hunterAddRelic(Hunter * hunter, Relic * relic);
 Relic * hunterRemoveRelicAt(Hunter * hunter, int index);

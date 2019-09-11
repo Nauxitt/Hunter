@@ -122,6 +122,8 @@ void matchCycle(MatchContext * context){
 		context->action = action->next;
 	}
 
+	action->context = context;
+
 	Hunter * actor = action->actor;
 	if(actor == NULL)
 		actor = context->characters[context->active_player];
@@ -146,6 +148,11 @@ void matchCycle(MatchContext * context){
 				enqueueDrawCards(context, context->characters[n], 4);
 
 			enqueueStartTurnAction(context, actor);
+			break;
+
+		case END_MATCH_ACTION:
+			for(int h=0; h < PLAYERS_LENGTH; h++)
+				printf("\t%s: %d\n", context->characters[h]->name, totalScore(context->scores[h]));
 			break;
 
 		case TURN_START_ACTION:
@@ -252,9 +259,13 @@ void matchCycle(MatchContext * context){
 
 			// Exit tile handling
 			if(hunterAt(actor, context->exit_x, context->exit_y)){
-				// TODO: End game if it's a hunter with the target item
-				// Otherwise teleport to random valid location
-				enqueueTeleportRandomAction(context, actor);
+				// End game if it's a hunter with the target item, 
+				// otherwise teleport to random valid location
+				
+				if(hunterHasRelic(actor, context->target_relic))
+					enqueueEndMatchAction(context);
+				else
+					enqueueTeleportRandomAction(context, actor);
 			}
 
 			break;
@@ -656,6 +667,14 @@ void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
 		default:
 			break;
 	}
+}
+
+int hunterHasRelic(Hunter * hunter, Relic * relic){
+	for(Relic ** slot = (Relic**) &hunter->inventory; *slot != NULL; slot++)
+		if(*slot == relic)
+			return 1;
+
+	return 0;
 }
 
 int hunterInventoryLength(Hunter * hunter){

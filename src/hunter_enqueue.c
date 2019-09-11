@@ -24,6 +24,10 @@ MatchAction * matchEnqueueActorAction(MatchContext * context, enum MatchActionTy
 	return action;
 }
 
+void enqueueEndMatchAction(MatchContext * context){
+	matchEnqueueAction(context, END_MATCH_ACTION);
+}
+
 void enqueueBeginMatchAction(MatchContext * context){
 	matchEnqueueAction(context, BEGIN_MATCH_ACTION);
 }

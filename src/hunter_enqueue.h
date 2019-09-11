@@ -7,6 +7,7 @@ MatchAction * matchEnqueueAction(MatchContext * context, enum MatchActionType ty
 MatchAction * matchEnqueueActorAction(MatchContext * context, enum MatchActionType type, Hunter * actor);
 
 void enqueueBeginMatchAction(MatchContext * context);
+void enqueueEndMatchAction(MatchContext * context);
 void enqueueEndTurnAction(MatchContext * context, Hunter * actor);
 void enqueueStartTurnAction(MatchContext * context, Hunter * actor);
 void enqueueMoveAction(MatchContext * context, Hunter * actor, int x, int y);

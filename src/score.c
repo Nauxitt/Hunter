@@ -15,15 +15,38 @@ void scoresetAdd(Scoreset * dest, Scoreset * add){
 
 void matchActionAssignScore(ScoringContext * scoring_context, MatchAction * action){
 	Scoreset * score = (Scoreset *) calloc(sizeof(Scoreset), 1);
+	MatchContext * context = action->context;
 
 	switch(action->type){
 		case MOVE_STEP_ACTION:
 			score->movement_bonus.value += scoring_context->movement_award;
 			break;
 
+		case END_MATCH_ACTION:
+			// Relic scores
+			for(int n=0; n < PLAYERS_LENGTH; n++){
+				Hunter * h = context->characters[n];
+				Scoreset * score = context->scores[n];
+				
+				// Iterate through hunter's inventory
+				for(Relic ** slot = (Relic**) &h->inventory; *slot != NULL; slot++){
+					// Dont' score items which entered the game with a player
+					if((*slot)->player_item)
+						continue;
+
+					// Increment score based on whether the relic is the target.
+					score->relic_bonus.value += (
+							(*slot == context->target_relic) ?
+							context->scoring_context->target_relic_award :
+							context->scoring_context->relic_award
+						);
+				}
+			}
+			break;
+
+
 		/* TODO: implement scoring for these
 		case DEAL_DAMAGE_ACTION:
-		case MATCH_END_ACTION:
 		case GET_FLAG_ACTION:
 		*/
 

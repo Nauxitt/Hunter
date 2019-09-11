@@ -211,6 +211,8 @@ void mapOnTick(EventHandler * h){
 			case POLL_DEFEND_ACTION:
 				breaker = 0;
 
+			case END_MATCH_ACTION:
+				// TODO: Handle ending screen
 			case BEGIN_MATCH_ACTION:
 			case TURN_END_ACTION:
 			case DRAW_CARD_ACTION:
