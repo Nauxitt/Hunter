@@ -647,6 +647,7 @@ void mapOnMouseDown(EventHandler * h, SDL_Event * e){
 void mapOnDraw(EventHandler * h){
 	MapState * state = MapState(h);
 	MapStateMap * map = state->map;
+	MatchContext * match = state->match;
 	
 	SDL_Rect srcrect  = {0, 0, state->tile_src_w, state->tile_img_h};
 
@@ -674,6 +675,10 @@ void mapOnDraw(EventHandler * h){
 			tile->tint_r = 255; tile->tint_g = 255; tile->tint_b = 255;
 		}
 		
+		if(x == match->exit_x && y == match->exit_y){
+			tile->tint_r = 48; tile->tint_g = 255; tile->tint_b = 48;
+		}
+
 		SDL_SetTextureColorMod(
 				state->tiles_texture,
 				tile->tint_r, tile->tint_g, tile->tint_b
