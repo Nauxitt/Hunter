@@ -151,6 +151,7 @@ void matchCycle(MatchContext * context){
 			break;
 
 		case END_MATCH_ACTION:
+			printf("End match. Scores:\n");
 			for(int h=0; h < PLAYERS_LENGTH; h++)
 				printf("\t%s: %d\n", context->characters[h]->name, totalScore(context->scores[h]));
 			break;
@@ -670,7 +671,7 @@ void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
 }
 
 int hunterHasRelic(Hunter * hunter, Relic * relic){
-	for(Relic ** slot = (Relic**) &hunter->inventory; *slot != NULL; slot++)
+	for(Relic ** slot = (Relic**) &hunter->inventory; *slot; slot++)
 		if(*slot == relic)
 			return 1;
 

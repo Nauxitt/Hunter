@@ -78,8 +78,8 @@ GameState * gamePopState(){
 		ret->events.onExit((EventHandler*) ret);
 	
 	game.state = ret->prevState;
-
-	if(game.state->events.onEnter)
+	
+	if(game.state && game.state->events.onEnter)
 		game.state->events.onEnter((EventHandler*) game.state);
 
 	return ret;

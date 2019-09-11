@@ -29,7 +29,7 @@ void matchActionAssignScore(ScoringContext * scoring_context, MatchAction * acti
 				Scoreset * score = context->scores[n];
 				
 				// Iterate through hunter's inventory
-				for(Relic ** slot = (Relic**) &h->inventory; *slot != NULL; slot++){
+				for(Relic ** slot = (Relic**) &h->inventory; *slot; slot++){
 					// Dont' score items which entered the game with a player
 					if((*slot)->player_item)
 						continue;

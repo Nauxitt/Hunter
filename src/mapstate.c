@@ -14,6 +14,7 @@
 #include "menubar.h"
 #include "utils.h"
 
+#include "scorestate.h"
 #include "selectorpanel.h"
 #include "dicestate.h"
 
@@ -202,6 +203,13 @@ void mapOnTick(EventHandler * h){
 		}
 
 		switch(action->type){
+			case END_MATCH_ACTION:
+				// If the match ends, exit this state and display score screen.
+				matchCycle(match);
+				gamePopState();
+				gamePushState((GameState*) makeScoreState(NULL, match));
+				return;
+
 			case POLL_MOVE_CARD_ACTION:
 			case POLL_MOVE_ACTION:
 			case POLL_ATTACK_ACTION:
@@ -211,8 +219,6 @@ void mapOnTick(EventHandler * h){
 			case POLL_DEFEND_ACTION:
 				breaker = 0;
 
-			case END_MATCH_ACTION:
-				// TODO: Handle ending screen
 			case BEGIN_MATCH_ACTION:
 			case TURN_END_ACTION:
 			case DRAW_CARD_ACTION:
