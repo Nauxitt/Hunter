@@ -14,6 +14,6 @@ typedef struct _ScoreState {
 
 ScoreState * makeScoreState(ScoreState * state, MatchContext * match);
 void scoreStateOnDraw(EventHandler * h);
-void scoreStateOnKeyDown(EventHandler * h, SDL_Event * e);
+void scoreStateOnKeyUp(EventHandler * h, SDL_Event * e);
 
 #endif

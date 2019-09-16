@@ -10,6 +10,7 @@ ScoreState * makeScoreState(ScoreState * state, MatchContext * match){
 	state->match = match;
 	EventHandler(state)->type = "ScoreState";
 	EventHandler(state)->onDraw = scoreStateOnDraw;
+	EventHandler(state)->onKeyUp = scoreStateOnKeyUp;
 	return state;
 }
 
@@ -33,4 +34,14 @@ void scoreStateOnDraw(EventHandler * h){
 	}
 }
 
-void scoreStateOnKeyDown(EventHandler * h, SDL_Event * e);
+void scoreStateOnKeyUp(EventHandler * h, SDL_Event * e){
+	switch(e->key.keysym.scancode){
+		case SDL_SCANCODE_RETURN:
+		case SDL_SCANCODE_SPACE:
+		case SDL_SCANCODE_ESCAPE:
+			gamePopState();
+			break;
+		default:
+			break;
+	}
+}

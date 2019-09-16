@@ -142,6 +142,9 @@ void gameCycle(){
 	// Run gamestate tick handler, as well as those of any new GameStates which gets pushed onto the GameState stack from a prior tick handler.
 	GameState * tickedState;
 	do {
+		if(game.state == NULL)
+			return;
+
 		tickedState = game.state;
 		onTick(EventHandler(game.state));
 	} while(game.state != tickedState);
