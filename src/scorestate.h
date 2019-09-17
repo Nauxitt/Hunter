@@ -10,6 +10,7 @@ typedef struct _ScoreState {
 	MatchContext * match;
 	Hunter * hunters[PLAYERS_LENGTH + 1];
 	Score * scores[PLAYERS_LENGTH + 1];
+	uint8_t places[PLAYERS_LENGTH];
 } ScoreState;
 
 ScoreState * makeScoreState(ScoreState * state, MatchContext * match);
