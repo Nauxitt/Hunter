@@ -114,6 +114,7 @@ void combatOnTick(EventHandler * h){
 				return;
 
 			case USE_CARD_ACTION:
+			case DEAL_DAMAGE_ACTION:
 			case ATTACK_DAMAGE_ACTION:
 			case ENTER_COMBAT_ACTION:
 			case MOVE_ROLL_BONUS_ACTION:

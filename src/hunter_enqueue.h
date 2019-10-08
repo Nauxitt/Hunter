@@ -46,6 +46,7 @@ void enqueueEscapeAction(MatchContext * context);
 void enqueueEscapeAttemptAction(MatchContext * context);
 void enqueueAttackAction(MatchContext * context, Hunter * attacker, Hunter * defender);
 void enqueueAttackDamageAction(MatchContext * context, Hunter * attacker, Hunter * defender);
+void enqueueDealDamageAction(MatchContext * context, Hunter * attacker, Hunter * target, int value);
 void enqueueDamageAction(MatchContext * context, Hunter * target, int value);
 
 #endif

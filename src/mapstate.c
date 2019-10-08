@@ -220,6 +220,7 @@ void mapOnTick(EventHandler * h){
 				breaker = 0;
 
 			case BEGIN_MATCH_ACTION:
+			case DEAL_DAMAGE_ACTION:
 			case TURN_END_ACTION:
 			case DRAW_CARD_ACTION:
 			case HEAL_ACTION:

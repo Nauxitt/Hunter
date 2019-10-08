@@ -13,6 +13,8 @@ ScoringContext DEFAULT_SCORING_CONTEXT = {
 void scoresetAdd(Scoreset * dest, Scoreset * add){
 	dest->relic_bonus.value += add->relic_bonus.value;
 	dest->movement_bonus.value += add->movement_bonus.value;
+	dest->damage_bonus.value += add->damage_bonus.value;
+	dest->flag_bonus.value += add->damage_bonus.value;
 }
 
 void matchActionAssignScore(ScoringContext * scoring_context, MatchAction * action){
@@ -47,8 +49,11 @@ void matchActionAssignScore(ScoringContext * scoring_context, MatchAction * acti
 			break;
 
 
-		/* TODO: implement scoring for these
 		case DEAL_DAMAGE_ACTION:
+			score->damage_bonus.value += action->value * context->scoring_context->damage_award;
+			break;
+
+		/* TODO:
 		case GET_FLAG_ACTION:
 		*/
 

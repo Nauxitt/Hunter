@@ -115,6 +115,13 @@ void enqueueAttackAction(MatchContext * context, Hunter * attacker, Hunter * def
 	action->target = defender;
 }
 
+void enqueueDealDamageAction(MatchContext * context, Hunter * attacker, Hunter * target, int value){
+	MatchAction * action = matchEnqueueActorAction(context, DEAL_DAMAGE_ACTION, target);
+	action->actor = attacker;
+	action->target = target;
+	action->value = (value > 0) ? value : 0;
+}
+
 void enqueueDamageAction(MatchContext * context, Hunter * target, int value){
 	MatchAction * action = matchEnqueueActorAction(context, DAMAGE_ACTION, target);
 	action->target = target;

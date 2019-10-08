@@ -193,6 +193,13 @@ void matchCycle(MatchContext * context){
 				actor->base_stats.hp = actor->stats.max_hp;
 			break;
 
+		case DEAL_DAMAGE_ACTION:
+			enqueueDamageAction(
+					context, action->target,
+					action->value
+				);
+			break;
+
 		case DAMAGE_ACTION:
 			action->target->base_stats.hp -= action->value;
 			if(action->target->base_stats.hp < 0)
@@ -425,8 +432,8 @@ void matchCycle(MatchContext * context){
 			actor_stats = hunterStats(action->actor);
 			target_stats = hunterStats(action->target);
 
-			enqueueDamageAction(
-					context, action->target,
+			enqueueDealDamageAction(
+					context, action->actor, action->target,
 					context->dice_total + actor_stats->atk -
 					context->dice_total2 - target_stats->def
 				);

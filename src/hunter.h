@@ -93,7 +93,8 @@ enum MatchActionType {
 	DRAW_CARD_ACTION,
 	USE_CARD_ACTION,
 	HEAL_ACTION,
-	DAMAGE_ACTION,
+	DEAL_DAMAGE_ACTION,  // denotes source and target
+	DAMAGE_ACTION,       // denotes recipient
 	
 	ROLL_DICE_ACTION,
 	
@@ -104,7 +105,7 @@ enum MatchActionType {
 	ATTACK_ROLL_BONUS_ACTION,
 	DEFENSE_ROLL_BONUS_ACTION,
 	
-	// Polling actions, which lock the state until input is recieved
+	// Polling actions, which lock the state until input is received
 	POLL_TURN_ACTION,
 	POLL_MOVE_CARD_ACTION,
 	POLL_MOVE_ACTION,
