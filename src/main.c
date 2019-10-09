@@ -14,7 +14,7 @@
 
 Game game;
 
-int main(){
+int basicMission(){
 	initGame();
 	loadSprites();
 
@@ -180,5 +180,10 @@ int main(){
 	gamePushState(GameState(mapstate));
 	gameMainLoop();
 
+	return 0;
+}
+
+int main(){
+	basicMission();
 	return 0;
 }
