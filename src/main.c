@@ -3,14 +3,18 @@
 #include <SDL2/SDL.h>
 
 #include <SDL2/SDL_image.h>
-
-#include "main.h"
-#include "animations.h"
 #include "stateengine.h"
+#include "main.h"
+
+// For mission
+#include "animations.h"
 #include "mapstate.h"
 #include "hunter.h"
 #include "sprites.h"
 #include "score.h"
+
+// For main menu
+#include "mainMenuState.h"
 
 Game game;
 
@@ -184,6 +188,13 @@ int basicMission(){
 }
 
 int main(){
-	basicMission();
+	initGame();
+	loadSprites();
+
+	MainMenuState * state = initMainMenuState(NULL);
+
+	gamePushState(state);
+	gameMainLoop();
+
 	return 0;
 }
