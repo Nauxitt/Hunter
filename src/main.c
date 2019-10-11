@@ -187,14 +187,18 @@ int basicMission(){
 	return 0;
 }
 
-int main(){
+int developmentMainMenu(){
 	initGame();
 	loadSprites();
 
 	MainMenuState * state = initMainMenuState(NULL);
-
 	gamePushState(state);
+
 	gameMainLoop();
 
 	return 0;
+}
+
+int main(){
+	return basicMission();
 }

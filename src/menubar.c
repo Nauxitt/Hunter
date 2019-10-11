@@ -57,11 +57,6 @@ void menuOnDraw(EventHandler * h){
 		spritesheetBlit(&textures.menu_icons, i,0, dest.x, dest.y);
 	}
 
-	// Draw deck icon
-	src.x = 5 * 16;
-	dest.x = game.w - 32 * 4;
-	spritesheetBlit(&textures.menu_icons, 5,0, dest.x, dest.y);
-
 	// Draw scroling text window
 	src.x = 0; src.y = 16;
 	src.w = 144;
@@ -69,6 +64,8 @@ void menuOnDraw(EventHandler * h){
 	dest.x = 5 * 38 + 32;
 	dest.w = 144*2;
 	blit(textures.menu_icons.texture, &src, &dest);
+
+	drawDeckIndicator(game.w - 32 * 4, 24, match->deck_len);
 
 	// Draw selector feather
 	if(pollAction("poll_turn_action")){
@@ -81,9 +78,4 @@ void menuOnDraw(EventHandler * h){
 			blit(textures.menu_icons.texture, &src, &dest);
 		}
 	}
-
-	// Draw deck card count
-	// TODO: move this into menubar's draw handler
-	drawBigNumber(game.w - 16*6, 32-2, match->deck_len / 10);
-	drawBigNumber(game.w - 16*5, 32-2, match->deck_len % 10);
 }

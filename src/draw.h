@@ -38,4 +38,6 @@ void drawDamageDice(int num, int x, int y);
 void drawMoveDice(int num, int x, int y);
 void drawDefenseDice(int num, int x, int y);
 
+void drawDeckIndicator(int x, int y, int len);
+
 #endif

@@ -312,3 +312,13 @@ void drawMoveDice(int num, int x, int y){
 void drawDefenseDice(int num, int x, int y){
 	spritesheetBlit(&textures.dice, num-1,1, x,y);
 }
+
+void drawDeckIndicator(int x, int y, int len){
+	// Draw deck icon
+	spritesheetBlit(&textures.menu_icons, 5,0, x, y);
+
+	// Draw deck card count
+	y += 6;
+	drawBigNumber(x += textures.menu_icons.w, y, len / 10);
+	drawBigNumber(x += textures.statbox.w   , y, len % 10);
+}
