@@ -9,7 +9,15 @@ MenubarState * initMenu(MenubarState * state, MatchContext * match){
 		state = MenubarState(calloc(sizeof(MenubarState), 1));
 
 	state->match = match;
+
+	// Hard-code mission icon data
 	state->length = 5;
+	state->icons[0].id = 0;
+	state->icons[1].id = 1;
+	state->icons[2].id = 2;
+	state->icons[3].id = 3;
+	state->icons[4].id = 4;
+	state->icons[5].id = -1;
 
 	EventHandler(state)->type = "MenubarState";
 	EventHandler(state)->onDraw = menuOnDraw;
@@ -37,33 +45,47 @@ void menuOnKeyUp(EventHandler * h, SDL_Event * e){
 	}
 }
 
+void drawMenubarBackground(SDL_Rect * dest){
+	SDL_Rect src = {0, 0, 1, 64};
+	blit(textures.menu_gradient.texture, &src, dest);
+}
+
+void drawMenubarIcon(int x, int y, int id){
+	spritesheetBlit(&textures.menu_icons, id,0, x,y);
+}
+
+
 void menuOnDraw(EventHandler * h){
 	MenubarState * menu = MenubarState(h);
 	MatchContext * match = menu->match;
 
 	// Render menubar background
-	SDL_Rect src = {0, 0, 1, 64};
 	SDL_Rect dest = {0, 0, game.w, 64};
 	
-	blit(textures.menu_gradient.texture, &src, &dest);
+	drawMenubarBackground(&dest);
 	
 	// Render left icons
-	src.w  = 16; src.h  = 16;
-	dest.y = 64 - 32 - 8;
-	dest.w = 32; dest.h = 32;
+	dest.y = 24;
 
-	for(int i=0; i<5; i++){
-		src.x = i * 16;
-		dest.x = i * 38 + 32;
-		spritesheetBlit(&textures.menu_icons, i,0, dest.x, dest.y);
+	SDL_Rect src = {0, 0, 16, 16};
+	for(int i=0; i < menu->length; i++){
+		MenubarIcon * icon = &menu->icons[i];
+		int id = icon->id;
+
+		if(id < 0){
+			menu->length = i;
+			break;
+		}
+
+		drawMenubarIcon(id*38 + 32, dest.y, id);
 	}
 
 	// Draw scroling text window
-	src.x = 0; src.y = 16;
-	src.w = 144;
-	src.h = 16;
+	src.x = 0;    src.y = 16;
+	src.w = 144;  src.h = 16;
+
 	dest.x = 5 * 38 + 32;
-	dest.w = 144*2;
+	dest.w = 144*2;  dest.h = 32;
 	blit(textures.menu_icons.texture, &src, &dest);
 
 	drawDeckIndicator(game.w - 32 * 4, 24, match->deck_len);
