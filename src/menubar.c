@@ -9,8 +9,10 @@ MenubarState * initMenu(MenubarState * state, MatchContext * match){
 		state = MenubarState(calloc(sizeof(MenubarState), 1));
 
 	state->match = match;
+	state->drawContents = drawMenubarContents;
 
-	// Hard-code mission icon data
+	// Hard-code mission menubar data
+	state->drawContents = matchMenubarDrawContents;
 	state->length = 5;
 	state->icons[0].id = 0;
 	state->icons[1].id = 1;
@@ -54,20 +56,8 @@ void drawMenubarIcon(int x, int y, int id){
 	spritesheetBlit(&textures.menu_icons, id,0, x,y);
 }
 
-
-void menuOnDraw(EventHandler * h){
-	MenubarState * menu = MenubarState(h);
-	MatchContext * match = menu->match;
-
-	// Render menubar background
-	SDL_Rect dest = {0, 0, game.w, 64};
-	
-	drawMenubarBackground(&dest);
-	
+void drawMenubarContents(MenubarState * menu){
 	// Render left icons
-	dest.y = 24;
-
-	SDL_Rect src = {0, 0, 16, 16};
 	for(int i=0; i < menu->length; i++){
 		MenubarIcon * icon = &menu->icons[i];
 		int id = icon->id;
@@ -77,26 +67,41 @@ void menuOnDraw(EventHandler * h){
 			break;
 		}
 
-		drawMenubarIcon(id*38 + 32, dest.y, id);
+		drawMenubarIcon(id*38 + 32, 24, id);
 	}
+}
 
+void matchMenubarDrawContents(MenubarState * menu){
+	MatchContext * match = menu->match;
+
+	drawMenubarContents(menu);
+	
 	// Draw scroling text window
-	src.x = 0;    src.y = 16;
-	src.w = 144;  src.h = 16;
+	SDL_Rect src = {0, 16, 144, 16};
 
-	dest.x = 5 * 38 + 32;
-	dest.w = 144*2;  dest.h = 32;
+	SDL_Rect dest = {5*38 + 32, 24, 144*2, 32};
 	blit(textures.menu_icons.texture, &src, &dest);
 
 	drawDeckIndicator(game.w - 32 * 4, 24, match->deck_len);
+}
+
+void menuOnDraw(EventHandler * h){
+	MenubarState * menu = MenubarState(h);
+
+	// Render menubar background
+	SDL_Rect dest = {0, 0, game.w, 64};
+	drawMenubarBackground(&dest);
+
+	if(menu->drawContents)
+		menu->drawContents(menu);
 
 	// Draw selector feather
 	if(pollAction("poll_turn_action")){
-		src.x = 0; src.y = 32;
-		src.w = 32; src.h = 32;
+		SDL_Rect src = {0, 32, 32, 32};
 		
 		if(menu->selector != -1){
 			dest.x = menu->selector * 38 + 32;
+			dest.y = 24;
 			dest.w = 64; dest.h = 64;
 			blit(textures.menu_icons.texture, &src, &dest);
 		}

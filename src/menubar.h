@@ -21,6 +21,7 @@ typedef struct _MenubarState {
 	int8_t selector;   // Index of the item being selected
 	uint8_t active;    // Whether the menubar is selecting anything
 	MenubarIcon icons[MENUBAR_MAX_ICONS];
+	void (*drawContents)(struct _MenubarState * menu);
 } MenubarState;
 
 #define MenubarState(M) ((MenubarState *) M)
@@ -31,5 +32,7 @@ void menuOnKeyUp(EventHandler * h, SDL_Event * e);
 
 void drawMenubarIcon(int x, int y, int id);
 void drawMenubarBackground(SDL_Rect * dest);
+void drawMenubarContents(MenubarState * menu);
+void matchMenubarDrawContents(MenubarState * menu);
 
 #endif
