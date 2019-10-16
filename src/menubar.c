@@ -9,6 +9,7 @@ MenubarState * initMenu(MenubarState * state, MatchContext * match){
 		state = MenubarState(calloc(sizeof(MenubarState), 1));
 
 	state->match = match;
+	state->length = 5;
 
 	EventHandler(state)->type = "MenubarState";
 	EventHandler(state)->onDraw = menuOnDraw;
@@ -23,11 +24,11 @@ void menuOnKeyUp(EventHandler * h, SDL_Event * e){
 	switch(e->key.keysym.scancode){
 		case SDL_SCANCODE_LEFT:
 			if(--state->selector < 0)
-				state->selector = 4;
+				state->selector = state->length-1;
 			break;
 
 		case SDL_SCANCODE_RIGHT:
-			if(++state->selector >= 5)
+			if(++state->selector >= state->length)
 				state->selector = 0;
 			break;
 
