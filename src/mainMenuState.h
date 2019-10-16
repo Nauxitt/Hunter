@@ -2,14 +2,25 @@
 #define __mainMenuState_h
 
 #include "stateengine.h"
+#include "menubar.h"
+#include "sprites.h"
 
 typedef struct _MainMenuState {
 	GameState state;
-
-	// Menubar
-	// Background
-	// Screen contents state?
+	MenubarState * menubar;
 } MainMenuState;
+
+typedef struct _BrokerState {
+	GameState state;
+	MenubarState * menubar;
+} BrokerState;
+
+typedef struct _NurseState {
+	GameState state;
+	MenubarState * menubar;
+} NurseState;
+
+#define MainMenuState(M) ((MainMenuState*) M)
 
 MainMenuState * initMainMenuState(MainMenuState * state);
 void mainMenuOnKeyDown(EventHandler * h);

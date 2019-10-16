@@ -96,6 +96,7 @@ void menuOnDraw(EventHandler * h){
 		menu->drawContents(menu);
 
 	// Draw selector feather
+	// TODO: generalize outside of matches (get rid of polling the action)
 	if(pollAction("poll_turn_action")){
 		SDL_Rect src = {0, 32, 32, 32};
 		

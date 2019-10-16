@@ -200,5 +200,5 @@ int developmentMainMenu(){
 }
 
 int main(){
-	return basicMission();
+	return developmentMainMenu();
 }
