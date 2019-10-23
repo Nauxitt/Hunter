@@ -322,3 +322,12 @@ void drawDeckIndicator(int x, int y, int len){
 	drawBigNumber(x += textures.menu_icons.w, y, len / 10);
 	drawBigNumber(x += textures.statbox.w   , y, len % 10);
 }
+
+void drawWallpaper(int id){
+	spritesheetBlit(
+			&textures.wallpapers,
+			id % textures.wallpapers.tiles_h,
+			id / textures.wallpapers.tiles_h,
+			0, 68
+		);
+}

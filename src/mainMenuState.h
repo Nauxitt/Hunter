@@ -8,6 +8,7 @@
 typedef struct _MainMenuState {
 	GameState state;
 	MenubarState * menubar;
+	int wallpaper;
 } MainMenuState;
 
 typedef struct _BrokerState {
@@ -23,7 +24,7 @@ typedef struct _NurseState {
 #define MainMenuState(M) ((MainMenuState*) M)
 
 MainMenuState * initMainMenuState(MainMenuState * state);
-void mainMenuOnKeyDown(EventHandler * h);
+void mainMenuOnKeyDown(EventHandler * h, SDL_Event * e);
 void mainMenuOnDraw(EventHandler * h);
 
 #endif

@@ -8,6 +8,8 @@ typedef struct _SpriteSheet {
 	char * path;
 	int w, h;
 	int src_w, src_h;
+	int sheet_w, sheet_h;
+	int tiles_h, tiles_v, tiles_num;
 } SpriteSheet;
 
 void loadSprites();
@@ -26,6 +28,7 @@ typedef struct _Textures {
 	SpriteSheet crate;
 	SpriteSheet dice;
 	SpriteSheet small_numbers;
+	SpriteSheet wallpapers;
 	SpriteSheet target_relic_panel;
 } Textures;
 
