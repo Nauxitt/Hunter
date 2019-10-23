@@ -24,7 +24,7 @@ typedef struct _NurseState {
 #define MainMenuState(M) ((MainMenuState*) M)
 
 MainMenuState * initMainMenuState(MainMenuState * state);
-void mainMenuOnKeyDown(EventHandler * h, SDL_Event * e);
+void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e);
 void mainMenuOnDraw(EventHandler * h);
 
 #endif

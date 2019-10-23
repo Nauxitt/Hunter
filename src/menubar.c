@@ -75,6 +75,7 @@ void matchMenubarDrawContents(MenubarState * menu){
 	MatchContext * match = menu->match;
 
 	drawMenubarContents(menu);
+	menu->active = pollAction("poll_turn_action");
 	
 	// Draw scroling text window
 	SDL_Rect src = {0, 16, 144, 16};
@@ -92,12 +93,12 @@ void menuOnDraw(EventHandler * h){
 	SDL_Rect dest = {0, 0, game.w, 64};
 	drawMenubarBackground(&dest);
 
+	// Executed before feather drawing, and has the chance to modify activation status of menubar.
 	if(menu->drawContents)
 		menu->drawContents(menu);
 
 	// Draw selector feather
-	// TODO: generalize outside of matches (get rid of polling the action)
-	if(pollAction("poll_turn_action")){
+	if(menu->active){
 		SDL_Rect src = {0, 32, 32, 32};
 		
 		if(menu->selector != -1){
