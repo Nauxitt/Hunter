@@ -28,6 +28,37 @@ Statset * hunterStats(Hunter * h){
 	return &h->stats;
 }
 
+Hunter * randomHunter(Hunter * h, int points){
+	if(h == NULL)
+		h = (Hunter*) calloc(sizeof(Hunter), 1);
+	
+	// Generate a random (and unreadable) name
+	for(int n=0; n<5; n++)
+		h->name[n] = 65 + rand() % 26;
+
+	h->base_stats.atk = 0;
+	h->base_stats.def = 0;
+	h->base_stats.mov = 0;
+	h->base_stats.max_hp = 0;
+
+	hunterRandomStatIncrease(h, points);
+	h->base_stats.hp = h->base_stats.max_hp*3 + 10;
+	hunterStats(h);
+
+	return h;
+}
+
+void hunterRandomStatIncrease(Hunter * h, int points){
+	while(points-- > 0){
+		switch(rand() % 4){
+			case 0: h->base_stats.atk++;    break;
+			case 1: h->base_stats.def++;    break;
+			case 2: h->base_stats.mov++;    break;
+			case 3: h->base_stats.max_hp++; break;
+		}
+	}
+}
+
 Card * hunterPopCard(Hunter * h, int card_num){
 	Card * ret = h->hand[card_num];
 

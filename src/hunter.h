@@ -226,6 +226,8 @@ Crate * getCrateAt(MatchContext * context, int x, int y);
 Hunter * getHunterAt(MatchContext * context, int x, int y);
 uint8_t hunterAt(Hunter * hunter, int x, int y);
 
+Hunter * randomHunter(Hunter * h, int points);
+void hunterRandomStatIncrease(Hunter * h, int points);
 Statset * hunterStats(Hunter * h);
 Card * hunterPopCard(Hunter * h, int card_num);
 int hunterHandSize(Hunter * h);

@@ -4,6 +4,7 @@
 #include "menubar.h"
 #include "draw.h"
 #include "sprites.h"
+#include "hunter.h"
 
 MainMenuState * initMainMenuState(MainMenuState * state){
 	if(state == NULL)
@@ -30,7 +31,8 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 		case SDL_SCANCODE_SPACE:
 			switch(state->menubar->selector){
 				case 0: // Hunter options
-					// TODO: Instead of going into submenu, creates a new random hunter.
+					// Instead of going into submenu, creates a new random hunter.
+					state->hunters[state->hunter_selected] = randomHunter(state->hunters[state->hunter_selected], 10);
 					break;
 
 				case 1: // Broker
@@ -38,7 +40,9 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 					break;
 
 				case 2: // Nurse
-					// TODO: Instead of I Heal You, levels your hunter up.
+					// Instead of I Heal You, levels your hunter up with a random stat.
+					if(state->hunters[state->hunter_selected])
+						hunterRandomStatIncrease(state->hunters[state->hunter_selected], 1);
 					break;
 
 				case 3: // Options
@@ -57,7 +61,9 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 			break;
 
 		case SDL_SCANCODE_TAB:
-			// TODO: cycles active hunter slot
+			state->hunter_selected++;
+			if(state->hunter_selected >= 4)
+				state->hunter_selected = 0;
 			break;
 
 		default:
@@ -69,4 +75,22 @@ void mainMenuOnDraw(EventHandler * h){
 	MainMenuState * state = MainMenuState(h);
 	drawWallpaper(state->wallpaper);
 	onDraw(EventHandler(state->menubar));
+	
+	// Draw Hunter statboxes
+	int panel_gutter = 4;
+	int panel_w = (game.w - 16*2 - 4*3) / 4;
+	for(int h=0; h < 4; h++){
+		Hunter * hunter = state->hunters[h];
+
+		if(hunter == NULL)
+			continue;
+
+		drawStatbox(
+				hunter,
+				(enum StatboxViews) 0,
+				(enum WindowColor) h,
+				16 + (panel_w+panel_gutter)*h,
+				game.h-160-panel_gutter
+			);
+	}
 }

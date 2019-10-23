@@ -9,6 +9,8 @@ typedef struct _MainMenuState {
 	GameState state;
 	MenubarState * menubar;
 	int wallpaper;
+	int hunter_selected;
+	Hunter * hunters[4];
 } MainMenuState;
 
 typedef struct _BrokerState {
