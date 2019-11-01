@@ -5,6 +5,7 @@
 #include "draw.h"
 #include "sprites.h"
 #include "hunter.h"
+#include "mapstate.h"
 
 MainMenuState * initMainMenuState(MainMenuState * state){
 	if(state == NULL)
@@ -37,6 +38,7 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 
 				case 1: // Broker
 					// TODO: Instead of visiting the man, the legend himself in his office, initializes a new match
+					mainMenuStartBasicMission(state);
 					break;
 
 				case 2: // Nurse
@@ -93,4 +95,73 @@ void mainMenuOnDraw(EventHandler * h){
 				game.h-160-panel_gutter
 			);
 	}
+}
+
+void mainMenuStartBasicMission(MainMenuState * state){
+	MatchContext * match = (MatchContext *) calloc(sizeof(MatchContext), 1);
+
+	Relic * relics = (Relic *) calloc(sizeof(Relic), 2);
+	relics[0].item_id = 0;
+	strcpy(relics[0].name, "floppy");
+
+	relics[1].item_id = 3;
+	strcpy(relics[1].name, "metal");
+
+	Crate * crates = (Crate *) calloc(sizeof(Crate), 2);
+	crates[0].exists = 1;
+	crates[0].contents = &relics[0];
+	crates[1].exists = 1;
+	crates[1].contents = &relics[1];
+	match->crates = crates;
+	match->crates_len = 2;
+
+	for(int n=0; n<4; n++)
+		match->characters[n] = state->hunters[n];
+
+	match->target_relic = &relics[0];
+	match->scoring_context = &DEFAULT_SCORING_CONTEXT;
+
+	decodeMap(match,
+			"   #C### ##\n"
+			"# #H########\n"
+			"#####     ##\n"
+			" ##       ##\n"
+			" ####     ##\n"
+			"  #E#    #H#####\n"
+			" ###     ###  ##\n"
+			" ##H      ######\n"
+			" ### ### ###\n"
+			" #####C#H###\n"
+			"  ### # ###\n"
+		);
+
+	initMatch(match);
+
+	// Make mapstate - Tiles
+	MapState * mapstate = makeMapState(NULL, match);
+	for(int n=0; n < match->map_w * match->map_h; n++){
+		mapstate->map->tiles[n].val = match->map[n].exists;
+	}
+
+	// Make mapstate - Hunter Entities
+	for(int n=0; n < 4; n++){
+		initHunterEntity(&mapstate->hunters[n], mapstate, textures.daniel.texture);
+		mapstate->hunters[n].hunter = match->characters[n];
+		hunterSetTile(&mapstate->hunters[n], match->characters[n]->x, match->characters[n]->y);
+	}
+
+	// Make mapstate - Crates
+	CrateEntity * crate_entities = calloc(sizeof(CrateEntity), 2);
+	SDL_Texture * crate_texture = textures.crate.texture;
+
+	initCrateEntity(&crate_entities[0], mapstate, crate_texture);
+	initCrateEntity(&crate_entities[1], mapstate, crate_texture);
+	crate_entities[0].crate = &crates[0];
+	crate_entities[1].crate = &crates[1];
+	crateSetTile(&crate_entities[0], crates[0].x, crates[0].y);
+	crateSetTile(&crate_entities[1], crates[1].x, crates[1].y);
+	mapstate->crates = crate_entities;
+	mapstate->crates_len = 2;
+	
+	gamePushState(GameState(mapstate));
 }

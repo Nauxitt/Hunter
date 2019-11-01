@@ -8,6 +8,87 @@
 #include "cards.h"
 #include "score.h"
 
+
+void decodeMap(MatchContext * context, char * map_encoded){
+	/*
+		Generate a map from a string encoding
+		Key:
+			space | Empty
+			\n    | Map row end
+			\0    | Map termination
+			#     | Map tile
+			C     | Crate
+			H     | Hunter
+			E     | Exit
+	*/
+
+	// Calculate map diminsions
+	int x=0, y=0, w=0, h=0;
+	for(char * c = map_encoded; *c; c++){
+		if(*c == '\n'){
+			if(x > w) w = x;
+			y++;
+			x = -1;
+		}
+		x++;
+	}
+	h = y;
+
+	context->map_w = w;
+	context->map_h = h;
+
+	Tile * map = (Tile*) calloc(sizeof(Tile), w*h);
+	context->map = map;
+
+	// Decode map contents
+	Hunter ** hunter_current = (Hunter **) &context->characters;
+	Crate * crate_current = context->crates;
+	int exit_x, exit_y;
+
+	x = 0;
+	y = 0;
+	for(char * c = map_encoded; *c; c++){
+		Tile * tile = context->map + w*y + x;
+		tile->exists = 1;
+
+		switch(*c){
+			case ' ':
+				tile->exists = 0;
+				break;
+
+			case '#':
+				break;
+
+			case 'E':
+				exit_x = x;
+				exit_y = y;
+				break;
+
+			case 'H':
+				(*hunter_current)->x = x;
+				(*hunter_current)->y = y;
+				tile->hunter = *hunter_current++;
+				break;
+
+			case 'C':
+				crate_current->x = x;
+				crate_current->y = y;
+				tile->crate = crate_current++;
+				break;
+
+			case '\n':
+				y++;
+				x = -1;
+				break;
+		}
+		x++;
+	}
+
+	context->exit_x = exit_x;
+	context->exit_y = exit_y;
+}
+
+
 void hunterClearBonus(Hunter * h){
 	h->turn_stats.atk = 0;
 	h->turn_stats.def = 0;
@@ -31,6 +112,7 @@ Statset * hunterStats(Hunter * h){
 Hunter * randomHunter(Hunter * h, int points){
 	if(h == NULL)
 		h = (Hunter*) calloc(sizeof(Hunter), 1);
+	strcpy(&h->type, "hunter");
 	
 	// Generate a random (and unreadable) name
 	for(int n=0; n<5; n++)

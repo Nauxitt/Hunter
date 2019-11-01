@@ -29,4 +29,6 @@ MainMenuState * initMainMenuState(MainMenuState * state);
 void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e);
 void mainMenuOnDraw(EventHandler * h);
 
+void mainMenuStartBasicMission(MainMenuState * menu);
+
 #endif

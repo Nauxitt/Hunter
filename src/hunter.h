@@ -222,6 +222,8 @@ typedef struct _MatchContext {
 	Scoreset * scores[PLAYERS_LENGTH];
 } MatchContext;
 
+void decodeMap(MatchContext * context, char * map_encoded);
+
 Crate * getCrateAt(MatchContext * context, int x, int y);
 Hunter * getHunterAt(MatchContext * context, int x, int y);
 uint8_t hunterAt(Hunter * hunter, int x, int y);

@@ -46,15 +46,23 @@ int basicMission(){
 	// Relic crystal = {.item_id=2, .name="crystal"};
 	Relic metal = {.item_id=3, .name="metal"};
 
-	Crate * crates = calloc(sizeof(Crate), 2);
-	crates[0].contents = NULL;
+	Crate * crates = (Crate*) calloc(sizeof(Crate), 2);
 	crates[0].exists = 1;
 	crates[0].contents = &floppy;
 
-	crates[1].contents = NULL;
 	crates[1].exists = 1;
 	crates[1].contents = &metal;
 
+	MatchContext context = {
+		.characters = {
+			&hunters[0], &hunters[1],
+			&hunters[2], &hunters[3],
+		},
+		.crates_len = 2,
+		.crates = crates,
+		.target_relic = &floppy,
+		.scoring_context = &DEFAULT_SCORING_CONTEXT
+	};
 	
 	/*
 		Generate a map from a string encoding
@@ -68,100 +76,27 @@ int basicMission(){
 			E     | Exit
 	*/
 
-	char * map_encoded = 
-		"   #C### ##\n"
-		"# #H########\n"
-		"#####     ##\n"
-		" ##       ##\n"
-		" ####     ##\n"
-		"  #E#    #H#####\n"
-		" ###     ###  ##\n"
-		" ##H      ######\n"
-		" ### ### ###\n"
-		" #####C#H###\n"
-		"  ### # ###\n";
-
-	// Calculate map diminsions
-	int x=0, y=0, w=0, h=0;
-	for(char * c = map_encoded; *c; c++){
-		if(*c == '\n'){
-			if(x > w) w = x;
-			y++;
-			x = -1;
-		}
-		x++;
-	}
-	h = y;
-
-	Tile * map = (Tile*) calloc(sizeof(Tile), w*h);
-
-	// Decode map contents
-	Hunter * hunter_current = (Hunter*) &hunters;
-	Crate * crate_current = crates;
-	int exit_x, exit_y;
-
-	x = 0;
-	y = 0;
-	for(char * c = map_encoded; *c; c++){
-		Tile * tile = map + w*y + x;
-		tile->exists = 1;
-
-		switch(*c){
-			case ' ':
-				tile->exists = 0;
-				break;
-
-			case '#':
-				break;
-
-			case 'E':
-				exit_x = x;
-				exit_y = y;
-				break;
-
-			case 'H':
-				hunter_current->x = x;
-				hunter_current->y = y;
-				tile->hunter = hunter_current++;
-				break;
-
-			case 'C':
-				crate_current->x = x;
-				crate_current->y = y;
-				tile->crate = crate_current++;
-				break;
-
-			case '\n':
-				y++;
-				x = -1;
-				break;
-		}
-		x++;
-	}
-
-	MatchContext context = {
-		.characters = {
-			&hunters[0], &hunters[1],
-			&hunters[2], &hunters[3],
-		},
-		.crates_len = 2,
-		.crates = crates,
-		.target_relic = &floppy,
-		.exit_x = exit_x,
-		.exit_y = exit_y,
-		.map_w = w,
-		.map_h = h,
-		.map = map,
-		.scoring_context = &DEFAULT_SCORING_CONTEXT
-	};
+	decodeMap(&context,
+			"   #C### ##\n"
+			"# #H########\n"
+			"#####     ##\n"
+			" ##       ##\n"
+			" ####     ##\n"
+			"  #E#    #H#####\n"
+			" ###     ###  ##\n"
+			" ##H      ######\n"
+			" ### ### ###\n"
+			" #####C#H###\n"
+			"  ### # ###\n"
+		);
 
 	initMatch(&context);
 
 	// Make mapstate
 
 	MapState * mapstate = makeMapState(NULL, &context);
-	for(int n=0; n < w*h; n++){
-		mapstate->map->tiles[n].val = map[n].exists;
+	for(int n=0; n < context.map_w * context.map_h; n++){
+		mapstate->map->tiles[n].val = context.map[n].exists;
 	}
 
 	for(int n=0; n < 4; n++){
