@@ -76,6 +76,9 @@ GameState * gamePopState(){
 	GameState * ret = game.state;
 	if(ret->events.onExit)
 		ret->events.onExit((EventHandler*) ret);
+
+	if(ret && ret->events.onPop)
+		ret->events.onPop(EventHandler(ret));
 	
 	game.state = ret->prevState;
 	
@@ -213,4 +216,42 @@ void prevStateOnDraw(EventHandler * h){
 
 	if(prev->onDraw)
 		prev->onDraw(prev);
+}
+
+void allocationStateOnTick(EventHandler * h){
+	gamePopState();
+}
+
+void allocationStateOnPop(EventHandler * h){
+	AllocationState * state = (AllocationState *) h;
+
+	// Recurse into internal allocation state stack
+	if(state->prev_allocation)
+		EventHandler(state->prev_allocation)->onPop(state->prev_allocation);
+
+	free(state);
+}
+
+void * gameCalloc(int size, int n){
+	int length = sizeof(AllocationState)+size*n;
+	AllocationState * state = (AllocationState*) malloc(length);
+	memset(state, 0, length);
+	
+	state->length = size * n;
+
+	EventHandler(state)->type = "AllocationState";
+	EventHandler(state)->onTick = allocationStateOnTick;
+	EventHandler(state)->onPop = allocationStateOnPop;
+	
+	EventHandler * prev = EventHandler(game.state);
+	if(prev && prev->type && (strcmp(prev->type, "AllocationState") == 0)){
+		state->prev_allocation = ((AllocationState*) prev);
+		GameState(state)->prevState = game.state->prevState;
+		game.state = (GameState*) state;
+	}
+	else {
+		gamePushState((GameState*) state);
+	}
+
+	return state + 1;
 }

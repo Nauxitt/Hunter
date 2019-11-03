@@ -98,16 +98,17 @@ void mainMenuOnDraw(EventHandler * h){
 }
 
 void mainMenuStartBasicMission(MainMenuState * state){
-	MatchContext * match = (MatchContext *) calloc(sizeof(MatchContext), 1);
+	MatchContext * match = (MatchContext *) gameCalloc(sizeof(MatchContext), 1);
 
-	Relic * relics = (Relic *) calloc(sizeof(Relic), 2);
+	Relic * relics = (Relic *) gameCalloc(sizeof(Relic), 2);
 	relics[0].item_id = 0;
 	strcpy(relics[0].name, "floppy");
 
 	relics[1].item_id = 3;
 	strcpy(relics[1].name, "metal");
 
-	Crate * crates = (Crate *) calloc(sizeof(Crate), 2);
+	// Crate * crates = (Crate *) calloc(sizeof(Crate), 2);
+	Crate * crates = (Crate *) gameCalloc(sizeof(Crate), 2);
 	crates[0].exists = 1;
 	crates[0].contents = &relics[0];
 	crates[1].exists = 1;
@@ -151,7 +152,7 @@ void mainMenuStartBasicMission(MainMenuState * state){
 	}
 
 	// Make mapstate - Crates
-	CrateEntity * crate_entities = calloc(sizeof(CrateEntity), 2);
+	CrateEntity * crate_entities = gameCalloc(sizeof(CrateEntity), 2);
 	SDL_Texture * crate_texture = textures.crate.texture;
 
 	initCrateEntity(&crate_entities[0], mapstate, crate_texture);

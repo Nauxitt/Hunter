@@ -11,6 +11,7 @@
 typedef struct _Game Game;
 typedef struct _EventHandler EventHandler;
 typedef struct _GameState GameState;
+typedef struct _AllocationState AllocationState;
 typedef struct _ActionQueue ActionQueue;
 
 extern Game game;
@@ -40,6 +41,9 @@ struct _EventHandler {
 	// Triggered by gamePushState and gamePopState
 	void (*onEnter)     (EventHandler * handler);
 	void (*onExit)      (EventHandler * handler);
+
+	// Triggered strictly when popped, as opposed to onExit, which triggers on top-level state change
+	void (*onPop)      (EventHandler * handler);
 	
 	// Triggered by the main event loop
 	void (*onTick)      (EventHandler * handler);
@@ -63,6 +67,16 @@ struct _GameState {
 	uint32_t duration;
 };
 
+/*
+   AllocationState - GameState-based memory allocation.
+   When created, allocates some memory, and on tick pops from the stack and frees that memory.
+   Contains in order to prevent overpopulating the state stack, maintains it's own internal AllocationState stack, where each allocation state is operated on in bulk.
+*/
+struct _AllocationState {
+	GameState state;
+	int length;
+	AllocationState * prev_allocation;
+};
 
 typedef struct _ActionQueue {
 	char * type;
@@ -90,6 +104,10 @@ ActionQueue * makeAction(char * type);
 ActionQueue * pushAction(char * type);
 int pollAction(char * type);
 void nextAction();
+
+void allocationStateOnTick(EventHandler * h);
+void allocationStateOnPop(EventHandler * h);
+void * gameCalloc(int size, int n);
 
 void blit(SDL_Texture * texture, SDL_Rect * src, SDL_Rect * dest);
 
