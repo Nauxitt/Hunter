@@ -5,11 +5,13 @@
 #include "sprites.h"
 #include "draw.h"
 #include "menubar.h"
+#include "statboxDisplayState.h"
 #include "scorestate.h"
 
 typedef struct _BrokerState {
 	GameState state;
 	MenubarState * menubar;
+	StatboxDisplayState * statbox;
 } BrokerState;
 
 #define BrokerState(s) ((BrokerState*) s)

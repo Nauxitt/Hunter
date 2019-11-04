@@ -4,11 +4,13 @@
 #include "stateengine.h"
 #include "menubar.h"
 #include "sprites.h"
+#include "statboxDisplayState.h"
 #include "brokerState.h"
 
 typedef struct _MainMenuState {
 	GameState state;
 	MenubarState * menubar;
+	StatboxDisplayState statbox;
 	int wallpaper;
 	int hunter_selected;
 	Hunter * hunters[4];

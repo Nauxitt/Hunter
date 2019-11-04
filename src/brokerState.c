@@ -7,11 +7,19 @@
 #include "mainMenuState.h"
 
 BrokerState * makeBrokerState(BrokerState * state){
+	if(state == NULL)
+		state = (BrokerState *) calloc(sizeof(BrokerState), 1);
+
+	EventHandler(state)->type = "BrokerState";
+	EventHandler(state)->onDraw = brokerStateOnDraw;
 	EventHandler(state)->onKeyUp = brokerStateOnKeyUp;
 	return state;
 }
 
-void brokerStateOnDraw(EventHandler * h){}
+void brokerStateOnDraw(EventHandler * h){
+	BrokerState * state = BrokerState(h);
+	onDraw(EventHandler(state->statbox));
+}
 
 void brokerStateOnKeyUp(EventHandler * h, SDL_Event * e){
 	BrokerState * state = BrokerState(h);

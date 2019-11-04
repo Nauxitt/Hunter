@@ -6,7 +6,6 @@
 extern Game game;
 extern MapState mapstate;
 extern MenubarState menubar;
-extern StatpanelState statpanel;
 
 int basicMission();
 int main();

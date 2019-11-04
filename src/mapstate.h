@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include "entity.h"
 #include "menubar.h"
+#include "statboxDisplayState.h"
 #include "draw.h"
 
 typedef struct _Entity Entity;
@@ -48,10 +49,6 @@ typedef struct _MapStateMap {
 } MapStateMap;
 
 
-typedef struct _StatpanelState {
-	GameState state;
-} StatpanelState;
-
 typedef struct _HunterEntity {
 	TileEntity entity;
 	Hunter * hunter;
@@ -83,7 +80,7 @@ typedef struct _MapState {
 	
 	MapStateMap * map;
 	MenubarState * menubar;
-	StatpanelState * statpanel;
+	StatboxDisplayState * statbox;
 
 	SDL_Color tint;
 
@@ -137,7 +134,6 @@ ActionQueueEntity * makeEntityAction(char * type);
 
 // Convenience macros for casting to EventHandler subtype pointers
 #define MapState(S) ((MapState *) S)
-#define StatpanelState(S) ((StatepanelState *) S)
 #define TileEntity(E) ((TileEntity *) E)
 #define HunterEntity(E) ((HunterEntity *) E)
 #define CrateEntity(E) ((CrateEntity *) E)

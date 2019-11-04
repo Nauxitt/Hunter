@@ -21,7 +21,6 @@
 extern Game game;
 extern MapState mapstate;
 extern MenubarState menubar;
-extern StatpanelState statpanel;
 
 int iso_x(MapState * state, int x, int y){
 	return state->camera_x + (x-y) * state->tile_w/2 + state->tile_w/2;
@@ -54,6 +53,9 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 
 	mapstate->menubar = initMenu(NULL, match);
 	mapstate->match = match;
+
+	mapstate->statbox = makeStatboxDisplayState(NULL);
+	mapstate->statbox->hunters_list = (Hunter**) &match->characters;
 	
 	// TODO: move menubar initialization into menubar.c
 	mapstate->map = makeMap(match->map_w, match->map_h);
@@ -555,11 +557,9 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 	MatchAction * action = match->action;
 	Hunter * active_player = match->characters[match->active_player];
 
-	// Toggle statboxron TAB
+	// Toggle statbox TAB
 	if(e->key.keysym.scancode == SDL_SCANCODE_TAB){
-		state->statbox_view++;
-		if(state->statbox_view == STATBOX_VIEW_NONE + 1)
-			state->statbox_view = 0;
+		onKeyUp(state->statbox, e);
 	}
 
 	// Escape prints a debug message of the current match action
@@ -740,7 +740,7 @@ void mapOnDraw(EventHandler * h){
 		onDraw(EventHandler(state->menubar));
 
 	// Draw stat windows and target relic
-	if(state->statbox_view != STATBOX_VIEW_NONE){
+	if(state->statbox->view != STATBOX_VIEW_NONE){
 		if(state->match->action->type == POLL_TURN_ACTION){
 			// target relic panel location and size
 			SDL_Rect dest = {
@@ -766,20 +766,7 @@ void mapOnDraw(EventHandler * h){
 			// TODO: blit relic level
 		}
 
-		// statboxes
-		int panel_gutter = 4;
-		int panel_w = (game.w - 16*2 - 4*3) / 4;
-		for(int h=0; h < HUNTERS_COUNT; h++){
-			Hunter * hunter = state->hunters[h].hunter;
-
-			drawStatbox(
-					hunter,
-					(enum StatboxViews) state->statbox_view,
-					(enum WindowColor) h,
-					16 + (panel_w+panel_gutter)*h,
-					game.h-160-panel_gutter
-				);
-		}
+		onDraw(EventHandler(state->statbox));
 	}
 }
 

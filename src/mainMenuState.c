@@ -22,7 +22,11 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 	state->menubar->length = 4;
 	state->menubar->icons[4].id = -1;
 
+	makeStatboxDisplayState(&state->statbox);
+	state->statbox.hunters_list = (Hunter**) &state->hunters;
+
 	makeBrokerState(&state->broker);
+	state->broker.statbox = &state->statbox;
 
 	return state;
 }
@@ -66,7 +70,7 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 
 				case 1: // Broker
 					// TODO: Instead of visiting the man, the legend himself in his office, initializes a new match
-					gamePushState(&state->broker);
+					gamePushState((GameState*) &state->broker);
 					// mainMenuStartBasicMission(state);
 					break;
 
@@ -106,24 +110,7 @@ void mainMenuOnDraw(EventHandler * h){
 	MainMenuState * state = MainMenuState(h);
 	drawWallpaper(state->wallpaper);
 	onDraw(EventHandler(state->menubar));
-
-	// Draw Hunter statboxes
-	int panel_gutter = 4;
-	int panel_w = (game.w - 16*2 - 4*3) / 4;
-	for(int h=0; h < 4; h++){
-		Hunter * hunter = state->hunters[h];
-
-		if(hunter == NULL)
-			continue;
-
-		drawStatbox(
-				hunter,
-				(enum StatboxViews) 0,
-				(enum WindowColor) h,
-				16 + (panel_w+panel_gutter)*h,
-				game.h-160-panel_gutter
-			);
-	}
+	onDraw(EventHandler(&state->statbox));
 }
 
 void mainMenuStartBasicMission(MainMenuState * state){
