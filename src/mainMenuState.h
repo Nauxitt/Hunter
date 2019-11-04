@@ -4,6 +4,7 @@
 #include "stateengine.h"
 #include "menubar.h"
 #include "sprites.h"
+#include "brokerState.h"
 
 typedef struct _MainMenuState {
 	GameState state;
@@ -11,17 +12,8 @@ typedef struct _MainMenuState {
 	int wallpaper;
 	int hunter_selected;
 	Hunter * hunters[4];
+	BrokerState broker;
 } MainMenuState;
-
-typedef struct _BrokerState {
-	GameState state;
-	MenubarState * menubar;
-} BrokerState;
-
-typedef struct _NurseState {
-	GameState state;
-	MenubarState * menubar;
-} NurseState;
 
 #define MainMenuState(M) ((MainMenuState*) M)
 

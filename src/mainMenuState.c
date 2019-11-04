@@ -22,6 +22,8 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 	state->menubar->length = 4;
 	state->menubar->icons[4].id = -1;
 
+	makeBrokerState(&state->broker);
+
 	return state;
 }
 
@@ -64,7 +66,8 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 
 				case 1: // Broker
 					// TODO: Instead of visiting the man, the legend himself in his office, initializes a new match
-					mainMenuStartBasicMission(state);
+					gamePushState(&state->broker);
+					// mainMenuStartBasicMission(state);
 					break;
 
 				case 2: // Nurse
