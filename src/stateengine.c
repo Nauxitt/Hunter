@@ -227,7 +227,7 @@ void allocationStateOnPop(EventHandler * h){
 
 	// Recurse into internal allocation state stack
 	if(state->prev_allocation)
-		EventHandler(state->prev_allocation)->onPop(state->prev_allocation);
+		EventHandler(state->prev_allocation)->onPop(EventHandler(state->prev_allocation));
 
 	free(state);
 }

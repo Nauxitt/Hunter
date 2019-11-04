@@ -35,8 +35,9 @@ void matchActionAssignScore(ScoringContext * scoring_context, MatchAction * acti
 				// Iterate through hunter's inventory
 				for(Relic ** slot = (Relic**) &h->inventory; *slot; slot++){
 					// Dont' score items which entered the game with a player
-					if((*slot)->player_item)
+					if((**slot).player_item != 0){
 						continue;
+					}
 
 					// Increment score based on whether the relic is the target.
 					score->relic_bonus.value += (

@@ -29,6 +29,7 @@ Textures textures = {
 	SHEET(menu_icons     , "resources/menu-battle-icons.png", 16,16),
 	SHEET(crate          , "resources/crate.png", 0,0),
 	SHEET(dice           , "resources/dice.png", 37, 48),
+	SHEET(font           , "resources/font.png", 8, 16),
 	SHEET(small_numbers  , "resources/small-numbers.png", 5, 6),
 	SHEET(wallpapers     , "resources/wallpapers.png", 320, 208),
 	SHEET(target_relic_panel, "resources/target-relic-panel.png", 0, 0)

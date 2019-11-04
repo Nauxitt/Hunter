@@ -11,6 +11,7 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 	if(state == NULL)
 		state = (MainMenuState*) calloc(sizeof(MainMenuState), 1);
 	
+	EventHandler(state)->onEnter = mainMenuOnEnter;
 	EventHandler(state)->onDraw = mainMenuOnDraw;
 	EventHandler(state)->onKeyUp = mainMenuOnKeyUp;
 
@@ -23,6 +24,31 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 
 	return state;
 }
+
+void mainMenuOnEnter(EventHandler * h){
+	MainMenuState * state = (MainMenuState *) h;
+
+	for(int h=0; h < 4; h++){
+		Hunter * hunter = state->hunters[h];
+
+		if(hunter == NULL)
+			continue;
+
+		// Clear hunter's hand
+		hunter->hand[0] = NULL;
+
+		// Mark player's items as owned
+		for(int n=0; n < INVENTORY_LIMIT; n++){
+			Relic * relic = hunter->inventory[n];
+		
+			if(relic == NULL)
+				continue;
+
+			relic->player_item = 1;
+		}
+	}
+}
+
 
 void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 	MainMenuState * state = MainMenuState(h);
@@ -77,7 +103,7 @@ void mainMenuOnDraw(EventHandler * h){
 	MainMenuState * state = MainMenuState(h);
 	drawWallpaper(state->wallpaper);
 	onDraw(EventHandler(state->menubar));
-	
+
 	// Draw Hunter statboxes
 	int panel_gutter = 4;
 	int panel_w = (game.w - 16*2 - 4*3) / 4;
@@ -100,14 +126,13 @@ void mainMenuOnDraw(EventHandler * h){
 void mainMenuStartBasicMission(MainMenuState * state){
 	MatchContext * match = (MatchContext *) gameCalloc(sizeof(MatchContext), 1);
 
-	Relic * relics = (Relic *) gameCalloc(sizeof(Relic), 2);
+	Relic * relics = (Relic *) calloc(sizeof(Relic), 2);
 	relics[0].item_id = 0;
 	strcpy(relics[0].name, "floppy");
 
 	relics[1].item_id = 3;
 	strcpy(relics[1].name, "metal");
 
-	// Crate * crates = (Crate *) calloc(sizeof(Crate), 2);
 	Crate * crates = (Crate *) gameCalloc(sizeof(Crate), 2);
 	crates[0].exists = 1;
 	crates[0].contents = &relics[0];

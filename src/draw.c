@@ -139,6 +139,12 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	int element_gutter = 4;
 	int element_margin = 18;
 
+	drawString(
+			&hunter->name,
+			x+4 + panel_w/2-element_gutter - strlen(&hunter->name)*textures.font.w/2,
+			y + element_margin
+		);
+
 	// Draw stat names
 	//    Mv. stat
 	SDL_Rect statname_src = {
@@ -330,4 +336,24 @@ void drawWallpaper(int id){
 			id / textures.wallpapers.tiles_h,
 			0, 68
 		);
+}
+
+void drawChar(char c, int x, int y){
+	if (c < '0')
+		return;
+	else if('0' <= c && c <= '9')
+		spritesheetBlit(&textures.font, c-'0',2, x,y);
+	else if ('A' <= c && c <= 'Z')
+		spritesheetBlit(&textures.font, c-'A',0, x,y);
+	else if ('a' <= c && c <= 'z')
+		spritesheetBlit(&textures.font, c-'a',1, x,y);
+
+}
+
+void drawString(char * str, int x, int y){
+	while(*str){
+		drawChar(*str, x,y);
+		x += textures.font.w;
+		str++;
+	}
 }

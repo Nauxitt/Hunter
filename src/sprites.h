@@ -27,6 +27,7 @@ typedef struct _Textures {
 	SpriteSheet menu_icons;
 	SpriteSheet crate;
 	SpriteSheet dice;
+	SpriteSheet font;
 	SpriteSheet small_numbers;
 	SpriteSheet wallpapers;
 	SpriteSheet target_relic_panel;

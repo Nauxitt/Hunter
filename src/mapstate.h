@@ -176,6 +176,7 @@ void mapOnTick(EventHandler * h);
 void mapOnKeyUp(EventHandler * h, SDL_Event * e);
 void mapOnMouseDown(EventHandler * h, SDL_Event * e);
 void mapOnDraw(EventHandler * h);
+void mapOnPop(EventHandler * h);
 
 void mapGiveRelic(HunterEntity * hunter, Relic * relic);
 void mapOnDrawGiveRelic(EventHandler * h);

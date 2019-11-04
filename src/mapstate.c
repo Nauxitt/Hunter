@@ -76,9 +76,19 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 	EventHandler(mapstate)->onMouseDown = mapOnMouseDown;
 	EventHandler(mapstate)->onDraw = mapOnDraw;
 	EventHandler(mapstate)->onKeyUp = mapOnKeyUp;
+	EventHandler(mapstate)->onPop = mapOnPop;
 
 	pushAction("poll_turn_action");
 	return mapstate;
+}
+
+void mapOnPop(EventHandler * h){
+	MapState * state = MapState(h);
+	MatchContext * match = state->match;
+
+	// Clear hunter hands
+	for(int n=0; n < 4; n++)
+		match->characters[n]->hand[0] = NULL;
 }
 
 void mapSetSelection(MapStateMap * map, int value){

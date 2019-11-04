@@ -1,11 +1,13 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <string.h>
 
 #include "sprites.h"
 #include "scorestate.h"
 #include "stateengine.h"
 #include "hunter.h"
 #include "score.h"
+#include "draw.h"
 
 ScoreState * makeScoreState(ScoreState * state, MatchContext * match){
 	if(state == NULL)
@@ -37,12 +39,11 @@ ScoreState * makeScoreState(ScoreState * state, MatchContext * match){
 	return state;
 }
 
+
 void scoreStateOnDraw(EventHandler * h){
 	ScoreState * state = (ScoreState *) h;
 	MatchContext * match = state->match;
 
-	SDL_Color white = {255, 255, 255};
-	
 	for(int h = 0; h < PLAYERS_LENGTH; h++){
 		int y = 64 + h * 100;
 
@@ -51,28 +52,14 @@ void scoreStateOnDraw(EventHandler * h){
 
 		char msg[20];
 		switch(h){
-			case 0: strcpy(&msg, "1st - "); break;
-			case 1: strcpy(&msg, "2nd - "); break;
-			case 2: strcpy(&msg, "3rd - "); break;
-			case 3: strcpy(&msg, "4th - "); break;
+			case 0: strcpy((char*) &msg, "1ST - "); break;
+			case 1: strcpy((char*) &msg, "2ND - "); break;
+			case 2: strcpy((char*) &msg, "3RD - "); break;
+			case 3: strcpy((char*) &msg, "4TH - "); break;
 		}
 
 		strcpy(&msg[6], (char*) &hunter->name);
-
-		SDL_Surface * nameMessage = TTF_RenderText_Solid(
-				game.font, &msg, white
-			);
-		SDL_Texture * nameTexture = SDL_CreateTextureFromSurface(
-				game.renderer, nameMessage
-			);
-		SDL_CreateTextureFromSurface(game.renderer, nameMessage);
-		SDL_Rect dest = {32, y, 0, 0};
-		SDL_QueryTexture(
-				nameTexture,
-				NULL, NULL,
-				&dest.w, &dest.h
-			);
-		SDL_RenderCopy(game.renderer, nameTexture, NULL, &dest);
+		drawString((char*) &msg, 32, y);
 
 		// Render hunter's total score
 		int number = totalScore(match->scores[state->places[h]]);

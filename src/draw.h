@@ -41,4 +41,7 @@ void drawDefenseDice(int num, int x, int y);
 void drawDeckIndicator(int x, int y, int len);
 void drawWallpaper(int id);
 
+void drawChar(char c, int x, int y);
+void drawString(char * str, int x, int y);
+
 #endif
