@@ -141,7 +141,7 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 
 	drawString(
 			&hunter->name,
-			x+4 + panel_w/2-element_gutter - strlen(&hunter->name)*textures.font.w/2,
+			x+4 + panel_w/2-element_gutter - strlen((char*) &hunter->name)*textures.font.w/2,
 			y + element_margin
 		);
 
@@ -339,14 +339,37 @@ void drawWallpaper(int id){
 }
 
 void drawChar(char c, int x, int y){
-	if (c < '0')
-		return;
-	else if('0' <= c && c <= '9')
+	if('0' <= c && c <= '9')
 		spritesheetBlit(&textures.font, c-'0',2, x,y);
 	else if ('A' <= c && c <= 'Z')
 		spritesheetBlit(&textures.font, c-'A',0, x,y);
 	else if ('a' <= c && c <= 'z')
 		spritesheetBlit(&textures.font, c-'a',1, x,y);
+	else {
+		int sx = 18;
+		switch(c){
+			case '&': sx =  0; break;
+			case '%': sx =  1; break;
+			case '?': sx =  2; break;
+			case '!': sx =  3; break;
+			case 1  : sx =  4; break;  // heart
+			case '-': sx =  5; break;
+			case 2  : sx =  6; break;  // list dot
+			case '.': sx =  7; break;
+			case ',': sx =  8; break;
+			case 3  : sx =  9; break;  // left-quote
+			case 4  : sx = 10; break;  // right-quote
+			case '[': sx = 11; break;
+			case ']': sx = 12; break;
+			case '+': sx = 13; break;
+			// case ''-': sx = 14; break;  TODO: minus, but not dash
+			// case 'x': sx = 15; break; TODO: multiplication cross
+			default:
+				  break;
+		}
+		spritesheetBlit(&textures.font, sx,3, x,y);
+
+	}
 
 }
 

@@ -28,6 +28,21 @@ void brokerStateOnDraw(EventHandler * h){
 	BrokerState * state = BrokerState(h);
 	drawWallpaper(22);
 	spritesheetBlit(&textures.character_portraits, 0,0, 300,game.h-textures.character_portraits.h);
+
+	int dialogue_margin = textures.font.h/2;
+	int dialogue_width = textures.font.w*15 + dialogue_margin*2;
+	SDL_Rect dest = {
+		300 - 10 - dialogue_width,
+		game.h - (textures.character_portraits.h*2/3),
+		dialogue_width,
+		textures.font.h*2 + dialogue_margin*2
+	};
+	SDL_SetRenderDrawColor(game.renderer, 0,0,0, 255);
+	SDL_RenderFillRect(game.renderer, &dest);
+
+	drawString("Hey, you! What", dest.x + dialogue_margin, dest.y + dialogue_margin);
+	drawString("do you want?", dest.x + dialogue_margin, dest.y + dialogue_margin + textures.font.h);
+
 	onDraw(EventHandler(state->menubar));
 	onDraw(EventHandler(state->statbox));
 }
