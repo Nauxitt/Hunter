@@ -30,6 +30,7 @@ typedef struct _Textures {
 	SpriteSheet font;
 	SpriteSheet small_numbers;
 	SpriteSheet wallpapers;
+	SpriteSheet character_portraits;
 	SpriteSheet target_relic_panel;
 } Textures;
 

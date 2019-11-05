@@ -41,7 +41,8 @@ void mainMenuOnEnter(EventHandler * h){
 			continue;
 
 		// Clear hunter's hand
-		hunter->hand[0] = NULL;
+		for(int n=0; n < HAND_LIMIT; n++)
+			hunter->hand[n] = NULL;
 
 		// Mark player's items as owned
 		for(int n=0; n < INVENTORY_LIMIT; n++){
@@ -69,9 +70,7 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 					break;
 
 				case 1: // Broker
-					// TODO: Instead of visiting the man, the legend himself in his office, initializes a new match
 					gamePushState((GameState*) &state->broker);
-					// mainMenuStartBasicMission(state);
 					break;
 
 				case 2: // Nurse
