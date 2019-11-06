@@ -70,7 +70,7 @@ struct _GameState {
 /*
    AllocationState - GameState-based memory allocation.
    When created, allocates some memory, and on tick pops from the stack and frees that memory.
-   Contains in order to prevent overpopulating the state stack, maintains it's own internal AllocationState stack, where each allocation state is operated on in bulk.
+   Contains an internal AllocationState stack in order to prevent overpopulating the main state stack, to which new AllocationStates are added.
 */
 struct _AllocationState {
 	GameState state;
