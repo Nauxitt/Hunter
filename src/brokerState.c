@@ -19,7 +19,10 @@ BrokerState * makeBrokerState(BrokerState * state){
 	state->menubar->selector = 0;
 	state->menubar->active = 1;
 	state->menubar->length = 4;
-	state->menubar->icons[4].id = -1;
+	state->menubar->icons[0].id =  9;
+	state->menubar->icons[1].id = 10;
+	state->menubar->icons[2].id = 11;
+	state->menubar->icons[3].id = -1;
 
 	return state;
 }
@@ -65,3 +68,26 @@ void brokerStateOnKeyUp(EventHandler * h, SDL_Event * e){
 			break;
 	}
 }
+
+SpeechBubbleState * makeSpeechBubbleState(SpeechBubbleState * state, char * dialogue, int x, int y){
+	return state;
+}
+
+void speechBubbleStateOnDraw(EventHandler * h){
+	SpeechBubbleState * state = (SpeechBubbleState *) h;
+
+	state->rect.w = textures.font.w*state->cw + state->margin*2;
+	SDL_Rect dest = {
+		300 - 10 - state->rect.w,
+		game.h - (textures.character_portraits.h*2/3),
+		state->rect.w,
+		textures.font.h*state->ch + state->margin*2
+	};
+	SDL_SetRenderDrawColor(game.renderer, 0,0,0, 255);
+	SDL_RenderFillRect(game.renderer, &dest);
+
+	drawString("Hey, you! What", dest.x + state->margin, dest.y + state->margin);
+	drawString("do you want?", dest.x + state->margin, dest.y + state->margin + textures.font.h);
+}
+
+void speechBubbleStateOnKeyUp(EventHandler * h, SDL_Event * e);

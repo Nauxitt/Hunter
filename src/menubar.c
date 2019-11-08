@@ -53,7 +53,12 @@ void drawMenubarBackground(SDL_Rect * dest){
 }
 
 void drawMenubarIcon(int x, int y, int id){
-	spritesheetBlit(&textures.menu_icons, id,0, x,y);
+	spritesheetBlit(
+			&textures.menu_icons,
+			id % textures.menu_icons.tiles_h,
+			id / textures.menu_icons.tiles_h,
+			x,y
+		);
 }
 
 void drawMenubarContents(MenubarState * menu){
@@ -67,7 +72,7 @@ void drawMenubarContents(MenubarState * menu){
 			break;
 		}
 
-		drawMenubarIcon(id*38 + 32, 24, id);
+		drawMenubarIcon(i*38 + 32, 24, id);
 	}
 }
 
@@ -78,7 +83,7 @@ void matchMenubarDrawContents(MenubarState * menu){
 	menu->active = pollAction("poll_turn_action");
 	
 	// Draw scroling text window
-	SDL_Rect src = {0, 16, 144, 16};
+	SDL_Rect src = {0, 80, 144, 16};
 
 	SDL_Rect dest = {5*38 + 32, 24, 144*2, 32};
 	blit(textures.menu_icons.texture, &src, &dest);
@@ -99,7 +104,7 @@ void menuOnDraw(EventHandler * h){
 
 	// Draw selector feather
 	if(menu->active){
-		SDL_Rect src = {0, 32, 32, 32};
+		SDL_Rect src = {0, 96, 32, 32};
 		
 		if(menu->selector != -1){
 			dest.x = menu->selector * 38 + 32;

@@ -20,6 +20,10 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 	state->menubar->selector = 0;
 	state->menubar->active = 1;
 	state->menubar->length = 4;
+	state->menubar->icons[0].id = 14;
+	state->menubar->icons[1].id = 15;
+	state->menubar->icons[2].id = 16;
+	state->menubar->icons[3].id =  4;
 	state->menubar->icons[4].id = -1;
 
 	makeStatboxDisplayState(&state->statbox);
