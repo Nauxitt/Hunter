@@ -27,8 +27,10 @@ typedef struct _SpeechBubbleState {
 	SDL_Rect rect;    // Speech bubble rect.  Height/width set in draw cycle
 	int cw, ch;       // Character width/height, in character count
 	int margin;       // Number of pixels surrounding text area
+	int pulse_margin;
 
 	int speed;        // Number of ticks to draw each character.
+	int pulse_speed;  // Speed of one pulse of the speech bubble
 	int skip;         // If true, skips individual-character drawing
 
 	char * dialogue;  // String containing dialogue

@@ -32,6 +32,7 @@ Textures textures = {
 	SHEET(font           , "resources/font.png", 8, 16),
 	SHEET(small_numbers  , "resources/small-numbers.png", 5, 6),
 	SHEET(wallpapers     , "resources/wallpapers.png", 320, 208),
+	SHEET(bubble         , "resources/bubble.png", 10, 10),
 	SHEET(character_portraits , "resources/character_portraits.png", 128, 224),
 	SHEET(target_relic_panel  , "resources/target-relic-panel.png", 0, 0)
 };

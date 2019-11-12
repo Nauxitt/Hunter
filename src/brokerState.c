@@ -98,6 +98,9 @@ SpeechBubbleState * makeSpeechBubbleState(SpeechBubbleState * state, char * dial
 	state->margin = textures.font.h/2;
 	state->speed = 1000/40;
 
+	state->pulse_margin = 5;
+	state->pulse_speed  = 1500;
+
 	speechBubbleUpdateSize(state);
 
 	return state;
@@ -113,10 +116,84 @@ void speechBubbleStateOnDraw(EventHandler * h){
 
 	SpeechBubbleState * state = (SpeechBubbleState *) h;
 	speechBubbleUpdateSize(state);
+	
+	
+	float q = (float)(GameState(h)->duration % state->pulse_speed) / (float) state->pulse_speed;
+	q *= 2;
+	
+	int pulse_margin = state->pulse_margin * (q*q - 2*q);
+	pulse_margin += state->pulse_margin;
 
-	state->rect.w = textures.font.w*state->cw + state->margin*2;
-	SDL_SetRenderDrawColor(game.renderer, 0,0,0, 255);
-	SDL_RenderFillRect(game.renderer, &state->rect);
+	SDL_Rect rect = {
+		state->rect.x - pulse_margin,
+		state->rect.y - pulse_margin,
+		state->rect.w + pulse_margin*2,
+		state->rect.h + pulse_margin*2
+	};
+
+	// Draw corners
+	spritesheetBlit(
+			&textures.bubble, 0,0,
+			rect.x, rect.y
+		);
+	spritesheetBlit(
+			&textures.bubble, 2,0,
+			rect.x+rect.w - textures.bubble.w, rect.y
+		);
+	spritesheetBlit(
+			&textures.bubble, 0,4,
+			rect.x, rect.y+rect.h - textures.bubble.h
+		);
+	spritesheetBlit(
+			&textures.bubble, 2,4,
+			rect.x+rect.w - textures.bubble.w, rect.y+rect.h -textures.bubble.h
+		);
+
+	// Speech bubble tail
+	spritesheetBlit(
+			&textures.bubble, 2,3,
+			rect.x+rect.w - textures.bubble.w, rect.y+rect.h -textures.bubble.h*2
+		);
+	spritesheetBlit(
+			&textures.bubble, 3,3,
+			rect.x+rect.w, rect.y+rect.h -textures.bubble.h*2
+		);
+
+	// Horizontal borders
+	SDL_Rect src;
+	SDL_Rect dest = {
+		rect.x + textures.bubble.w,
+		rect.y,
+		rect.w - textures.bubble.w*2,
+		textures.bubble.h
+	};
+	getSpriteClip(&textures.bubble, 1,0, &src);
+	blit(textures.bubble.texture, &src, &dest);
+
+	src.y = textures.bubble.src_h * 4;
+	dest.y = rect.y + rect.h - textures.bubble.h;
+	blit(textures.bubble.texture, &src, &dest);
+
+	// Vertical borders
+	dest.x = rect.x;
+	dest.w = textures.bubble.w;
+	dest.y = rect.y + textures.bubble.h;
+	dest.h = rect.h - textures.bubble.h*2;
+	getSpriteClip(&textures.bubble, 0,1, &src);
+	blit(textures.bubble.texture, &src, &dest);
+
+	getSpriteClip(&textures.bubble, 2,1, &src);
+	dest.h = rect.h - textures.bubble.h*3;
+	dest.x = rect.x + rect.w - textures.bubble.w;
+	blit(textures.bubble.texture, &src, &dest);
+
+	// Bubble interior
+	getSpriteClip(&textures.bubble, 1,1, &src);
+	dest.x = rect.x + textures.bubble.w;
+	dest.w = rect.w - textures.bubble.w*2;
+	dest.y = rect.y + textures.bubble.h;
+	dest.h = rect.h - textures.bubble.h*2;
+	blit(textures.bubble.texture, &src, &dest);
 	
 	// Everything below is dialogue, so skip NULL dialogue
 	if(state->dialogue == NULL)
