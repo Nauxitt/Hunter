@@ -28,6 +28,8 @@ struct _Game {
 	SDL_Window   * window;
 	SDL_Renderer * renderer;
 	TTF_Font * font;
+
+	SDL_Color background_color;
 };
 
 
@@ -38,12 +40,13 @@ struct _EventHandler {
 	void* data;  // user-defined convenience pointer. Allows an event handler or any struct in which one is an initial member to be cast into any pointer type
 	char * type;  // A string which can be used for simple type-checking or debugging purposes
 	
-	// Triggered by gamePushState and gamePopState
+	// Triggered by top-level state changes
 	void (*onEnter)     (EventHandler * handler);
 	void (*onExit)      (EventHandler * handler);
 
-	// Triggered strictly when popped, as opposed to onExit, which triggers on top-level state change
-	void (*onPop)      (EventHandler * handler);
+	// Triggered strictly when pushed/popped, as opposed to onEnter/onExit, which triggers on any top-level state change
+	void (*onPush)      (EventHandler * handler);
+	void (*onPop)       (EventHandler * handler);
 	
 	// Triggered by the main event loop
 	void (*onTick)      (EventHandler * handler);

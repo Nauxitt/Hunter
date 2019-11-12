@@ -65,6 +65,9 @@ GameState * gamePushState(GameState * state){
 	state->prevState = game.state;
 	game.state = state;
 
+	if(state->events.onPush)
+		state->events.onPush((EventHandler*) state);
+
 	if(state->events.onEnter)
 		state->events.onEnter((EventHandler*) state);
 	
@@ -153,7 +156,13 @@ void gameCycle(){
 	} while(game.state != tickedState);
 
 
-	SDL_SetRenderDrawColor(game.renderer,0,0,0,255);
+	SDL_SetRenderDrawColor(
+			game.renderer,
+			game.background_color.r,
+			game.background_color.g,
+			game.background_color.b,
+			255
+		);
 	SDL_RenderClear(game.renderer);
 
 	if(game.state->events.onDraw)

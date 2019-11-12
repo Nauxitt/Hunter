@@ -17,6 +17,7 @@ typedef struct _BrokerState {
 #define BrokerState(s) ((BrokerState*) s)
 
 BrokerState * makeBrokerState(BrokerState * state);
+void brokerStateOnPush(EventHandler * h);
 void brokerStateOnDraw(EventHandler * h);
 void brokerStateOnKeyUp(EventHandler * h, SDL_Event * e);
 
@@ -27,12 +28,14 @@ typedef struct _SpeechBubbleState {
 	int margin;       // Number of pixels surrounding text area
 
 	int speed;        // Number of ticks to draw each character.
+	int skip;         // If true, skips individual-character drawing
 
 	char * dialogue;  // String containing dialogue
 	int scroll;
 } SpeechBubbleState;
 
 SpeechBubbleState * makeSpeechBubbleState(SpeechBubbleState * state, char * dialogue, int x, int y);
+void speechBubbleUpdateSize(SpeechBubbleState * state);
 void speechBubbleStateOnDraw(EventHandler * h);
 void speechBubbleStateOnKeyUp(EventHandler * h, SDL_Event * e);
 
