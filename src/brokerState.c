@@ -51,6 +51,15 @@ void brokerStateOnKeyUp(EventHandler * h, SDL_Event * e){
 			gamePopState();
 			mainMenuStartBasicMission(MainMenuState(GameState(state)->prevState));
 			return;
+		
+		case SDL_SCANCODE_TAB:
+			onKeyUp(EventHandler(state->statbox), e);
+			break;
+
+		case SDL_SCANCODE_LEFT:
+		case SDL_SCANCODE_RIGHT:
+			onKeyUp(state->menubar, e);
+			break;
 
 		case SDL_SCANCODE_ESCAPE:
 			gamePopState();

@@ -65,7 +65,14 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 	MainMenuState * state = MainMenuState(h);
 
 	switch(e->key.keysym.scancode){
+		// Return cycles hunter
 		case SDL_SCANCODE_RETURN:
+			state->hunter_selected++;
+			if(state->hunter_selected >= 4)
+				state->hunter_selected = 0;
+			break;
+
+		// Space operates menubar
 		case SDL_SCANCODE_SPACE:
 			switch(state->menubar->selector){
 				case 0: // Hunter options
@@ -95,13 +102,11 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 		case SDL_SCANCODE_LEFT:
 		case SDL_SCANCODE_RIGHT:
 			// Forward event to menubar
-			onKeyUp(EventHandler(state->menubar), e);
+			onKeyUp((EventHandler*) state->menubar, e);
 			break;
 
 		case SDL_SCANCODE_TAB:
-			state->hunter_selected++;
-			if(state->hunter_selected >= 4)
-				state->hunter_selected = 0;
+			onKeyUp((EventHandler*) &state->statbox, e);
 			break;
 
 		default:
