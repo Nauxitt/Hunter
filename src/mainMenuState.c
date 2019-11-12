@@ -82,6 +82,10 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 
 				case 1: // Broker
 					gamePushState((GameState*) &state->broker);
+					mainMenuTransitionOut(state, 22);
+					state->transition.menubar = state->menubar;
+					state->transition.statbox = &state->statbox;
+					state->transition.npc = 0;
 					break;
 
 				case 2: // Nurse
@@ -119,6 +123,60 @@ void mainMenuOnDraw(EventHandler * h){
 	drawWallpaper(state->wallpaper);
 	onDraw(EventHandler(state->menubar));
 	onDraw(EventHandler(&state->statbox));
+}
+
+void mainMenuTransitionOut(MainMenuState * state, int wallpaper){
+	WallpaperTransitionState * transition = &state->transition;
+	makeWallpaperTransitionState(transition, state->wallpaper, wallpaper);
+	gamePushState(GameState(transition));
+}
+
+void mainMenuTransitionIn(MainMenuState * state){
+	WallpaperTransitionState * transition = &state->transition;
+	transition->reverse = 1;
+	gamePushState(GameState(transition));
+}
+
+WallpaperTransitionState * makeWallpaperTransitionState(WallpaperTransitionState * state, int top, int bottom){
+	if(state == NULL)
+		state = (WallpaperTransitionState*) calloc(sizeof(WallpaperTransitionState), 1);
+	
+	EventHandler(state)->type = "WallpaperTransitionState";
+	EventHandler(state)->onDraw = wallpaperTransitionStateOnDraw;
+
+	state->top = top;
+	state->bottom = bottom;
+	state->duration = 250;
+	state->npc = -1;
+	state->reverse = 0;
+
+	return state;
+}
+
+void wallpaperTransitionStateOnDraw(EventHandler * h){
+	WallpaperTransitionState * state = (WallpaperTransitionState*) h;
+	uint32_t time = GameState(state)->duration;
+
+	if(state->reverse)
+		time = state->duration - time;
+
+	drawWallpaper(state->bottom);
+
+	if(state->npc >= 0)
+		spritesheetBlit(
+				&textures.character_portraits,
+				0,0,
+				game.w-(textures.character_portraits.w*time)/state->duration,
+				game.h-textures.character_portraits.h
+			);
+
+	drawWallpaperTransition(state->top, time * game.w/2 / state->duration);
+
+	onDraw(EventHandler(state->menubar));
+	onDraw(EventHandler(state->statbox));
+
+	if(GameState(h)->duration >= ((WallpaperTransitionState*) h)->duration)
+		gamePopState();
 }
 
 void mainMenuStartBasicMission(MainMenuState * state){

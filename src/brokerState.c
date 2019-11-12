@@ -12,6 +12,7 @@ BrokerState * makeBrokerState(BrokerState * state){
 
 	EventHandler(state)->type = "BrokerState";
 	EventHandler(state)->onPush  = brokerStateOnPush;
+	EventHandler(state)->onPop   = brokerStateOnPop;
 	EventHandler(state)->onDraw  = brokerStateOnDraw;
 	EventHandler(state)->onKeyUp = brokerStateOnKeyUp;
 
@@ -75,6 +76,10 @@ void brokerStateOnPush(EventHandler * h){
 	bubble->rect.x = game.w-textures.character_portraits.w - 10 - bubble->rect.w;
 	bubble->rect.y = game.h - (textures.character_portraits.h*2/3);
 	gamePushState((GameState*) bubble);
+}
+
+void brokerStateOnPop(EventHandler * h){
+	mainMenuTransitionIn(MainMenuState(game.state));
 }
 
 SpeechBubbleState * makeSpeechBubbleState(SpeechBubbleState * state, char * dialogue, int x, int y){

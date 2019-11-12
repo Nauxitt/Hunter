@@ -18,6 +18,7 @@ typedef struct _BrokerState {
 
 BrokerState * makeBrokerState(BrokerState * state);
 void brokerStateOnPush(EventHandler * h);
+void brokerStateOnPop(EventHandler * h);
 void brokerStateOnDraw(EventHandler * h);
 void brokerStateOnKeyUp(EventHandler * h, SDL_Event * e);
 

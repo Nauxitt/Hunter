@@ -108,7 +108,7 @@ ActionQueue * pushAction(char * type);
 int pollAction(char * type);
 void nextAction();
 
-void allocationStateOnTick(EventHandler * h);
+void popEvent(EventHandler * h);
 void allocationStateOnPop(EventHandler * h);
 void * gameCalloc(int size, int n);
 

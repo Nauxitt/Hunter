@@ -80,10 +80,10 @@ GameState * gamePopState(){
 	if(ret->events.onExit)
 		ret->events.onExit((EventHandler*) ret);
 
+	game.state = ret->prevState;
+
 	if(ret && ret->events.onPop)
 		ret->events.onPop(EventHandler(ret));
-	
-	game.state = ret->prevState;
 	
 	if(game.state && game.state->events.onEnter)
 		game.state->events.onEnter((EventHandler*) game.state);
@@ -227,7 +227,7 @@ void prevStateOnDraw(EventHandler * h){
 		prev->onDraw(prev);
 }
 
-void allocationStateOnTick(EventHandler * h){
+void popEvent(EventHandler * h){
 	gamePopState();
 }
 
@@ -249,7 +249,7 @@ void * gameCalloc(int size, int n){
 	state->length = size * n;
 
 	EventHandler(state)->type = "AllocationState";
-	EventHandler(state)->onTick = allocationStateOnTick;
+	EventHandler(state)->onTick = popEvent;
 	EventHandler(state)->onPop = allocationStateOnPop;
 	
 	EventHandler * prev = EventHandler(game.state);

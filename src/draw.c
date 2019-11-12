@@ -338,6 +338,23 @@ void drawWallpaper(int id){
 		);
 }
 
+void drawWallpaperTransition(int id, int gap){
+	int sx = id % textures.wallpapers.tiles_h;
+	int sy = id / textures.wallpapers.tiles_h;
+	SDL_Rect src;
+	SDL_Rect dest = {-gap, 68, textures.wallpapers.w/2, textures.wallpapers.h};
+	getSpriteClip(&textures.wallpapers, sx, sy, &src);
+	src.w /= 2;
+
+	// Draw left half
+	blit(textures.wallpapers.texture, &src, &dest);
+
+	// Draw right half
+	dest.x = game.w/2 + gap;
+	src.x += src.w;
+	blit(textures.wallpapers.texture, &src, &dest);
+}
+
 void drawChar(char c, int x, int y){
 	if('0' <= c && c <= '9')
 		spritesheetBlit(&textures.font, c-'0',2, x,y);
