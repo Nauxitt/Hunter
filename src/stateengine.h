@@ -81,6 +81,11 @@ struct _AllocationState {
 	AllocationState * prev_allocation;
 };
 
+typedef struct _StateContainerState {
+	GameState state;
+	GameState * value;
+} StateContainerState;
+
 typedef struct _ActionQueue {
 	char * type;
 	struct _ActionQueue * next;
@@ -108,10 +113,6 @@ ActionQueue * pushAction(char * type);
 int pollAction(char * type);
 void nextAction();
 
-void popEvent(EventHandler * h);
-void allocationStateOnPop(EventHandler * h);
-void * gameCalloc(int size, int n);
-
 void blit(SDL_Texture * texture, SDL_Rect * src, SDL_Rect * dest);
 
 void onTick(EventHandler * h);
@@ -122,5 +123,13 @@ void onMouseUp(EventHandler * h, SDL_Event * e);
 void onMouseDown(EventHandler * h, SDL_Event * e);
 
 void prevStateOnDraw(EventHandler * h);
+void popEvent(EventHandler * h);
+void freeEvent(EventHandler *);
+
+void allocationStateOnPop(EventHandler * h);
+void * gameCalloc(int size, int n);
+
+GameState * gamePushStateOnTick(GameState * state);
+void containerStateReplace(EventHandler * h);
 
 #endif

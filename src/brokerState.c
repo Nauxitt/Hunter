@@ -75,7 +75,7 @@ void brokerStateOnPush(EventHandler * h){
 	SpeechBubbleState * bubble = makeSpeechBubbleState(NULL, "Hey, you!!\nWhat do you want?", 0, 0);
 	bubble->rect.x = game.w-textures.character_portraits.w - 10 - bubble->rect.w;
 	bubble->rect.y = game.h - (textures.character_portraits.h*2/3);
-	gamePushState((GameState*) bubble);
+	gamePushStateOnTick((GameState*) bubble);
 }
 
 void brokerStateOnPop(EventHandler * h){

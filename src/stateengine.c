@@ -231,6 +231,10 @@ void popEvent(EventHandler * h){
 	gamePopState();
 }
 
+void freeEvent(EventHandler * h){
+	free(h);
+}
+
 void allocationStateOnPop(EventHandler * h){
 	AllocationState * state = (AllocationState *) h;
 
@@ -263,4 +267,19 @@ void * gameCalloc(int size, int n){
 	}
 
 	return state + 1;
+}
+
+GameState * gamePushStateOnTick(GameState * state){
+	StateContainerState * container = (StateContainerState*) calloc(sizeof(StateContainerState), 1);
+	EventHandler(container)->type = "ReplaceOnTickState";
+	EventHandler(container)->onTick = containerStateReplace;
+	EventHandler(container)->onPop = freeEvent;
+	container->value = state;
+	return gamePushState((GameState*) container);
+}
+
+void containerStateReplace(EventHandler * h){
+	GameState * new = ((StateContainerState*) h)->value;
+	gamePopState();
+	gamePushState(new);
 }
