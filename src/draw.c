@@ -37,6 +37,18 @@ void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest){
 	blit(textures.statbox.texture, &src, &dest);
 }
 
+void drawWindowPanelScaled(enum WindowColor color, SDL_Rect * window_dest, float scale){
+	// Horizontally center scaling
+	window_dest->x += window_dest->w/2 - (float) window_dest->w * scale / 2;
+
+	window_dest->w *= scale;
+	window_dest->h *= scale;
+
+	if(window_dest->w >= textures.statbox.w * 2)
+		drawWindowPanel(color, window_dest);
+	
+}
+
 void drawSmallNumber(int x, int y, int n){
 	spritesheetBlit(&textures.small_numbers, n,0, x,y);
 }

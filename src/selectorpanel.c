@@ -153,15 +153,7 @@ void selectorPanelOnDraw(EventHandler *h){
 	int duration = GameState(state)->duration;
 	float scale = (float) duration / (float) expand_time;
 	if(scale < 1.0){
-		// Horizontally center scaling
-		window_panel.x += window_panel.w/2 - (float) window_panel.w * scale / 2;
-
-		window_panel.w *= scale;
-		window_panel.h *= scale;
-
-		if(window_panel.w >= textures.statbox.w * 2)
-			drawWindowPanel(state->color, &window_panel);
-
+		drawWindowPanelScaled(state->color, &window_panel, scale);
 		return;
 	}
 
