@@ -76,8 +76,13 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 		case SDL_SCANCODE_SPACE:
 			switch(state->menubar->selector){
 				case 0: // Hunter options
-					// Instead of going into submenu, creates a new random hunter.
-					state->hunters[state->hunter_selected] = randomHunter(state->hunters[state->hunter_selected], 10);
+					// Instead of going into submenu, creates a new hunter.
+					state->hunters[state->hunter_selected] = randomHunter(state->hunters[state->hunter_selected], 0);
+					gamePushState((GameState*) makeStatAllocatorState(
+							&state->allocator, state->hunters[state->hunter_selected])
+						);
+					state->allocator.rect.x = 16;
+					state->allocator.rect.y = 64 + 16;
 					break;
 
 				case 1: // Broker

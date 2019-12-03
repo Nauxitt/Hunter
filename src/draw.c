@@ -38,15 +38,26 @@ void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest){
 }
 
 void drawWindowPanelScaled(enum WindowColor color, SDL_Rect * window_dest, float scale){
-	// Horizontally center scaling
-	window_dest->x += window_dest->w/2 - (float) window_dest->w * scale / 2;
-
-	window_dest->w *= scale;
-	window_dest->h *= scale;
-
-	if(window_dest->w >= textures.statbox.w * 2)
+	if(scale >= 1){
 		drawWindowPanel(color, window_dest);
-	
+		return;
+	}
+
+	SDL_Rect rect = {
+		window_dest->x,
+		window_dest->y,
+		window_dest->w,
+		window_dest->h
+	};
+
+	// Horizontally center scaling
+	rect.x += rect.w/2 - (float) rect.w * scale / 2;
+
+	rect.w *= scale;
+	rect.h *= scale;
+
+	if(rect.w >= textures.statbox.w * 2)
+		drawWindowPanel(color, &rect);
 }
 
 void drawSmallNumber(int x, int y, int n){

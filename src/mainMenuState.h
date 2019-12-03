@@ -5,6 +5,7 @@
 #include "menubar.h"
 #include "sprites.h"
 #include "statboxDisplayState.h"
+#include "statAllocatorPanel.h"
 #include "brokerState.h"
 
 typedef struct _WallpaperTransitionState {
@@ -24,6 +25,7 @@ typedef struct _MainMenuState {
 	GameState state;
 	MenubarState * menubar;
 	StatboxDisplayState statbox;
+	StatAllocatorState allocator;
 	WallpaperTransitionState transition;
 	int wallpaper;
 	int hunter_selected;
