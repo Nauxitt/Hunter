@@ -21,6 +21,10 @@ StatAllocatorState *  makeStatAllocatorState(StatAllocatorState * state, Hunter 
 	return state;
 }
 
+void statAllocatorStateSave(StatAllocatorState * state){
+	memcpy(&state->hunter->base_stats, &state->stats, sizeof(Statset));
+}
+
 void statAllocatorStateOnKeyUp(EventHandler * h, SDL_Event * e){
 	StatAllocatorState * state = StatAllocatorState(h);
 
@@ -126,11 +130,26 @@ void statAllocatorStateOnDraw(EventHandler * h){
 	};
 
 	SDL_Rect dest = {
-		state->rect.x + margin,
+		state->rect.x + margin + textures.font.w,
 		state->rect.y + margin + textures.font.h,
 		textures.statbox.w * 2,
 		textures.statbox.h
 	};
+
+	// Selector position
+	SDL_Rect selector = {
+		dest.x + textures.font.w/2 - textures.font.w - (textures.font.w-8)/2,
+		dest.y + state->selector * textures.statbox.h + 4,
+		textures.font.w - 8,
+		textures.font.w - 8,
+	};
+	
+	// Bottom row is is vertically padded by one row of space
+	if(state->selector >= 4)
+		selector.y += textures.statbox.h;
+
+	// Blit selector
+	SDL_RenderFillRect(game.renderer, &selector);
 
 	// Text column screen positions
 	int point_count_x = dest.x + dest.w * 3/2;
