@@ -21,8 +21,14 @@ StatAllocatorState *  makeStatAllocatorState(StatAllocatorState * state, Hunter 
 	return state;
 }
 
-void statAllocatorStateSave(StatAllocatorState * state){
+void statAllocatorStateEnd(StatAllocatorState * state){
+	// Don't exit if there's still points left to distribute
+	if(state->points > 0)
+		return;
+
+	// Save stat data to hunter and exit
 	memcpy(&state->hunter->base_stats, &state->stats, sizeof(Statset));
+	gamePopState();
 }
 
 void statAllocatorStateOnKeyUp(EventHandler * h, SDL_Event * e){
@@ -88,9 +94,14 @@ void statAllocatorStateOnKeyUp(EventHandler * h, SDL_Event * e){
 			state->points--;
 			break;
 
+		case SDL_SCANCODE_SPACE:
+			if(state->selector == 4)
+				statAllocatorStateEnd(state);
+			break;
+
 		case SDL_SCANCODE_RETURN:
 			if(state->selector == 4)
-				;  // TODO: exit
+				statAllocatorStateEnd(state);
 			else
 				state->selector = 4;
 
