@@ -78,11 +78,11 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 				case 0: // Hunter options
 					// Instead of going into submenu, creates a new hunter.
 					state->hunters[state->hunter_selected] = randomHunter(state->hunters[state->hunter_selected], 0);
+					state->hunters[state->hunter_selected]->id = state->hunter_selected;
 					gamePushState((GameState*) makeStatAllocatorState(
-							&state->allocator, state->hunters[state->hunter_selected])
-						);
-					state->allocator.rect.x = 16;
-					state->allocator.rect.y = 64 + 16;
+							&state->allocator, state->hunters[state->hunter_selected], 10
+						));
+					state->allocator.color = state->hunter_selected;
 					break;
 
 				case 1: // Broker
@@ -94,9 +94,28 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 					break;
 
 				case 2: // Nurse
-					// Instead of I Heal You, levels your hunter up with a random stat.
-					if(state->hunters[state->hunter_selected])
-						hunterRandomStatIncrease(state->hunters[state->hunter_selected], 1);
+					// Instead of I Heal You, levels your hunter up
+
+					// TODO: go to hopsital
+					/*
+					mainMenuTransitionOut(state, 23);
+					state->transition.npc = 1;
+					*/
+
+					if(state->hunters[state->hunter_selected]){
+						Hunter * hunter = state->hunters[state->hunter_selected];
+						int cost = hunter->level * 1000;
+						// TODO: when gaining credits are implemented, implement cost checking
+						// if(hunter->credits <= cost){
+						if(1){
+							hunter->credits -= cost;
+							hunter->level++;
+							gamePushState((GameState*) makeStatAllocatorState(
+									&state->allocator, hunter, 1
+								));
+							state->allocator.color = state->hunter_selected;
+						}
+					}
 					break;
 
 				case 3: // Options
@@ -170,15 +189,18 @@ void wallpaperTransitionStateOnDraw(EventHandler * h){
 	if(state->npc >= 0)
 		spritesheetBlit(
 				&textures.character_portraits,
-				0,0,
+				state->npc,0,
 				game.w-(textures.character_portraits.w*time)/state->duration,
 				game.h-textures.character_portraits.h
 			);
 
 	drawWallpaperTransition(state->top, time * game.w/2 / state->duration);
 
-	onDraw(EventHandler(state->menubar));
-	onDraw(EventHandler(state->statbox));
+	if(state->menubar)
+		onDraw(EventHandler(state->menubar));
+
+	if(state->statbox)
+		onDraw(EventHandler(state->statbox));
 
 	if(GameState(h)->duration >= ((WallpaperTransitionState*) h)->duration)
 		gamePopState();

@@ -4,7 +4,7 @@
 #include "sprites.h"
 #include "stateengine.h"
 
-StatAllocatorState *  makeStatAllocatorState(StatAllocatorState * state, Hunter * hunter){
+StatAllocatorState *  makeStatAllocatorState(StatAllocatorState * state, Hunter * hunter, int points){
 	if(state == NULL)
 		state = (StatAllocatorState*) calloc(sizeof(StatAllocatorState), 1);
 	
@@ -12,10 +12,13 @@ StatAllocatorState *  makeStatAllocatorState(StatAllocatorState * state, Hunter 
 	EventHandler(state)->onDraw = statAllocatorStateOnDraw;
 	EventHandler(state)->onKeyUp = statAllocatorStateOnKeyUp;
 
+	state->selector = 1;
+	state->rect.x = 16;
+	state->rect.y = 64 + 16;
 	state->rect.w = STAT_ALLOCATOR_W;
 	state->rect.h = STAT_ALLOCATOR_H;
 	state->hunter = hunter;
-	state->points = 10;
+	state->points = points;
 
 	memcpy(&state->stats, &hunter->base_stats, sizeof(Statset));
 	return state;

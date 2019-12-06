@@ -21,7 +21,7 @@ typedef struct _StatAllocatorState {
 
 #define StatAllocatorState(s) ((StatAllocatorState*) s)
 
-StatAllocatorState *  makeStatAllocatorState(StatAllocatorState * state, Hunter * hunter);
+StatAllocatorState *  makeStatAllocatorState(StatAllocatorState * state, Hunter * hunter, int points);
 void statAllocatorStateEnd(StatAllocatorState * state);
 void statAllocatorStateOnKeyUp(EventHandler * h, SDL_Event * e);
 void statAllocatorStateOnDraw(EventHandler * h);
