@@ -236,9 +236,9 @@ Hunter * randomHunter(Hunter * h, int points){
 	for(int n=0; n<5; n++)
 		h->name[n] = 65 + rand() % 26;
 
-	h->base_stats.atk = 0;
-	h->base_stats.def = 0;
-	h->base_stats.mov = 0;
+	h->base_stats.atk = 1;
+	h->base_stats.def = 1;
+	h->base_stats.mov = 1;
 	h->base_stats.max_hp = 0;
 
 	hunterRandomStatIncrease(h, points);
