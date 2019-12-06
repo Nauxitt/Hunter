@@ -25,8 +25,9 @@ typedef struct _MatchContext MatchContext;
 #define PLAYERS_LENGTH 4
 
 typedef struct _Statset {
-	uint8_t hp;
-	uint8_t max_hp;
+	uint8_t hp;     // current hp value
+	uint8_t restricted_hp; // short-term max hp. Cannot be healed beyond, but can be fixed in the hospital
+	uint8_t max_hp; // The highest possible hp value
 	uint8_t atk;    // Adds to damage in combat
 	uint8_t mov;    // Adds to map movement and combat escape attemps
 	uint8_t def;    // Subtracts from damage in combat
@@ -62,7 +63,7 @@ typedef struct _Hunter {
 	Relic * inventory[INVENTORY_LIMIT+1];
 	Card * hand[HAND_LIMIT];
 	int x, y;
-	int credits;
+	uint32_t credits;
 } Hunter;
 
 
@@ -227,6 +228,10 @@ void decodeMap(MatchContext * context, char * map_encoded);
 Crate * getCrateAt(MatchContext * context, int x, int y);
 Hunter * getHunterAt(MatchContext * context, int x, int y);
 uint8_t hunterAt(Hunter * hunter, int x, int y);
+
+void printHunter(Hunter * h);
+void encodeHunter(Hunter * hunter, char * buffer);
+int decodeHunter(Hunter * hunter, char * buffer);
 
 Hunter * randomHunter(Hunter * h, int points);
 void hunterRandomStatIncrease(Hunter * h, int points);

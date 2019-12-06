@@ -88,6 +88,124 @@ void decodeMap(MatchContext * context, char * map_encoded){
 	context->exit_y = exit_y;
 }
 
+void encodeHunter(Hunter * hunter, char * buffer){
+	int o = 0;  // write offset within buffer
+	int data_length = 1;
+
+	// Write hunter data header
+	char * header = "HUNTER";
+	strcpy(buffer, header);
+	int header_len = strlen(header) + 1;
+	o += header_len;
+	data_length += header_len;
+
+	// Skip writing data length for now
+	int length_address = o;
+	o += 4;
+	data_length += 4;
+
+	// Write level (1)
+	buffer[o++] = hunter->level;
+	data_length++;
+
+	// Write name (9b)
+	strncpy(&buffer[o], (char*) &hunter->name, NAME_MAX_LENGTH);
+	o += NAME_MAX_LENGTH+1;
+	data_length += NAME_MAX_LENGTH+1;
+
+	// Write base stats (1b/ea.)
+	buffer[o++] = hunter->base_stats.mov;
+	buffer[o++] = hunter->base_stats.atk;
+	buffer[o++] = hunter->base_stats.def;
+	buffer[o++] = hunter->base_stats.max_hp;
+	buffer[o++] = hunter->base_stats.hp;
+	buffer[o++] = hunter->base_stats.restricted_hp;
+	data_length += 6;
+
+	// Write credits (4b)
+	buffer[o++] = (hunter->credits >> 24) & 0xFF;
+	buffer[o++] = (hunter->credits >> 16) & 0xFF;
+	buffer[o++] = (hunter->credits >>  8) & 0xFF;
+	buffer[o++] =  hunter->credits        & 0xFF;
+	data_length += 4;
+
+	// Write inventory (6 slots, 1b/ea.)
+	for(int r=0; r < 6; r++)
+		if(hunter->inventory[r] == NULL)
+			break;
+		else
+			buffer[o++] = hunter->inventory[r]->item_id;
+
+	data_length += 6;
+	
+	// Write hunter data length (4b)
+	o = length_address;
+	buffer[o++] = (data_length >> 24) & 0xFF;
+	buffer[o++] = (data_length >> 16) & 0xFF;
+	buffer[o++] = (data_length >>  8) & 0xFF;
+	buffer[o++] =  data_length        & 0xFF;
+}
+
+int decodeHunter(Hunter * hunter, char * buffer){
+	int o = 0;  // write offset within buffer
+
+	// Read hunter data header
+	if(strcmp(buffer, "HUNTER") != 0)
+		return 1;
+	o += strlen(&buffer[o]) + 1;
+
+	// Get data length, ensure it's long enough
+	int encoded_length = buffer[o++] << 24;
+	encoded_length |= buffer[o++] << 16;
+	encoded_length |= buffer[o++] << 8;
+	encoded_length |= buffer[o++];
+
+	// Read level (1)
+	hunter->level = buffer[o++];
+
+	// Read name (9b)
+	strncpy((char*) &hunter->name, &buffer[o], NAME_MAX_LENGTH);
+	o += NAME_MAX_LENGTH+1;
+
+	// Read base stats (1b/ea.)
+	hunter->base_stats.mov           = buffer[o++];
+	hunter->base_stats.atk           = buffer[o++];
+	hunter->base_stats.def           = buffer[o++];
+	hunter->base_stats.max_hp        = buffer[o++];
+	hunter->base_stats.hp            = buffer[o++];
+	hunter->base_stats.restricted_hp = buffer[o++];
+
+	// Read credits (4b)
+	uint32_t credits = buffer[o++] << 24;
+	credits |= buffer[o++] << 16;
+	credits |= buffer[o++] <<  8;
+	credits |= buffer[o++];
+	hunter->credits = credits;
+
+	// Read inventory (6 slots, 1b/ea.)
+	// TODO: figure this out
+	o += 6;
+
+	// Return error code if the data length is incorrect
+	if(o+1 != encoded_length)
+		return 1;
+
+	return 0;
+}
+
+
+void printHunter(Hunter * h){
+	printf(
+			"%s(lvl %d) [%u/%u/%u/%u] Cr:%u",
+			(char*) h->name,
+			h->level,
+			h->base_stats.mov,
+			h->base_stats.atk,
+			h->base_stats.def,
+			h->base_stats.max_hp,
+			h->credits
+		);
+}
 
 void hunterClearBonus(Hunter * h){
 	h->turn_stats.atk = 0;
@@ -112,7 +230,7 @@ Statset * hunterStats(Hunter * h){
 Hunter * randomHunter(Hunter * h, int points){
 	if(h == NULL)
 		h = (Hunter*) calloc(sizeof(Hunter), 1);
-	strcpy(&h->type, "hunter");
+	strcpy((char*) &h->type, "hunter");
 	
 	// Generate a random (and unreadable) name
 	for(int n=0; n<5; n++)
