@@ -9,6 +9,7 @@ typedef struct _StatboxDisplayState {
 	GameState state;
 	Hunter ** hunters_list;
 	enum StatboxViews view;
+	int selector;
 } StatboxDisplayState;
 
 #define StatboxDisplayState(S) ((StatboxDisplayState *) S)

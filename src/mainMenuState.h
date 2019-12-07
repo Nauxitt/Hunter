@@ -7,6 +7,7 @@
 #include "statboxDisplayState.h"
 #include "statAllocatorPanel.h"
 #include "brokerState.h"
+#include "nurseState.h"
 
 typedef struct _WallpaperTransitionState {
 	GameState state;
@@ -31,6 +32,7 @@ typedef struct _MainMenuState {
 	int hunter_selected;
 	Hunter * hunters[4];
 	BrokerState broker;
+	NurseState nurse;
 } MainMenuState;
 
 #define MainMenuState(M) ((MainMenuState*) M)

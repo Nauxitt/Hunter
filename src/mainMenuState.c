@@ -7,6 +7,9 @@
 #include "hunter.h"
 #include "mapstate.h"
 
+#include "brokerState.h"
+#include "nurseState.h"
+
 MainMenuState * initMainMenuState(MainMenuState * state){
 	if(state == NULL)
 		state = (MainMenuState*) calloc(sizeof(MainMenuState), 1);
@@ -30,7 +33,9 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 	state->statbox.hunters_list = (Hunter**) &state->hunters;
 
 	makeBrokerState(&state->broker);
+	makeNurseState(&state->nurse);
 	state->broker.statbox = &state->statbox;
+	state->nurse.statbox = &state->statbox;
 
 	return state;
 }
@@ -96,26 +101,12 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 				case 2: // Nurse
 					// Instead of I Heal You, levels your hunter up
 
-					// TODO: go to hopsital
-					/*
+					gamePushState((GameState*) &state->nurse);
+					state->transition.menubar = state->menubar;
+					state->transition.statbox = &state->statbox;
 					mainMenuTransitionOut(state, 23);
 					state->transition.npc = 1;
-					*/
 
-					if(state->hunters[state->hunter_selected]){
-						Hunter * hunter = state->hunters[state->hunter_selected];
-						int cost = hunter->level * 1000;
-						// TODO: when gaining credits are implemented, implement cost checking
-						// if(hunter->credits <= cost){
-						if(1){
-							hunter->credits -= cost;
-							hunter->level++;
-							gamePushState((GameState*) makeStatAllocatorState(
-									&state->allocator, hunter, 1
-								));
-							state->allocator.color = state->hunter_selected;
-						}
-					}
 					break;
 
 				case 3: // Options
@@ -140,6 +131,8 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 		default:
 			break;
 	}
+
+	state->statbox.selector = state->hunter_selected;
 }
 
 void mainMenuOnDraw(EventHandler * h){
