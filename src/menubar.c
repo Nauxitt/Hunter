@@ -71,12 +71,21 @@ void drawMenubarContents(MenubarState * menu){
 	}
 	
 	// Draw scroling text window
+
 	SDL_Rect src = {0, 80, 144, 16};
 
 	SDL_Rect dest = {5*38 + 32, 24, 144*2, 32};
 	blit(textures.menu_icons.texture, &src, &dest);
 
-	// If there's no text to draw, exit
+	// Skip drawing text if inactive
+	if (menu->active == 0)
+		return;
+
+	// Skip drawing text if no icons are selected
+	if (menu->selector == -1)
+		return;
+
+	// Skip drawing text if there's no text to draw
 	char * help_text = menu->icons[menu->selector].help_text;
 	if (help_text == NULL)
 		return;

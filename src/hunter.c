@@ -195,14 +195,17 @@ int decodeHunter(Hunter * hunter, char * buffer){
 
 
 void printHunter(Hunter * h){
+	hunterStats(h);
 	printf(
-			"%s(lvl %d) [%u/%u/%u/%u] Cr:%u",
+			"%s (%02u/%02u) (lvl %d) [%u/%u/%u] Cr:%u",
 			(char*) h->name,
+			h->stats.hp,
+			h->stats.max_hp,
+
 			h->level,
 			h->base_stats.mov,
 			h->base_stats.atk,
 			h->base_stats.def,
-			h->base_stats.max_hp,
 			h->credits
 		);
 }
@@ -223,7 +226,7 @@ Statset * hunterStats(Hunter * h){
 	h->stats.hp = h->base_stats.hp;
 
 	// TODO: max HP penalties from respawn
-	h->stats.max_hp = h->base_stats.max_hp * 3 + 10;
+	h->stats.max_hp = h->base_stats.max_hp * 3 + 6 + h->level;
 	return &h->stats;
 }
 
@@ -236,13 +239,15 @@ Hunter * randomHunter(Hunter * h, int points){
 	for(int n=0; n<5; n++)
 		h->name[n] = 65 + rand() % 26;
 
+	h->level = 0;
+
 	h->base_stats.atk = 1;
 	h->base_stats.def = 1;
 	h->base_stats.mov = 1;
-	h->base_stats.max_hp = 0;
+	h->base_stats.max_hp = 1;
 
 	hunterRandomStatIncrease(h, points);
-	h->base_stats.hp = h->base_stats.max_hp*3 + 10;
+	h->base_stats.hp = h->base_stats.max_hp * 3 + 6 + h->level;
 	hunterStats(h);
 
 	return h;
@@ -250,6 +255,7 @@ Hunter * randomHunter(Hunter * h, int points){
 
 void hunterRandomStatIncrease(Hunter * h, int points){
 	while(points-- > 0){
+		h->level++;
 		switch(rand() % 4){
 			case 0: h->base_stats.atk++;    break;
 			case 1: h->base_stats.def++;    break;
@@ -295,10 +301,14 @@ void initMatch(MatchContext * context){
 	context->deck_len = DECK_SIZE;
 	context->active_player = 0;
 
-	// Assign hunters numeric id's
+	// Assign hunters numeric id's and max-heal them if their HP is zero
 	for(int n=0; n < 4; n++){
-		context->characters[n]->id = n;
-		context->characters[n]->base_stats.hp = context->characters[n]->base_stats.max_hp;
+		Hunter * hunter = context->characters[n];
+		hunter->id = n;
+
+		hunterStats(hunter);
+		if (hunter->base_stats.hp == 0)
+			hunter->base_stats.hp = hunter->stats.max_hp;
 	}
 
 	// initialize scores
@@ -432,9 +442,10 @@ void matchCycle(MatchContext * context){
 			break;
 
 		case DAMAGE_ACTION:
-			action->target->base_stats.hp -= action->value;
-			if(action->target->base_stats.hp < 0)
+			if (action->target->base_stats.hp <= action->value)
 				action->target->base_stats.hp = 0;
+			else
+				action->target->base_stats.hp -= action->value;
 			break;
 
 		case MOVE_ACTION:

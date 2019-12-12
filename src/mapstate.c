@@ -96,6 +96,12 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 	EventHandler(mapstate)->onPop = mapOnPop;
 
 	pushAction("poll_turn_action");
+
+	for (int i=0; i < 4; i++) {
+		printHunter(mapstate->match->characters[i]);
+		printf("\n");
+	}
+
 	return mapstate;
 }
 

@@ -246,7 +246,7 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	statval_dest.x = panel_rect.x + panel_rect.w - element_margin/2 - textures.statbox.w;
 	spritesheetBlit(
 			&textures.statbox,
-			5 + ((hunter->base_stats.hp < hunter->base_stats.max_hp) ? 3:0), 2,
+			5 + ((hunter->stats.hp < hunter->stats.max_hp) ? 3:0), 2,
 			statval_dest.x, statval_dest.y
 		);
 
@@ -254,7 +254,7 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	statval_dest.x = panel_rect.x + element_margin/2;
 	spritesheetBlit(
 			&textures.statbox,
-			3 + ((hunter->base_stats.hp == 0) ? 3:0), 2,
+			3 + ((hunter->stats.hp == 0) ? 3:0), 2,
 			statval_dest.x, statval_dest.y
 		);
 	
@@ -268,12 +268,12 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	blit(textures.statbox.texture, &statbar_src, &statval_dest);
 	
 	// The first and last HP points are drawn by the left and right edge blits respectively, so draw the middle portion of the healthbar in proportion of health to max health, precluding representation of those values.
-	if(hunter->base_stats.hp <= 1)
+	if(hunter->stats.hp <= 1)
 		statval_dest.w = 0;
-	else if(hunter->base_stats.hp >= hunter->base_stats.max_hp - 1)
+	else if(hunter->stats.hp >= hunter->stats.max_hp - 1)
 		statval_dest.w = middle_w;
 	else
-		statval_dest.w = middle_w * hunter->base_stats.hp / (hunter->base_stats.max_hp-1);
+		statval_dest.w = middle_w * hunter->stats.hp / (hunter->stats.max_hp-1);
 
 	getSpriteClip(&textures.statbox, 4, 2, &statbar_src);
 	blit(textures.statbox.texture, &statbar_src, &statval_dest);
@@ -283,14 +283,14 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	statval_dest.x = panel_rect.x + panel_rect.w - element_margin/2 - textures.small_numbers.w;
 
 	drawSmallNumber(
-			XY(&statval_dest), hunter->base_stats.max_hp % 10
+			XY(&statval_dest), hunter->stats.max_hp % 10
 		);
 
 	
 	// Draw HP number: max HP 10's
 	statval_dest.x -= textures.small_numbers.w;
 	drawSmallNumber(
-			XY(&statval_dest), hunter->base_stats.max_hp / 10
+			XY(&statval_dest), hunter->stats.max_hp / 10
 		);
 
 	// Draw HP number: slash
@@ -303,13 +303,13 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	// Draw HP number: current HP 1's
 	statval_dest.x -= textures.small_numbers.w;
 	drawSmallNumber(
-			XY(&statval_dest), hunter->base_stats.hp % 10
+			XY(&statval_dest), hunter->stats.hp % 10
 		);
 
 	// Draw HP number: current HP 10's
 	statval_dest.x -= textures.small_numbers.w;
 	drawSmallNumber(
-			XY(&statval_dest), hunter->base_stats.hp / 10
+			XY(&statval_dest), hunter->stats.hp / 10
 		);
 
 	// Draw HP number: HP label

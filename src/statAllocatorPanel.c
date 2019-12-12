@@ -226,7 +226,7 @@ void statAllocatorStateOnDraw(EventHandler * h){
 	drawBigNumber(point_count_x+textures.font.w, dest.y, state->stats.max_hp % 10);
 
 	// Draw Hp: Modifier
-	int hp = state->stats.max_hp * 3 + 10;
+	int hp = state->stats.max_hp * 3 + 6 + state->hunter->level;
 
 	drawBigNumber(point_count_x + textures.font.w * 5, dest.y, hp/10);
 	drawBigNumber(point_count_x + textures.font.w * 6, dest.y, hp%10);

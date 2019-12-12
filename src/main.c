@@ -24,19 +24,23 @@ int basicMission(){
 
 	Hunter hunters[] = {
 		{	.name = "Daniel",
-			.base_stats={.atk = 2, .mov = 3, .def = 6, .max_hp=10},
+			.base_stats={.atk = 7, .mov = 4, .def = 3, .max_hp=1},
+			.level = 1,
 			.type = "hunter"
 		},
 		{	.name = "Dave",
-			.base_stats = {.mov = 3, .atk = 4, .def = 4, .max_hp=10},
+			.base_stats = {.mov = 1, .atk = 11, .def = 1, .max_hp=1},
+			.level = 1,
 			.type = "hunter"
 		},
 		{	.name = "Stan",
-			.base_stats = {.atk = 2, .mov = 1, .def = 8, .max_hp=10},
+			.base_stats = {.atk = 2, .mov = 3, .def = 8, .max_hp=1},
+			.level = 1,
 			.type = "hunter"
 		},
 		{	.name = "Tim",
-			.base_stats = {.atk = 9, .mov = 1, .def = 1, .max_hp=10},
+			.base_stats = {.atk = 11, .mov = 1, .def = 1, .max_hp=1},
+			.level = 1,
 			.type = "hunter"
 		}
 	};
@@ -136,5 +140,6 @@ int developmentMainMenu(){
 
 int main(){
 	return developmentMainMenu();
-	//return usermain();
+	// return basicMission();
+	// return usermain();
 }

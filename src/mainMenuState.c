@@ -97,6 +97,7 @@ void mainMenuHunterMenubarOnSpace(MainMenuState * state){
 		case 0: // Make new hunter
 			state->hunters[state->hunter_selected] = randomHunter(state->hunters[state->hunter_selected], 0);
 			state->hunters[state->hunter_selected]->id = state->hunter_selected;
+			state->hunters[state->hunter_selected]->level = 1;
 			gamePushState((GameState*) makeStatAllocatorState(
 					&state->allocator, state->hunters[state->hunter_selected], 10
 				));
