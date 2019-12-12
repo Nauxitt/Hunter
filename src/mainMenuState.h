@@ -25,6 +25,10 @@ typedef struct _WallpaperTransitionState {
 typedef struct _MainMenuState {
 	GameState state;
 	MenubarState * menubar;
+
+	MenubarState menubar_main;
+	MenubarState menubar_hunter;
+
 	StatboxDisplayState statbox;
 	StatAllocatorState allocator;
 	WallpaperTransitionState transition;
@@ -40,7 +44,10 @@ typedef struct _MainMenuState {
 MainMenuState * initMainMenuState(MainMenuState * state);
 void mainMenuOnEnter(EventHandler * h);
 void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e);
+void mainMenuHunterMenubarOnSpace(MainMenuState * state);
 void mainMenuOnDraw(EventHandler * h);
+
+void mainMenuMainMenubarOnSpace(MainMenuState * state);
 
 void mainMenuStartBasicMission(MainMenuState * menu);
 void mainMenuTransitionOut(MainMenuState * state, int wallpaper);

@@ -18,16 +18,30 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 	EventHandler(state)->onDraw = mainMenuOnDraw;
 	EventHandler(state)->onKeyUp = mainMenuOnKeyUp;
 
-	state->menubar = initMenu(NULL, NULL);
-	state->menubar->drawContents = drawMenubarContents;
-	state->menubar->selector = 0;
-	state->menubar->active = 1;
-	state->menubar->length = 4;
-	state->menubar->icons[0].id = 14;
-	state->menubar->icons[1].id = 15;
-	state->menubar->icons[2].id = 16;
-	state->menubar->icons[3].id =  4;
-	state->menubar->icons[4].id = -1;
+	initMenu(&state->menubar_main, NULL);
+	state->menubar_main.drawContents = drawMenubarContents;
+	state->menubar_main.selector = 0;
+	state->menubar_main.active = 1;
+	state->menubar_main.length = 4;
+	state->menubar_main.icons[0].id = 14;
+	state->menubar_main.icons[1].id = 15;
+	state->menubar_main.icons[2].id = 16;
+	state->menubar_main.icons[3].id =  4;
+	state->menubar_main.icons[4].id = -1;
+
+	initMenu(&state->menubar_hunter, NULL);
+	state->menubar_hunter.drawContents = drawMenubarContents;
+	state->menubar_hunter.selector = 0;
+	state->menubar_hunter.active = 1;
+	state->menubar_hunter.length = 5;
+	state->menubar_hunter.icons[0].id = 18;
+	state->menubar_hunter.icons[1].id = 19;
+	state->menubar_hunter.icons[2].id = 20;
+	state->menubar_hunter.icons[3].id = 21;
+	state->menubar_hunter.icons[4].id = 22;
+	state->menubar_hunter.icons[5].id = -1;
+
+	state->menubar = &state->menubar_main;
 
 	makeStatboxDisplayState(&state->statbox);
 	state->statbox.hunters_list = (Hunter**) &state->hunters;
@@ -65,6 +79,65 @@ void mainMenuOnEnter(EventHandler * h){
 	}
 }
 
+void mainMenuHunterMenubarOnSpace(MainMenuState * state){
+	switch (state->menubar->selector) {
+		case 0: // Make new hunter
+			state->hunters[state->hunter_selected] = randomHunter(state->hunters[state->hunter_selected], 0);
+			state->hunters[state->hunter_selected]->id = state->hunter_selected;
+			gamePushState((GameState*) makeStatAllocatorState(
+					&state->allocator, state->hunters[state->hunter_selected], 10
+				));
+			state->allocator.color = state->hunter_selected;
+			break;
+
+		case 1:  // Save hunter
+			if(state->hunters[state->hunter_selected])
+				hunterSave(state->hunters[state->hunter_selected]);
+			break;
+		case 2:  // TODO: Load hunter
+			break;
+		case 3:  // TODO: Hunter stats
+			break;
+		case 4:  // TODO: Remove hunter
+			break;
+	}
+}
+
+void mainMenuMainMenubarOnSpace(MainMenuState * state){
+	switch(state->menubar->selector){
+		case 0: // Hunter options
+			// Enter Hunter submenubar
+			state->menubar = &state->menubar_hunter;
+			state->menubar->selector = 0;
+			break;
+
+		case 1: // Broker
+			gamePushState((GameState*) &state->broker);
+			mainMenuTransitionOut(state, 22);
+			state->transition.menubar = state->menubar;
+			state->transition.statbox = &state->statbox;
+			state->transition.npc = 0;
+			break;
+
+		case 2: // Nurse
+			// Instead of I Heal You, levels your hunter up
+
+			gamePushState((GameState*) &state->nurse);
+			state->transition.menubar = state->menubar;
+			state->transition.statbox = &state->statbox;
+			mainMenuTransitionOut(state, 23);
+			state->transition.npc = 1;
+
+			break;
+
+		case 3: // Options
+			// Currently, instead of changing a plenthora of settings, cycles the wallpaper, all of which you've unlocked.
+			state->wallpaper++;
+			if(state->wallpaper >= textures.wallpapers.tiles_num)
+				state->wallpaper = 0;
+			break;
+	}
+}
 
 void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 	MainMenuState * state = MainMenuState(h);
@@ -79,42 +152,17 @@ void mainMenuOnKeyUp(EventHandler * h, SDL_Event * e){
 
 		// Space operates menubar
 		case SDL_SCANCODE_SPACE:
-			switch(state->menubar->selector){
-				case 0: // Hunter options
-					// Instead of going into submenu, creates a new hunter.
-					state->hunters[state->hunter_selected] = randomHunter(state->hunters[state->hunter_selected], 0);
-					state->hunters[state->hunter_selected]->id = state->hunter_selected;
-					gamePushState((GameState*) makeStatAllocatorState(
-							&state->allocator, state->hunters[state->hunter_selected], 10
-						));
-					state->allocator.color = state->hunter_selected;
-					break;
+			if(state->menubar == &state->menubar_main)
+				mainMenuMainMenubarOnSpace(state);
+			else if(state->menubar == &state->menubar_hunter)
+				mainMenuHunterMenubarOnSpace(state);
+			break;
 
-				case 1: // Broker
-					gamePushState((GameState*) &state->broker);
-					mainMenuTransitionOut(state, 22);
-					state->transition.menubar = state->menubar;
-					state->transition.statbox = &state->statbox;
-					state->transition.npc = 0;
-					break;
-
-				case 2: // Nurse
-					// Instead of I Heal You, levels your hunter up
-
-					gamePushState((GameState*) &state->nurse);
-					state->transition.menubar = state->menubar;
-					state->transition.statbox = &state->statbox;
-					mainMenuTransitionOut(state, 23);
-					state->transition.npc = 1;
-
-					break;
-
-				case 3: // Options
-					// Currently, instead of changing a plenthora of settings, cycles the wallpaper, all of which you've unlocked.
-					state->wallpaper++;
-					if(state->wallpaper >= textures.wallpapers.tiles_num)
-						state->wallpaper = 0;
-					break;
+		// Escape key exits hunter submenubar
+		case SDL_SCANCODE_ESCAPE:
+			if (state->menubar == &state->menubar_hunter) {
+				state->menubar = &state->menubar_main;
+				state->menubar->selector = 0;
 			}
 			break;
 

@@ -139,7 +139,6 @@ int usermain(){
 		Hunter hunter;
 		
 		// double-linked list
-		struct HunterFileLinkedList * prev;
 		struct HunterFileLinkedList * next;
 	};
 
@@ -174,28 +173,37 @@ int usermain(){
 		}
 
 		// Sort hunters by modified date, newest first
-		// Just set root node if empty, and continue
+
+		// If root node is empty, set it to the current node and continue to next node
 		if (hunters == NULL) {
 			hunters = node;
 			continue;
 		}
-		
-		struct HunterFileLinkedList * iter = hunters;
-		struct HunterFileLinkedList * prev = NULL;
 
-		// Find node which was modified earlier, then break search
-		while(iter->next && iter->next->attr.st_mtime > node->attr.st_mtime){
-			prev = iter;
+		// If the new node's modify time is greatest, make it the new root and continue
+		time_t node_time = node->attr.st_mtim.tv_sec;
+
+		if (node_time >= hunters->attr.st_mtim.tv_sec) {
+			node->next = hunters;
+			hunters = node;
+			continue;
+		}
+
+		// Search for sorted insert point for node
+		struct HunterFileLinkedList * iter = hunters;
+
+		while (iter->next != NULL) {
+			time_t iter_time = iter->attr.st_mtim.tv_sec;
+			time_t next_time = iter->next->attr.st_mtim.tv_sec;
+
+			if(iter_time >= node_time && node_time >= next_time)
+				break;
+
 			iter = iter->next;
 		}
 
-		// insert new hunter, sorted
-		if(prev == NULL)
-			hunters = node;
-		else
-			prev->next = node;
-
-		node->next = iter;
+		node->next = iter->next;
+		iter->next = node;
 	}
 	closedir(dir);
 
