@@ -26,6 +26,9 @@ NurseState * makeNurseState(NurseState * state){
 	state->menubar->icons[1].id = 16;
 	state->menubar->icons[2].id = -1;
 
+	state->menubar->icons[0].help_text = "Level up Hunter";
+	state->menubar->icons[1].help_text = "Heal Hunter";
+
 	return state;
 }
 

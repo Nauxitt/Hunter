@@ -24,11 +24,17 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 	state->menubar_main.selector = 0;
 	state->menubar_main.active = 1;
 	state->menubar_main.length = 4;
+
 	state->menubar_main.icons[0].id = 14;
 	state->menubar_main.icons[1].id = 15;
 	state->menubar_main.icons[2].id = 16;
-	state->menubar_main.icons[3].id =  4;
+	state->menubar_main.icons[3].id = 4;
 	state->menubar_main.icons[4].id = -1;
+
+	state->menubar_main.icons[0].help_text = "Register a Hunter";
+	state->menubar_main.icons[1].help_text = "Accept a mission";
+	state->menubar_main.icons[2].help_text = "Level up or heal";
+	state->menubar_main.icons[3].help_text = "Options";
 
 	initMenu(&state->menubar_hunter, NULL);
 	state->menubar_hunter.drawContents = drawMenubarContents;
@@ -41,6 +47,12 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 	state->menubar_hunter.icons[3].id = 21;
 	state->menubar_hunter.icons[4].id = 22;
 	state->menubar_hunter.icons[5].id = -1;
+
+	state->menubar_hunter.icons[0].help_text = "Register a Hunter";
+	state->menubar_hunter.icons[1].help_text = "Save Hunter";
+	state->menubar_hunter.icons[2].help_text = "Load Hunter";
+	state->menubar_hunter.icons[3].help_text = "View Hunter stats";
+	state->menubar_hunter.icons[4].help_text = "Remove Hunter";
 
 	state->menubar = &state->menubar_main;
 

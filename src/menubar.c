@@ -21,6 +21,8 @@ MenubarState * initMenu(MenubarState * state, MatchContext * match){
 	state->icons[4].id = 4;
 	state->icons[5].id = -1;
 
+	state->scroll_speed = 6;
+
 	EventHandler(state)->type = "MenubarState";
 	EventHandler(state)->onDraw = menuOnDraw;
 	EventHandler(state)->onKeyUp = menuOnKeyUp;
@@ -30,16 +32,21 @@ MenubarState * initMenu(MenubarState * state, MatchContext * match){
 
 void menuOnKeyUp(EventHandler * h, SDL_Event * e){
 	MenubarState * state = MenubarState(h);
+	uint32_t time = GameState(h)->duration;
 
 	switch(e->key.keysym.scancode){
 		case SDL_SCANCODE_LEFT:
-			if(--state->selector < 0)
+			if (--state->selector < 0) {
 				state->selector = state->length-1;
+				state->selector_change_time = time;
+			}
 			break;
 
 		case SDL_SCANCODE_RIGHT:
-			if(++state->selector >= state->length)
+			if (++state->selector >= state->length) {
 				state->selector = 0;
+				state->selector_change_time = time;
+			}
 			break;
 
 		default:
@@ -74,13 +81,6 @@ void drawMenubarContents(MenubarState * menu){
 
 		drawMenubarIcon(i*38 + 32, 24, id);
 	}
-}
-
-void matchMenubarDrawContents(MenubarState * menu){
-	MatchContext * match = menu->match;
-
-	drawMenubarContents(menu);
-	menu->active = pollAction("poll_turn_action");
 	
 	// Draw scroling text window
 	SDL_Rect src = {0, 80, 144, 16};
@@ -88,11 +88,45 @@ void matchMenubarDrawContents(MenubarState * menu){
 	SDL_Rect dest = {5*38 + 32, 24, 144*2, 32};
 	blit(textures.menu_icons.texture, &src, &dest);
 
+	// If there's no text to draw, exit
+	char * help_text = menu->icons[menu->selector].help_text;
+	if (help_text == NULL)
+		return;
+
+	// Set clip inside rect and draw text inside the textbox
+	dest.x += 4;
+	dest.y += 4;
+	dest.w -= 8;
+	dest.h -= 8;
+	SDL_RenderSetClipRect(game.renderer, &dest);
+	
+	int scroll_length = dest.w + textures.font.w * strlen(help_text);
+	int scroll_offset = (GameState(menu)->duration - menu->selector_change_time) / menu->scroll_speed % scroll_length;
+
+	drawString(
+			help_text,
+			dest.x + dest.w - scroll_offset,
+			dest.y
+		);
+	
+	SDL_RenderSetClipRect(game.renderer, NULL);
+}
+
+void matchMenubarDrawContents(MenubarState * menu){
+	MatchContext * match = menu->match;
+
+	drawMenubarContents(menu);
+	menu->active = pollAction("poll_turn_action");
+
 	drawDeckIndicator(game.w - 32 * 4, 24, match->deck_len);
 }
 
 void menuOnDraw(EventHandler * h){
 	MenubarState * menu = MenubarState(h);
+	stateUpdateTime((GameState*) menu, 0);
+
+	if(menu->selector_change_time == 0)
+		menu->selector_change_time = GameState(h)->duration;
 
 	// Render menubar background
 	SDL_Rect dest = {0, 0, game.w, 64};

@@ -115,6 +115,8 @@ void nextAction();
 
 void blit(SDL_Texture * texture, SDL_Rect * src, SDL_Rect * dest);
 
+uint32_t stateUpdateTime(GameState * state, uint32_t time);
+
 void onTick(EventHandler * h);
 void onDraw(EventHandler * h);
 void onKeyUp(EventHandler * h, SDL_Event * e);

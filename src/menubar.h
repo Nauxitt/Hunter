@@ -4,10 +4,11 @@
 #include "stateengine.h"
 #include "hunter.h"
 
-#define MENUBAR_MAX_ICONS 20    // arbitrary number
+#define MENUBAR_MAX_ICONS 6    // arbitrary number
 
 typedef struct _MenubarIcon {
 	int id;
+	char * help_text;
 	// on highlight
 	// on activate
 } MenubarIcon;
@@ -21,6 +22,8 @@ typedef struct _MenubarState {
 	int8_t selector;   // Index of the item being selected
 	uint8_t active;    // Whether the menubar is selecting anything
 	MenubarIcon icons[MENUBAR_MAX_ICONS];
+	uint32_t selector_change_time;
+	int scroll_speed;
 	void (*drawContents)(struct _MenubarState * menu);
 } MenubarState;
 

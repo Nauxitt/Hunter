@@ -26,6 +26,10 @@ BrokerState * makeBrokerState(BrokerState * state){
 	state->menubar->icons[2].id = 11;
 	state->menubar->icons[3].id = -1;
 
+	state->menubar->icons[0].help_text = "Accept a mission";
+	state->menubar->icons[1].help_text = "Sell Relic";
+	state->menubar->icons[2].help_text = "Identify Relic";
+
 	return state;
 }
 

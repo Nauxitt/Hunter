@@ -141,7 +141,7 @@ void gameCycle(){
 	uint32_t time = SDL_GetTicks();
 	GameState * state = game.state;
 	while(state != NULL){
-		state->duration = time - state->enterTime;
+		stateUpdateTime(state, time);
 		state = state->prevState;
 	}
 	
@@ -178,6 +178,17 @@ void gameMainLoop(){
 	
 	SDL_DestroyWindow(game.window);
 	SDL_Quit();
+}
+
+uint32_t stateUpdateTime(GameState * state, uint32_t time){
+	if (time == 0)
+		time = SDL_GetTicks();
+	
+	if (state->enterTime == 0)
+		state->enterTime = time;
+
+	state->duration = time - state->enterTime;
+	return time;
 }
 
 void onTick(EventHandler * h){ if(h->onTick) h->onTick(h); }
