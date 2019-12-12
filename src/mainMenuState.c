@@ -19,7 +19,7 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 	EventHandler(state)->onDraw = mainMenuOnDraw;
 	EventHandler(state)->onKeyUp = mainMenuOnKeyUp;
 
-	initMenu(&state->menubar_main, NULL);
+	initMenu(&state->menubar_main);
 	state->menubar_main.drawContents = drawMenubarContents;
 	state->menubar_main.selector = 0;
 	state->menubar_main.active = 1;
@@ -36,7 +36,7 @@ MainMenuState * initMainMenuState(MainMenuState * state){
 	state->menubar_main.icons[2].help_text = "Level up or heal";
 	state->menubar_main.icons[3].help_text = "Options";
 
-	initMenu(&state->menubar_hunter, NULL);
+	initMenu(&state->menubar_hunter);
 	state->menubar_hunter.drawContents = drawMenubarContents;
 	state->menubar_hunter.selector = 0;
 	state->menubar_hunter.active = 1;

@@ -17,7 +17,7 @@ NurseState * makeNurseState(NurseState * state){
 	EventHandler(state)->onDraw  = nurseStateOnDraw;
 	EventHandler(state)->onKeyUp = nurseStateOnKeyUp;
 
-	state->menubar = initMenu(NULL, NULL);
+	state->menubar = initMenu(NULL);
 	state->menubar->drawContents = drawMenubarContents;
 	state->menubar->selector = 0;
 	state->menubar->active = 1;

@@ -184,4 +184,6 @@ void mapOnTickMoveHunter(EventHandler * h);
 void mapStateFlash(MapState * mapstate);
 void mapStateOnDrawFlash(EventHandler * h);
 
+void matchMenubarDrawContents(MenubarState * menu);
+
 #endif

@@ -51,7 +51,22 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 	if(mapstate == NULL)
 		mapstate = MapState(calloc(sizeof(MapState), 1));
 
-	mapstate->menubar = initMenu(NULL, match);
+	mapstate->menubar = initMenu(NULL);
+
+	mapstate->menubar->drawContents = matchMenubarDrawContents;
+	mapstate->menubar->length = 5;
+	mapstate->menubar->match = match;
+	mapstate->menubar->icons[0].id = 0;
+	mapstate->menubar->icons[1].id = 1;
+	mapstate->menubar->icons[2].id = 2;
+	mapstate->menubar->icons[3].id = 3;
+	mapstate->menubar->icons[4].id = -1;
+
+	mapstate->menubar->icons[0].help_text = "Move";
+	mapstate->menubar->icons[1].help_text = "Attack";
+	mapstate->menubar->icons[2].help_text = "Rest";
+	mapstate->menubar->icons[3].help_text = "Options";
+
 	mapstate->match = match;
 
 	mapstate->statbox = makeStatboxDisplayState(NULL);
@@ -891,6 +906,15 @@ void mapStateOnDrawFlash(EventHandler * h){
 	}
 
 	prevStateOnDraw(h);
+}
+
+void matchMenubarDrawContents(MenubarState * menu){
+	MatchContext * match = menu->match;
+
+	drawMenubarContents(menu);
+	menu->active = pollAction("poll_turn_action");
+
+	drawDeckIndicator(game.w - 32 * 4, 24, match->deck_len);
 }
 
 HunterEntityDamageState * makeHunterEntityDamageState(HunterEntityDamageState * state, HunterEntity * hunter, int damage){

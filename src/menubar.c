@@ -4,23 +4,11 @@
 #include "sprites.h"
 #include "draw.h"
 
-MenubarState * initMenu(MenubarState * state, MatchContext * match){
+MenubarState * initMenu(MenubarState * state){
 	if(state == NULL)
 		state = MenubarState(calloc(sizeof(MenubarState), 1));
 
-	state->match = match;
 	state->drawContents = drawMenubarContents;
-
-	// Hard-code mission menubar data
-	state->drawContents = matchMenubarDrawContents;
-	state->length = 5;
-	state->icons[0].id = 0;
-	state->icons[1].id = 1;
-	state->icons[2].id = 2;
-	state->icons[3].id = 3;
-	state->icons[4].id = 4;
-	state->icons[5].id = -1;
-
 	state->scroll_speed = 6;
 
 	EventHandler(state)->type = "MenubarState";
@@ -110,15 +98,6 @@ void drawMenubarContents(MenubarState * menu){
 		);
 	
 	SDL_RenderSetClipRect(game.renderer, NULL);
-}
-
-void matchMenubarDrawContents(MenubarState * menu){
-	MatchContext * match = menu->match;
-
-	drawMenubarContents(menu);
-	menu->active = pollAction("poll_turn_action");
-
-	drawDeckIndicator(game.w - 32 * 4, 24, match->deck_len);
 }
 
 void menuOnDraw(EventHandler * h){

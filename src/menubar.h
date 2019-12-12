@@ -29,13 +29,12 @@ typedef struct _MenubarState {
 
 #define MenubarState(M) ((MenubarState *) M)
 
-MenubarState * initMenu(MenubarState * state, MatchContext * match);
+MenubarState * initMenu(MenubarState * state);
 void menuOnDraw(EventHandler * h);
 void menuOnKeyUp(EventHandler * h, SDL_Event * e);
 
 void drawMenubarIcon(int x, int y, int id);
 void drawMenubarBackground(SDL_Rect * dest);
 void drawMenubarContents(MenubarState * menu);
-void matchMenubarDrawContents(MenubarState * menu);
 
 #endif

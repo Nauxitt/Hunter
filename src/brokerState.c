@@ -16,7 +16,7 @@ BrokerState * makeBrokerState(BrokerState * state){
 	EventHandler(state)->onDraw  = brokerStateOnDraw;
 	EventHandler(state)->onKeyUp = brokerStateOnKeyUp;
 
-	state->menubar = initMenu(NULL, NULL);
+	state->menubar = initMenu(NULL);
 	state->menubar->drawContents = drawMenubarContents;
 	state->menubar->selector = 0;
 	state->menubar->active = 1;
