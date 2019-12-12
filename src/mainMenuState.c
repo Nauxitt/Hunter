@@ -6,6 +6,7 @@
 #include "sprites.h"
 #include "hunter.h"
 #include "mapstate.h"
+#include "userdata.h"
 
 #include "brokerState.h"
 #include "nurseState.h"
@@ -94,10 +95,18 @@ void mainMenuHunterMenubarOnSpace(MainMenuState * state){
 			if(state->hunters[state->hunter_selected])
 				hunterSave(state->hunters[state->hunter_selected]);
 			break;
-		case 2:  // TODO: Load hunter
+
+		case 2:
+			gamePushState( makeLoadHunterState(
+						&state->load_hunter,
+						state->hunters[state->hunter_selected]
+					));
+			state->hunters[state->hunter_selected] = state->load_hunter.hunter;
 			break;
+
 		case 3:  // TODO: Hunter stats
 			break;
+
 		case 4:  // TODO: Remove hunter
 			break;
 	}

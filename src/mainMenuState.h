@@ -8,6 +8,7 @@
 #include "statAllocatorPanel.h"
 #include "brokerState.h"
 #include "nurseState.h"
+#include "loadHunterState.h"
 
 typedef struct _WallpaperTransitionState {
 	GameState state;
@@ -28,6 +29,8 @@ typedef struct _MainMenuState {
 
 	MenubarState menubar_main;
 	MenubarState menubar_hunter;
+
+	LoadHunterState load_hunter;
 
 	StatboxDisplayState statbox;
 	StatAllocatorState allocator;
