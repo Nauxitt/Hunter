@@ -763,6 +763,7 @@ void printMatchAction(MatchAction * action){
 		case EXIT_COMBAT_ACTION:
 		case ROLL_DICE_ACTION:
 		case BEGIN_MATCH_ACTION:
+		case END_MATCH_ACTION:
 		case EXECUTE_COMBAT_ACTION:
 		case DEFEND_ACTION:
 		case ESCAPE_ACTION:
@@ -807,6 +808,7 @@ void printMatchAction(MatchAction * action){
 			printf("%s, %s", action->actor->name, action->target ? action->target->name : NULL);
 			break;
 
+
 		// Actions with a special configuration of parameters
 		case TELEPORT_ACTION:
 		case MOVE_ACTION:
@@ -826,6 +828,10 @@ void printMatchAction(MatchAction * action){
 
 		case OPEN_CRATE_ACTION:
 			printf("%s, [%d, %d]", action->actor->name, action->crate->x, action->crate->y);
+			break;
+
+		case DEAL_DAMAGE_ACTION:
+			printf("%s, %s, %d", action->actor->name, action->target->name, action->value);
 			break;
 	}
 
@@ -1134,6 +1140,7 @@ uint8_t postMoveAction(MatchContext * context, Hunter * character, int x, int y)
 const char * getMatchActionName(enum MatchActionType type){
 	switch(type){
 		case BEGIN_MATCH_ACTION: return "BEGIN_MATCH_ACTION";
+		case END_MATCH_ACTION: return "END_MATCH_ACTION";
 		case TURN_START_ACTION: return "TURN_START_ACTION";
 		case TURN_END_ACTION: return "TURN_END_ACTION";
 		case DRAW_CARD_ACTION: return "DRAW_CARD_ACTION";
@@ -1152,6 +1159,7 @@ const char * getMatchActionName(enum MatchActionType type){
 		case END_MOVE_ACTION: return "END_MOVE_ACTION";
 		case ATTACK_ACTION: return "ATTACK_ACTION";
 		case ATTACK_DAMAGE_ACTION: return "ATTACK_DAMAGE_ACTION";
+		case DEAL_DAMAGE_ACTION: return "DEAL_DAMAGE_ACTION";
 		case REST_ACTION: return "REST_ACTION";
 		case DEFEND_ACTION: return "DEFEND_ACTION";
 		case ESCAPE_ACTION: return "ESCAPE_ACTION";

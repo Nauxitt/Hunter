@@ -110,7 +110,7 @@ void mainMenuHunterMenubarOnSpace(MainMenuState * state){
 			break;
 
 		case 2:
-			gamePushState( makeLoadHunterState(
+			gamePushState( (GameState*) makeLoadHunterState(
 						&state->load_hunter,
 						state->hunters[state->hunter_selected]
 					));

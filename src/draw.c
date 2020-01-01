@@ -163,7 +163,7 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	int element_margin = 18;
 
 	drawString(
-			&hunter->name,
+			(char*) &hunter->name,
 			x+4 + panel_w/2-element_gutter - strlen((char*) &hunter->name)*textures.font.w/2,
 			y + element_margin
 		);

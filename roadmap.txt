@@ -1,15 +1,9 @@
 Graphics Extractions:
 	Small numbers: 5, 9
-	Big letters (found in characters' statboxes)
 	Big numbers: 4, 5, 6, 7
 	Cards:
 		Letters: A, C, and E
 		Icons: Attack, Trap
-
-Refactor:
-	Encapsulate card selector in its own structure, similar to MenuState
-
-	MatchContext should have map data, and the MapState should generate its map from that data.
 
 Gameplay Done:
 	HunterEntity type
@@ -23,11 +17,6 @@ Gameplay Done:
 	Deck of cards, shuffle, draw
 	Stat window hand
 	Rest menu action
-
-Gameplay Features:
-	Pathfinding
-	Pathfinding + movement
-	Click-and-drag map view
 	Stat window HP bar
 	Stat window name
 	Card graphics
@@ -38,19 +27,28 @@ Gameplay Features:
 	Attack menu action
 	Crates + item sprites
 	Ingame crates + items
-	Trap logic
-	Exit, Base game mode
+	Exit
 	Match rank screen
+	Screen flash/fade
+	Dice animations
+	Main menu, broker, nurse
+	Character builder
+	Character save/load
+	Nurse services
+
+Gameplay Features:
+	Pathfinding
+	Pathfinding + movement
+	Click-and-drag map view
+	Trap logic
 	Flags
 
 Gameplay polish:
 	Auto panning
 	Trap animation extraction
 	Trap animations
-	Screen flash/fade
 	Movement cursor
 	Card animations
-	Dice animations
 	Music
 	Menu sound effects
 	Combat sound effects
@@ -59,12 +57,8 @@ Gameplay polish:
 	Combat background animation
 
 Main menu features:
-	Main menu, broker, nurse
 	Character palates
-	Character builder
-	Character save/load
 	Broker missions
-	Nurse services
 
 Bot features:
 	AI action polling

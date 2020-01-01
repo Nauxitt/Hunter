@@ -41,9 +41,7 @@ char * dataDir(){
 		// Make directory
 		mkdir((char*) &__data_dir, 0755);
 	}
-	else {
-		return NULL;
-	}
+	return NULL;
 }
 
 char * dataPath(char * dest, char * sub_path){
@@ -63,7 +61,7 @@ void hunterSaveAt(Hunter * hunter, char * fpath){
 	char * seek = (char*) &buffer;
 	
 	// Seek NULL byte, ending the header
-	while(*seek++ != NULL);
+	while(*seek++ != 0);
 	
 	// Decode length from characters
 	uint32_t length;
