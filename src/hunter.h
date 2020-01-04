@@ -81,6 +81,12 @@ typedef struct _Tile {
 	Crate * crate;
 	// Flag * flag;
 	// Trap * traps[3]
+
+	// General-purpose registers for algorithmic use
+	union {
+		void * reg_ptr;
+		int * reg_int;
+	};
 } Tile;
 
 

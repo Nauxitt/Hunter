@@ -138,8 +138,10 @@ int developmentMainMenu(){
 	return 0;
 }
 
-int main(){
-	return developmentMainMenu();
+#include "path.h"
+int main() {
+	return pathfindingMain();
+	// return developmentMainMenu();
 	// return basicMission();
 	// return usermain();
 }
