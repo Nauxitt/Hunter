@@ -14,6 +14,7 @@ typedef struct _Hunter Hunter;
 typedef struct _Relic Relic;
 typedef struct _Crate Crate;
 typedef struct _Tile Tile;
+typedef struct _PathNode PathNode;
 typedef struct _Agent Agent;
 typedef struct _MatchAction MatchAction;
 typedef struct _MatchContext MatchContext;
@@ -21,6 +22,7 @@ typedef struct _MatchContext MatchContext;
 #include <stdint.h>
 #include "cards.h"
 #include "score.h"
+#include "path.h"
 
 #define PLAYERS_LENGTH 4
 
@@ -81,6 +83,11 @@ typedef struct _Tile {
 	Crate * crate;
 	// Flag * flag;
 	// Trap * traps[3]
+
+	// Each tile reserves memory for nodes for pathfinding algorithm use.
+	// These will be overwritten between path searches and should be copied if
+	// preservation is needed.
+	PathNode path;
 
 	// General-purpose registers for algorithmic use
 	union {
@@ -230,6 +237,8 @@ typedef struct _MatchContext {
 } MatchContext;
 
 void decodeMap(MatchContext * context, char * map_encoded);
+int pointWalkable(MatchContext * context, int x, int y);
+int tileWalkable(Tile * tile);
 
 Crate * getCrateAt(MatchContext * context, int x, int y);
 Hunter * getHunterAt(MatchContext * context, int x, int y);

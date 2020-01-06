@@ -51,6 +51,11 @@ void decodeMap(MatchContext * context, char * map_encoded){
 		Tile * tile = context->map + w*y + x;
 		tile->exists = 1;
 
+		tile->x = x;
+		tile->y = y;
+		tile->path.x = x;
+		tile->path.y = y;
+
 		switch(*c){
 			case ' ':
 				tile->exists = 0;
@@ -836,6 +841,27 @@ void printMatchAction(MatchAction * action){
 	}
 
 	printf(")\n");
+}
+
+int pointWalkable(MatchContext * context, int x, int y) {
+	// Check map bounds
+	if ((x < 0) || (y < 0))
+		return 0;
+
+	if ((x >= context->map_w) || (y >= context->map_h))
+		return 0;
+
+	return tileWalkable(&context->map[context->map_w * y + x]);
+}
+
+int tileWalkable(Tile * tile) {
+	if (tile->exists == 0)
+		return 0;
+
+	if (tile->hunter)
+		return 0;
+
+	return 1;
 }
 
 void getRandomTile(MatchContext * context, int * x, int * y){

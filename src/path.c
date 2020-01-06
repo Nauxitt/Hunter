@@ -1,7 +1,156 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <limits.h>
 #include "path.h"
 #include "hunter.h"
+#include "utils.h"
+
+void mapResetPathData(MatchContext * context){
+	for (int x=0; x < context->map_w; x++) {
+		for (int y=0; y < context->map_h; y++) {
+			PathNode * node = &context->map[context->map_w*y + x].path;
+			node->x = x;
+			node->y = y;
+			node->scanned = 0;
+			node->distance = 0;
+			node->to = NULL;
+			node->from = NULL;
+			node->next_path = NULL;
+			node->prev_path = NULL;
+		}
+	}
+}
+
+PathNode * insertPath(PathNode * insert_point, PathNode * inserted) {
+	if (insert_point) {
+		inserted->next_path = insert_point->next_path;
+		inserted->prev_path = insert_point->prev_path;
+		insert_point->next_path->prev_path = inserted;
+		insert_point->next_path = inserted;
+	}
+	else {
+		// If this is the first element, establish it a circular list
+		inserted->next_path = inserted;
+		inserted->prev_path = inserted;
+	}
+
+	return inserted;
+}
+
+int inPath(PathNode * path, int x, int y ) {
+	// If we've recursed past the start of the path
+	if (path == NULL)
+		return 0;
+
+	// Check point position
+	if ((path->x == x) && (path->y == y))
+		return 1;
+
+	// Recurse down path
+	return inPath(path->to, x, y);
+}
+
+int inPathFrom(PathNode * endpoint, int x, int y ) {
+	// If we've recursed past the start of the path
+	if (endpoint == NULL)
+		return 0;
+
+	// Check point position
+	if ((endpoint->x == x) && (endpoint->y == y))
+		return 1;
+
+	// Recurse down path
+	return inPathFrom(endpoint->from, x, y);
+}
+
+PathNode * removePath(PathNode * path) {
+	PathNode * insert_point = path->next_path;
+
+	path->next_path->prev_path = path->prev_path;
+	path->prev_path->next_path = path->next_path;
+	
+	path->next_path = NULL;
+	path->prev_path = NULL;
+
+	return insert_point;
+}
+
+void freePath(PathNode * path){
+	while (path) {
+		PathNode * next = path->to;
+		free(path);
+		path = next;
+	}
+}
+
+PathNode * findPathWithin(MatchContext * context, int s_x, int s_y, int e_x, int e_y, int distance){
+	PathNode * addNode(PathNode * from, int x, int y) {
+		PathNode * node = &context->map[context->map_w * y + x].path;
+		node->x = x;
+		node->y = y;
+
+		node->distance = 0;
+		if (from) {
+			node->from = from;
+			node->distance = from->distance + 1;
+		}
+		return node;
+	}
+	
+	// Clear leftover path data of previous searches from tile map
+	mapResetPathData(context);
+
+	// Start-point of the path is the initial node
+	PathNode * path_head = addNode(NULL, s_x, s_y);
+	insertPath(NULL, path_head);
+	PathNode * final_path = NULL;
+
+	while (path_head) {
+		int x = path_head->x, y = path_head->y;
+		path_head->scanned = 1;
+
+		// If we've found the destination, nice, exit!
+		if ((x == e_x) && (y == e_y)) {
+			final_path = path_head;
+			break;
+		}
+
+		// Expand paths clockwise, starting up, by maping a function in each
+		// direction, unless we've hit the search distance limit.
+
+		inline void expandPath(int x, int y) {
+			PathNode * node = &context->map[context->map_w*y + x].path;
+
+			if (node->scanned)                   return;
+			if (!pointWalkable(context, x, y))   return;
+
+			// Path doesn't break any requirements, add it
+			insertPath(path_head->prev_path, addNode(path_head, x, y));
+		}
+		
+		if (path_head->distance < distance) {
+			ADJACENT_MAP(expandPath, x, y);
+		}
+
+		
+		// Return NULL if we've scanned the entire map
+		if (path_head->next_path == path_head)
+			return NULL;
+
+		// Remove the old path and go to the next
+		path_head = removePath(path_head);
+	}
+
+	// Write to-path using from-path, then return the start of the whole path
+	for (; final_path && final_path->from; final_path = final_path->from){
+		final_path->from->to = final_path;
+	}
+	return final_path;
+}
+
+PathNode * findPath(MatchContext * context, int s_x, int s_y, int e_x, int e_y){
+	return findPathWithin(context, s_x, e_y, e_x, e_y, INT_MAX);
+}
 
 int pathfindingMain(){
 	Hunter hunters[] = {
@@ -55,167 +204,31 @@ int pathfindingMain(){
 		);
 
 	initMatch(&context);
-
-	// Clear map pointer registers
-	for (int n =0; n < context.map_w * context.map_h; n++)
-		context.map[n].reg_ptr = NULL;
-
-	int pointValid(int x, int y) {
-		if ((x < 0) || (y < 0))
-			return 0;
-
-		if ((x >= context.map_w) || (y >= context.map_h))
-			return 0;
-
-		Tile * tile = &context.map[context.map_w * y + x];
-		
-		if (tile->exists == 0)
-			return 0;
-		
-		// Don't re-scan tiles
-		if (tile->reg_ptr)
-			return 0;
-
-		if (tile->hunter)
-			return 0;
-
-		return 1;
-	}
 	
-	int start_x = 3, start_y = 1;
-	int end_x = 15, end_y = 6;
+	int tryPath(int start_x, int start_y, int end_x, int end_y){
+		PathNode * path = findPathWithin(
+				&context,
+				start_x, start_y,
+				end_x, end_y,
+				15
+			);
 
-	struct pathNode {
-		int x, y;
-		uint32_t distance;
-
-		struct pathNode * from;
-		struct pathNode * to;   // Next node in path, set when path is found.
-		
-		// Linked list for path endpoints. NULL if not an endpoint
-		struct pathNode * prev_path;
-		struct pathNode * next_path;
-	};
-
-	struct pathNode nodes[1000];
-	int nodes_length = 0;
-
-	struct pathNode * newNode() {
-		return &nodes[nodes_length++];
-	}
-
-	struct pathNode * addNode(int x, int y, struct pathNode * from) {
-		struct pathNode * node = newNode();
-		node->x = x;
-		node->y = y;
-
-		// Set map-tile pointer register, allowing us to later check
-		// if a position-indexed tile has a respective pathNode,
-		// ensuring nodes are only scaned once.
-		context.map[context.map_w * y + x].reg_ptr = node;
-
-		node->distance = 0;
-		if (from) {
-			node->from = from;
-			node->distance = from->distance + 1;
-		}
-		return node;
-	}
-
-	int inPath(struct pathNode * endpoint, int x, int y ) {
-		// If we've recursed past the start of the path
-		if (endpoint == NULL)
-			return 0;
-
-		// Check point position
-		if ((endpoint->x == x) && (endpoint->y == y))
+		if (path == NULL) {
+			printf("No path found :(\n\n");
 			return 1;
-
-		// Recurse down path
-		return inPath(endpoint->from, x, y);
-	}
-
-	struct pathNode * insertPath(struct pathNode * insert_point, struct pathNode * inserted) {
-		if (insert_point) {
-			inserted->next_path = insert_point->next_path;
-			inserted->prev_path = insert_point->prev_path;
-			insert_point->next_path->prev_path = inserted;
-			insert_point->next_path = inserted;
-		}
-		else {
-			// If this is the first element, establish it a circular list
-			inserted->next_path = inserted;
-			inserted->prev_path = inserted;
 		}
 
-		return inserted;
+		// Print path
+		for (PathNode * node = path; node; node = node->to)
+			printf("%d, %d (%d)\n", node->x, node->y, node->distance);
+
+		printf("\n");
+
+		return 0;
 	}
 
-	struct pathNode * removePath(struct pathNode * path) {
-		struct pathNode * insert_point = path->next_path;
-
-		path->next_path->prev_path = path->prev_path;
-		path->prev_path->next_path = path->next_path;
-		
-		path->next_path = NULL;
-		path->prev_path = NULL;
-
-		return insert_point;
-	}
-
-	struct pathNode * start_node = addNode(start_x, start_y, NULL);
-	insertPath(NULL, start_node);
-	struct pathNode * path_head = start_node;
-
-	struct pathNode * final_path = NULL;
-
-	int iterations = 0;
-	while (path_head) {
-		iterations++;
-		int x = path_head->x, y = path_head->y;
-
-		// If we've found the destination, nice, exit!
-		if ((x == end_x) && (y == end_y)) {
-			printf("Found a path at %d iterations!\n", iterations);
-			final_path = path_head;
-			break;
-		}
-
-		inline void expandPath(int x, int y) {
-			if (!pointValid(x, y))
-				return;
-			
-			if (inPath(path_head, x, y))
-				return;
-
-			insertPath(path_head->prev_path, addNode(x, y, path_head));
-		}
-
-		// Expand paths clockwise, starting up
-		expandPath(x  , y-1);
-		expandPath(x+1, y  );
-		expandPath(x  , y+1);
-		expandPath(x-1, y  );
-		
-		// Exit if we're at the last endpoint
-		if (path_head->next_path == path_head) {
-			printf("Hit last endpoint, exiting\n");
-			break;
-		}
-
-		// Remove the old path and go to the next
-		path_head = removePath(path_head);
-	}
-
-	// Write forward-path from backward-path,
-	// set first node to the start of the path
-	for (; final_path && final_path->from; final_path = final_path->from){
-		final_path->from->to = final_path;
-	}
-
-	// Print path
-	for (struct pathNode * node = final_path; node; node = node->to)
-		printf("%d, %d\n", node->x, node->y);
-
+	tryPath(3,1, 15,6);
+	tryPath(3,1, 11,2);
+	// tryPath(3,1, 15,600);
 	return 0;
 }
