@@ -239,10 +239,13 @@ typedef struct _MatchContext {
 void decodeMap(MatchContext * context, char * map_encoded);
 int pointWalkable(MatchContext * context, int x, int y);
 int tileWalkable(Tile * tile);
+Tile * getTile(MatchContext * context, int x, int y);
 
 Crate * getCrateAt(MatchContext * context, int x, int y);
 Hunter * getHunterAt(MatchContext * context, int x, int y);
 uint8_t hunterAt(Hunter * hunter, int x, int y);
+void hunterSetPosition(MatchContext * context, Hunter * hunter, int x, int y);
+
 
 void printHunter(Hunter * h);
 void encodeHunter(Hunter * hunter, char * buffer);

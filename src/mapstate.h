@@ -35,6 +35,8 @@ typedef struct _MapStateTile {
 	int val;        // 0 if void, otherwise floor
 	int selected;
 
+	Tile * tile;
+
 	int contents_len;
 	TileEntity * contents[TILE_ENTITY_LAYERS];
 
@@ -45,6 +47,7 @@ typedef struct _MapStateTile {
 
 typedef struct _MapStateMap {
 	MapStateTile * tiles;
+	MatchContext * context;
 	int w, h;
 } MapStateMap;
 
@@ -142,7 +145,7 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match);
 
 MapStateMap * makeMap(int w, int h);
 void freeMap(MapStateMap * map);
-MapStateTile * getTile(MapStateMap * map, int x, int y);
+MapStateTile * getMapstateTile(MapStateMap * map, int x, int y);
 
 /*
    Translates map cell coordinates the pixel coordinates of that cell's center.
@@ -153,7 +156,7 @@ int iso_y(MapState * state, int x, int y);
 /*
    Returns the MapStateTile at a given pixel position, or returns NULL if the position is outside the map's boundries.
 */
-MapStateTile * getTileAtPx(MapState * state, float p_x, float p_y);
+MapStateTile * getMapstateTileAtPx(MapState * state, float p_x, float p_y);
 
 void tileEntityOnDraw(EventHandler * h);
 HunterEntity * initHunterEntity(HunterEntity * hunter, MapState * state, SDL_Texture * texture);

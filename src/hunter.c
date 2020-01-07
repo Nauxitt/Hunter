@@ -215,6 +215,22 @@ void printHunter(Hunter * h){
 		);
 }
 
+Tile * getTile(MatchContext * context, int x, int y) {
+	return &context->map[context->map_w * y + x];
+}
+
+void hunterSetPosition(MatchContext * context, Hunter * hunter, int x, int y) {
+	// update tile data
+	if (context) {
+		getTile(context, hunter->x, hunter->y)->hunter = NULL;
+		getTile(context, x, y)->hunter = hunter;
+	}
+
+	// Update hunter position data
+	hunter->x = x;
+	hunter->y = y;
+}
+
 void hunterClearBonus(Hunter * h){
 	h->turn_stats.atk = 0;
 	h->turn_stats.def = 0;
@@ -314,6 +330,9 @@ void initMatch(MatchContext * context){
 		hunterStats(hunter);
 		if (hunter->base_stats.hp == 0)
 			hunter->base_stats.hp = hunter->stats.max_hp;
+		
+		// Update tile/hunter data
+		hunterSetPosition(context, hunter, hunter->x, hunter->y);
 	}
 
 	// initialize scores
@@ -377,6 +396,8 @@ void matchCycle(MatchContext * context){
 	Statset * active_stats = hunterStats(actor);
 	Statset * actor_stats;
 	Statset * target_stats;
+
+	PathNode * path = NULL;
 
 	Crate * crate;
 
@@ -454,14 +475,12 @@ void matchCycle(MatchContext * context){
 			break;
 
 		case MOVE_ACTION:
-			for(int x = actor->x; x != action->x;){
-				x += (x > action->x) ? -1 : 1;
-				enqueueMoveStepAction(context, actor, x, actor->y);
+			path = findPath(context, actor->x, actor->y, action->x, action->y);
+
+			while ((path = path->to)) {
+				enqueueMoveStepAction(context, actor, path->x, path->y);
 			}
-			for(int y = actor->y; y != action->y;){
-				y += (y > action->y) ? -1 : 1;
-				enqueueMoveStepAction(context, actor, action->x, y);
-			}
+
 			enqueueEndMoveAction(context, actor);
 			break;
 
@@ -482,17 +501,7 @@ void matchCycle(MatchContext * context){
 
 		case TELEPORT_ACTION:
 		case MOVE_STEP_ACTION:
-			context->map[
-					actor->x + context->map_w * actor->y
-				].hunter = NULL;
-
-			actor->x = action->x;
-			actor->y = action->y;
-
-			context->map[
-					actor->x + context->map_w * actor->y
-				].hunter = actor;
-
+			hunterSetPosition(context, actor, action->x, action->y);
 			break;
 
 		case END_MOVE_ACTION:
@@ -851,14 +860,14 @@ int pointWalkable(MatchContext * context, int x, int y) {
 	if ((x >= context->map_w) || (y >= context->map_h))
 		return 0;
 
-	return tileWalkable(&context->map[context->map_w * y + x]);
+	return tileWalkable(getTile(context, x, y));
 }
 
 int tileWalkable(Tile * tile) {
 	if (tile->exists == 0)
 		return 0;
 
-	if (tile->hunter)
+	if (tile->hunter != NULL)
 		return 0;
 
 	return 1;

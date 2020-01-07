@@ -13,6 +13,7 @@ void mapResetPathData(MatchContext * context){
 			node->y = y;
 			node->scanned = 0;
 			node->distance = 0;
+
 			node->to = NULL;
 			node->from = NULL;
 			node->next_path = NULL;
@@ -75,6 +76,11 @@ PathNode * removePath(PathNode * path) {
 	return insert_point;
 }
 
+PathNode * pathEndpoint(PathNode * path) {
+	for (; path->to; path = path->to);
+	return path;
+}
+
 void freePath(PathNode * path){
 	while (path) {
 		PathNode * next = path->to;
@@ -121,10 +127,15 @@ PathNode * findPathWithin(MatchContext * context, int s_x, int s_y, int e_x, int
 		inline void expandPath(int x, int y) {
 			PathNode * node = &context->map[context->map_w*y + x].path;
 
-			if (node->scanned)                   return;
-			if (!pointWalkable(context, x, y))   return;
+			if (node->scanned)
+				return;
+
+			if (!pointWalkable(context, x, y))
+				if (!((x == s_x) && (y == s_y)))
+					return;
 
 			// Path doesn't break any requirements, add it
+			node->scanned = 1;
 			insertPath(path_head->prev_path, addNode(path_head, x, y));
 		}
 		
@@ -149,7 +160,7 @@ PathNode * findPathWithin(MatchContext * context, int s_x, int s_y, int e_x, int
 }
 
 PathNode * findPath(MatchContext * context, int s_x, int s_y, int e_x, int e_y){
-	return findPathWithin(context, s_x, e_y, e_x, e_y, INT_MAX);
+	return findPathWithin(context, s_x, s_y, e_x, e_y, INT_MAX);
 }
 
 int pathfindingMain(){
@@ -205,13 +216,22 @@ int pathfindingMain(){
 
 	initMatch(&context);
 	
-	int tryPath(int start_x, int start_y, int end_x, int end_y){
-		PathNode * path = findPathWithin(
-				&context,
-				start_x, start_y,
-				end_x, end_y,
-				15
-			);
+	int tryPath(int start_x, int start_y, int end_x, int end_y, int distance){
+		PathNode * path;
+
+		if (distance == 0)
+			path = findPath(
+					&context,
+					start_x, start_y,
+					end_x, end_y
+				);
+		else
+			path = findPathWithin(
+					&context,
+					start_x, start_y,
+					end_x, end_y,
+					distance
+				);
 
 		if (path == NULL) {
 			printf("No path found :(\n\n");
@@ -227,8 +247,30 @@ int pathfindingMain(){
 		return 0;
 	}
 
-	tryPath(3,1, 15,6);
-	tryPath(3,1, 11,2);
-	// tryPath(3,1, 15,600);
+	void testAllFrom(int s_x, int s_y) {
+		for (int e_x=0; e_x < context.map_w; e_x++) {
+			for (int e_y=0; e_y < context.map_h; e_y++) {
+				if(!pointWalkable(&context, e_x, e_y))
+					continue;
+
+				PathNode * path = findPath(&context, s_x, s_y, e_x, e_y);
+				if (path == NULL) {
+					printf(
+							"No path from (%d, %d) to (%d, %d)\n",
+							s_x, s_y, e_x, e_y
+						);
+				}
+			}
+		}
+	}
+
+	for (int x=0; x < context.map_w; x++) {
+		for (int y=0; y < context.map_h; y++) {
+			if(!pointWalkable(&context, x, y))
+				continue;
+			testAllFrom(x, y);
+		}
+	}
+
 	return 0;
 }

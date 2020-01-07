@@ -24,7 +24,7 @@ int basicMission(){
 
 	Hunter hunters[] = {
 		{	.name = "Daniel",
-			.base_stats={.atk = 7, .mov = 4, .def = 3, .max_hp=1},
+			.base_stats={.atk = 7, .mov = 6, .def = 3, .max_hp=1},
 			.level = 1,
 			.type = "hunter"
 		},
@@ -99,9 +99,6 @@ int basicMission(){
 	// Make mapstate
 
 	MapState * mapstate = makeMapState(NULL, &context);
-	for(int n=0; n < context.map_w * context.map_h; n++){
-		mapstate->map->tiles[n].val = context.map[n].exists;
-	}
 
 	for(int n=0; n < 4; n++){
 		initHunterEntity(&mapstate->hunters[n], mapstate, textures.daniel.texture);
@@ -140,8 +137,10 @@ int developmentMainMenu(){
 
 #include "path.h"
 int main() {
+	return developmentMainMenu();
+	/*
+	return basicMission();
 	return pathfindingMain();
-	// return developmentMainMenu();
-	// return basicMission();
-	// return usermain();
+	return usermain();
+	*/
 }

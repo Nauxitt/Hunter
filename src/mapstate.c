@@ -13,6 +13,7 @@
 #include "entity.h"
 #include "menubar.h"
 #include "utils.h"
+#include "path.h"
 
 #include "scorestate.h"
 #include "selectorpanel.h"
@@ -72,8 +73,14 @@ MapState * makeMapState(MapState * mapstate, MatchContext * match){
 	mapstate->statbox = makeStatboxDisplayState(NULL);
 	mapstate->statbox->hunters_list = (Hunter**) &match->characters;
 	
-	// TODO: move menubar initialization into menubar.c
+	// Make map from match context
 	mapstate->map = makeMap(match->map_w, match->map_h);
+	mapstate->map->context = match;
+	for(int n=0; n < match->map_w * match->map_h; n++){
+		MapStateTile * stateTile = &mapstate->map->tiles[n];
+		stateTile->val = match->map[n].exists;
+		stateTile->tile = &match->map[n];
+	}
 
 	mapstate->tile_w = 64;
 	mapstate->tile_h = 32;
@@ -121,10 +128,35 @@ void mapSetSelection(MapStateMap * map, int value){
 
 void mapSelectAll(MapStateMap * map){  mapSetSelection(map, 1); }
 void mapSelectNone(MapStateMap * map){ mapSetSelection(map, 0); }
+
 void mapSelectRange(MapStateMap * map, int c_x, int c_y, int range){
-	for_xy(x, y, map->w, map->h){
-		MapStateTile * tile = getTile(map, x,y);
-		tile->selected = (abs(c_x - x) + abs(c_y - y)) <= range;
+	for (int y = c_y - range; y <= c_y + range; y++) {
+		// Skip this row if out of map bounds
+		if ((y < 0) || (y >= map->h))
+			continue;
+
+		for (int x = c_x - range; x <= c_x + range; x++) {
+			// Skip this column if out of map bounds
+			if ((x < 0) || (map->w <= x))
+				continue;
+
+			// Check path to tile, and select based off that
+
+			MapStateTile * tile = getMapstateTile(map, x,y);
+			PathNode * path = findPath(map->context, c_x, c_y, x, y);
+
+			tile->selected = 0;
+
+			// If no path exists to tile, don't select
+			if (path == NULL)
+				continue;
+			
+			// If there isn't a short enough path, don't select
+			if (pathEndpoint(path)->distance > range)
+				continue;
+
+			tile->selected = 1;
+		}
 	}
 }
 
@@ -133,11 +165,11 @@ void freeMap(MapStateMap * map){
 	free(map);
 }
 
-MapStateTile * getTile(MapStateMap * map, int x, int y){
+MapStateTile * getMapstateTile(MapStateMap * map, int x, int y){
 	return &(map->tiles[y * map->w + x]);
 }
 
-MapStateTile * getTileAtPx(MapState * state, float p_x, float p_y){
+MapStateTile * getMapstateTileAtPx(MapState * state, float p_x, float p_y){
 	// Account for the tile's diagonal edges
 	p_x -= state->tile_w / 4;
 	p_y -= state->tile_h / 4;
@@ -151,13 +183,13 @@ MapStateTile * getTileAtPx(MapState * state, float p_x, float p_y){
 	if((tx < 0) | (tx > state->map->w)) return NULL;
 	if((ty < 0) | (ty > state->map->h)) return NULL;
 
-	return getTile(state->map, tx, ty);
+	return getMapstateTile(state->map, tx, ty);
 }
 
 void hunterSetTile(HunterEntity * e, int x, int y){
 	tileEntitySetTile(TileEntity(e), x, y, TILE_LAYER_HUNTER);
-	e->hunter->x = x;
-	e->hunter->y = y;
+	// e->hunter->x = x;
+	// e->hunter->y = y;
 }
 
 void crateSetTile(CrateEntity * c, int x, int y){
@@ -305,7 +337,7 @@ void mapOnTick(EventHandler * h){
 			case OPEN_CRATE_ACTION:
 				matchCycle(match);
 				for_xy(x, y, state->map->w, state->map->h){
-					MapStateTile * tile = getTile(state->map, x, y);
+					MapStateTile * tile = getMapstateTile(state->map, x, y);
 					CrateEntity * entity = CrateEntity(tile->contents[TILE_LAYER_CRATE]);
 
 					if(!entity || (entity->crate != action->crate))
@@ -359,8 +391,20 @@ void mapOnTick(EventHandler * h){
 	MatchAction * action = match->action;
 
 	if(action->type == POLL_MOVE_ACTION){
+		Statset * stats = hunterStats(active_player);
+
 		if(!pollAction("poll_move_action")){
 			pushAction("poll_move_action");
+			mapSelectRange(
+					state->map,
+					active_player->x,
+					active_player->y,
+					stats->mov
+				);
+
+			// Deselect hunter's tile
+			state->map->tiles[state->map->w * active_player->y + active_player->x].selected = 0;
+			
 			mapStateFlash(state);
 		}
 		
@@ -370,13 +414,6 @@ void mapOnTick(EventHandler * h){
 		if(keys[SDL_SCANCODE_LEFT])  state->camera_x += 10;
 		if(keys[SDL_SCANCODE_RIGHT]) state->camera_x -= 10;
 
-		Statset * stats = hunterStats(active_player);
-		mapSelectRange(
-				state->map,
-				active_player->x,
-				active_player->y,
-				stats->mov
-			);
 	}
 	else if(
 				pollAction("poll_combat_target") ||
@@ -393,19 +430,19 @@ void mapOnTick(EventHandler * h){
 		int x = action->actor->x, y = action->actor->y;
 		MapStateTile * tile;
 
-		tile = getTile(state->map, x, y-1);
+		tile = getMapstateTile(state->map, x, y-1);
 		if(tile)
 			tile->selected = (int) getHunterAt(match, x, y-1);
 
-		tile = getTile(state->map, x, y+1);
+		tile = getMapstateTile(state->map, x, y+1);
 		if(tile)
 			tile->selected = (int) getHunterAt(match, x, y+1);
 
-		tile = getTile(state->map, x-1, y);
+		tile = getMapstateTile(state->map, x-1, y);
 		if(tile)
 			tile->selected = (int) getHunterAt(match, x-1, y);
 
-		tile = getTile(state->map, x+1, y);
+		tile = getMapstateTile(state->map, x+1, y);
 		if(tile)
 			tile->selected = (int) getHunterAt(match, x+1, y);
 	}
@@ -653,7 +690,7 @@ void mapOnMouseDown(EventHandler * h, SDL_Event * e){
 	MatchContext * match = state->match;
 	SDL_MouseButtonEvent me = e->button;
 
-	MapStateTile * t = getTileAtPx(
+	MapStateTile * t = getMapstateTileAtPx(
 			state,
 			me.x - state->camera_x,
 			me.y - state->camera_y
@@ -700,7 +737,7 @@ void mapOnDraw(EventHandler * h){
 
 	// Draw tiles
 	for_xy(x, y, map->w, map->h){
-		MapStateTile * tile = getTile(map, x, y);
+		MapStateTile * tile = getMapstateTile(map, x, y);
 		
 		if(!tile->val)
 			continue;
@@ -744,7 +781,7 @@ void mapOnDraw(EventHandler * h){
 	
 	// Iterate through tiles and draw entities
 	for_xy(x, y, map->w, map->h){
-		MapStateTile * tile = getTile(map, x, y);
+		MapStateTile * tile = getMapstateTile(map, x, y);
 
 		for(int e=0; e < TILE_ENTITY_LAYERS; e++){
 			TileEntity * entity = tile->contents[e];
@@ -833,13 +870,13 @@ void tileEntityOnDraw(EventHandler * h){
 }
 
 void tileEntitySetTile(TileEntity * e, int x, int y, int layer){
-	MapStateTile * old_tile = getTile(e->mapstate->map,x,y);
+	MapStateTile * old_tile = getMapstateTile(e->mapstate->map,x,y);
 
 	if(old_tile && old_tile->contents[layer] == e)
 		old_tile->contents[layer] = NULL;
 
 	e->x = x; e->y = y;
-	MapStateTile * tile = getTile(e->mapstate->map,x,y);
+	MapStateTile * tile = getMapstateTile(e->mapstate->map,x,y);
 	tile->contents[layer] = e;
 }
 

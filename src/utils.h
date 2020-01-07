@@ -11,8 +11,6 @@ void printRect(SDL_Rect * rect);
 #define for_xy(X, Y, W, H) \
 	for(int X=0; X<(W); X++) for(int Y=0; Y<(H); Y++)
 
-#endif
-
 #define XY(ptr) (ptr)->x, (ptr)->y
 
 #define ADJACENT_MAP(OP, X, Y) \
@@ -20,3 +18,5 @@ void printRect(SDL_Rect * rect);
 	OP(X+1, Y  ); \
 	OP(X  , Y+1); \
 	OP(X-1, Y  );
+
+#endif

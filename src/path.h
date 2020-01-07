@@ -30,6 +30,7 @@ PathNode * insertPath(PathNode * insert_point, PathNode * inserted);
 int inPath(PathNode * path, int x, int y );
 int inPathFrom(PathNode * endpoint, int x, int y );
 PathNode * removePath(PathNode * path);
+PathNode * pathEndpoint(PathNode * path);
 void freePath(PathNode * path);
 int pathfindingMain();
 
