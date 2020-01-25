@@ -22,12 +22,30 @@ void mapResetPathData(MatchContext * context){
 	}
 }
 
+void mapClearPathList(MatchContext * context) {
+	for (int x=0; x < context->map_w; x++) {
+		for (int y=0; y < context->map_h; y++) {
+			PathNode * node = &context->map[context->map_w*y + x].path;
+			node->next_path = NULL;
+			node->prev_path = NULL;
+		}
+	}
+}
+
 PathNode * insertPath(PathNode * insert_point, PathNode * inserted) {
 	if (insert_point) {
 		inserted->next_path = insert_point->next_path;
 		inserted->prev_path = insert_point->prev_path;
 		insert_point->next_path->prev_path = inserted;
 		insert_point->next_path = inserted;
+	}
+
+	return inserted;
+}
+
+PathNode * insertPathCircular(PathNode * insert_point, PathNode * inserted) {
+	if (insert_point) {
+		insertPath(insert_point, inserted);
 	}
 	else {
 		// If this is the first element, establish it a circular list
@@ -89,25 +107,89 @@ void freePath(PathNode * path){
 	}
 }
 
-PathNode * findPathWithin(MatchContext * context, int s_x, int s_y, int e_x, int e_y, int distance){
-	PathNode * addNode(PathNode * from, int x, int y) {
-		PathNode * node = &context->map[context->map_w * y + x].path;
-		node->x = x;
-		node->y = y;
+PathNode * mapAddPathNode(MatchContext * context, PathNode * from, int x, int y) {
+	PathNode * node = &getTile(context, x, y)->path;
+	node->x = x;
+	node->y = y;
 
-		node->distance = 0;
-		if (from) {
-			node->from = from;
-			node->distance = from->distance + 1;
-		}
-		return node;
+	node->distance = 0;
+	if (from) {
+		node->from = from;
+		node->distance = from->distance + 1;
 	}
-	
+	return node;
+}
+
+PathNode * generatePathsWithin(MatchContext * context, int s_x, int s_y, int range) {
 	// Clear leftover path data of previous searches from tile map
 	mapResetPathData(context);
 
 	// Start-point of the path is the initial node
-	PathNode * path_head = addNode(NULL, s_x, s_y);
+	PathNode * path_head = mapAddPathNode(context, NULL, s_x, s_y);
+	insertPathCircular(NULL, path_head);
+
+	while (path_head) {
+		int x = path_head->x, y = path_head->y;
+		path_head->scanned = 1;
+
+		// Expand paths clockwise, starting up, by maping a function in each
+		// direction, unless we've hit the search distance limit.
+
+		inline void expandPath(int x, int y) {
+			PathNode * node = &context->map[context->map_w*y + x].path;
+
+			if (node->scanned)
+				return;
+
+			if (!pointWalkable(context, x, y))
+				if (!((x == s_x) && (y == s_y)))
+					return;
+
+			// Path doesn't break any requirements, add it
+			node->scanned = 1;
+			insertPath(path_head->prev_path, mapAddPathNode(context, path_head, x, y));
+		}
+		
+		if (path_head->distance < range) {
+			ADJACENT_MAP(expandPath, x, y);
+		}
+
+		
+		// Break if we've scanned the entire map
+		if (path_head->next_path == path_head)
+			break;
+
+		// Remove the old path and go to the next
+		path_head = removePath(path_head);
+	}
+
+	// Create a list of shortest paths to return
+	PathNode * paths_list = NULL;
+	path_head = NULL;
+
+	for (int n=0; n < context->map_w * context->map_h; n++) {
+		PathNode * path = &context->map[n].path;
+		if (path->scanned) {
+			if (paths_list) {
+				path_head = insertPath(path_head, path);
+			}
+			else {
+				path_head = path;
+				paths_list = path;
+			}
+		}
+	}
+
+	return paths_list;
+}
+
+
+PathNode * findPathWithin(MatchContext * context, int s_x, int s_y, int e_x, int e_y, int distance){
+	// Clear leftover path data of previous searches from tile map
+	mapResetPathData(context);
+
+	// Start-point of the path is the initial node
+	PathNode * path_head = mapAddPathNode(context, NULL, s_x, s_y);
 	insertPath(NULL, path_head);
 	PathNode * final_path = NULL;
 
@@ -136,7 +218,7 @@ PathNode * findPathWithin(MatchContext * context, int s_x, int s_y, int e_x, int
 
 			// Path doesn't break any requirements, add it
 			node->scanned = 1;
-			insertPath(path_head->prev_path, addNode(path_head, x, y));
+			insertPath(path_head->prev_path, mapAddPathNode(context, path_head, x, y));
 		}
 		
 		if (path_head->distance < distance) {
@@ -157,6 +239,10 @@ PathNode * findPathWithin(MatchContext * context, int s_x, int s_y, int e_x, int
 		final_path->from->to = final_path;
 	}
 	return final_path;
+}
+
+PathNode * generatePaths(MatchContext * context, int s_x, int s_y, int range) {
+	return generatePathsWithin(context, s_x, s_y, INT_MAX);
 }
 
 PathNode * findPath(MatchContext * context, int s_x, int s_y, int e_x, int e_y){

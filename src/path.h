@@ -10,7 +10,7 @@ typedef struct _Tile Tile;
 
 typedef struct _PathNode {
 	int32_t x, y;
-	uint32_t distance;
+	int32_t distance;
 	uint8_t scanned;
 
 	MatchContext * context;
@@ -25,7 +25,10 @@ typedef struct _PathNode {
 	Tile * tile;
 } PathNode;
 
+PathNode * mapAddPathNode(MatchContext * context, PathNode * from, int x, int y);
 void mapResetPathData(MatchContext * context);
+void mapClearPathList(MatchContext * context);
+PathNode * insertPathCircular(PathNode * insert_point, PathNode * inserted);
 PathNode * insertPath(PathNode * insert_point, PathNode * inserted);
 int inPath(PathNode * path, int x, int y );
 int inPathFrom(PathNode * endpoint, int x, int y );
@@ -33,6 +36,12 @@ PathNode * removePath(PathNode * path);
 PathNode * pathEndpoint(PathNode * path);
 void freePath(PathNode * path);
 int pathfindingMain();
+
+/*
+   Generates all paths within a certain radius, or generates all shortests paths possible within the map, starting from a certain point
+*/
+PathNode * generatePaths(MatchContext * context, int s_x, int s_y, int range);
+PathNode * generatePathsWithin(MatchContext * context, int s_x, int s_y, int range);
 
 /*
    Finds a path between two points.  Returns NULL if no path is found.

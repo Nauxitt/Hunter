@@ -19,12 +19,19 @@ typedef struct _Agent Agent;
 typedef struct _MatchAction MatchAction;
 typedef struct _MatchContext MatchContext;
 
+#define PLAYERS_LENGTH 4
+
+#define CHARACTER_TYPE_MAX_LENGTH 8
+#define NAME_MAX_LENGTH 8
+#define HAND_LIMIT 6
+#define INVENTORY_LIMIT 6
+
+
 #include <stdint.h>
 #include "cards.h"
 #include "score.h"
 #include "path.h"
-
-#define PLAYERS_LENGTH 4
+#include "ai.h"
 
 typedef struct _Statset {
 	uint8_t hp;     // current hp value
@@ -47,11 +54,6 @@ typedef struct _Relic {
 	int target_item;
 	int player_item;  // Denotes whether the relic the game through a player's inventory, which means it is not scored.
 } Relic;
-
-#define CHARACTER_TYPE_MAX_LENGTH 8
-#define NAME_MAX_LENGTH 8
-#define HAND_LIMIT 6
-#define INVENTORY_LIMIT 6
 
 typedef struct _Hunter {
 	int id;
@@ -256,8 +258,12 @@ void hunterRandomStatIncrease(Hunter * h, int points);
 Statset * hunterStats(Hunter * h);
 Card * hunterPopCard(Hunter * h, int card_num);
 int hunterHandSize(Hunter * h);
+Card * hunterHighestMoveCard(Hunter * h);
+Card * hunterHighestAttackCard(Hunter * h, int copy_val);
+Card * hunterHighestDefenseCard(Hunter * h);
 void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card);
 int hunterHasRelic(Hunter * hunter, Relic * relic);
+Hunter * getHunterWithTarget(MatchContext * context);
 int hunterInventoryLength(Hunter * hunter);
 int hunterAddRelic(Hunter * hunter, Relic * relic);
 Relic * hunterRemoveRelicAt(Hunter * hunter, int index);

@@ -7,6 +7,7 @@
 #include "hunter_enqueue.h"
 #include "cards.h"
 #include "score.h"
+#include "ai.h"
 
 
 void decodeMap(MatchContext * context, char * map_encoded){
@@ -303,6 +304,61 @@ int hunterHandSize(Hunter * h){
 	while((hand_size < HAND_LIMIT) && (h->hand[hand_size] != NULL)) hand_size++;
 	return hand_size;
 }
+
+Card * hunterHighestMoveCard(Hunter * h) {
+	Card * highest = NULL;
+
+	for (int n=0; n < HAND_LIMIT && h->hand[n]; n++) {
+		Card * c = h->hand[n];
+
+		switch (c->type) {
+			case MOVE_CARD:
+				if (c->num > highest->num)
+					highest = c;
+				break;
+
+			// Exit is the highest card, end search
+			case MOVE_EXIT_CARD:
+				return c;
+
+			default:
+				break;
+		}
+	}
+
+	return highest;
+}
+
+Card * hunterHighestAttackCard(Hunter * h, int copy_val) {
+	Card * highest = NULL;
+	for (int n=0; n < HAND_LIMIT && h->hand[n]; n++) {
+		Card * c = h->hand[n];
+
+		switch (c->type) {
+			case ATTACK_CARD:
+				if (c->num > highest->num)
+					highest = c;
+				break;
+
+			case ATTACK_DOUBLE_CARD:
+				if (hunterStats(h)->atk > c->num)
+					highest = c;
+				break;
+
+			case ATTACK_COPY_CARD:
+				if (copy_val > highest->num)
+					highest = c;
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	return highest;
+}
+
+Card * hunterHighestDefenseCard(Hunter * h);
 
 void initMatch(MatchContext * context){
 	// Copy deck into a cardpool, from which we will randomly initialize the context's deck
@@ -966,6 +1022,17 @@ int hunterHasRelic(Hunter * hunter, Relic * relic){
 			return 1;
 
 	return 0;
+}
+
+Hunter * getHunterWithTarget(MatchContext * context) {
+	for (int n=0; n < PLAYERS_LENGTH; n++) {
+		Hunter * h = context->characters[n];
+		if (hunterHasRelic(h, context->target_relic))
+			return h;
+	}
+
+	// No hunter is holding the target relic
+	return NULL;
 }
 
 int hunterInventoryLength(Hunter * hunter){
