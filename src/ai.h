@@ -45,7 +45,6 @@ typedef struct _BotPriorities {
 
 typedef struct _Bot {
 	BotPriorities priorities;
-	Hunter * hunter;
 	MatchContext * context;
 
 	// For storing different profiles of move actions
@@ -68,7 +67,7 @@ void botGenerateCrateAction(Bot * bot, MatchContext * match, Hunter * hunter);
 BotAction * makeBotAction(BotAction * action, Hunter * hunter, enum MatchActionType type);
 void botClearMoveActions(Bot * bot);
 
-void botAction(Bot * bot, MatchContext * match, Hunter * hunter);
+void botControllerHook(MatchContext * context, Hunter * hunter, void * controller_data);
 void botTurnAction(Bot * bot, MatchContext * match, Hunter * hunter);
 void botMoveAction(Bot * bot, MatchContext * match, Hunter * hunter);
 void botAttackAction(Bot * bot, MatchContext * match, Hunter * hunter);

@@ -306,10 +306,13 @@ int hunterHandSize(Hunter * h){
 }
 
 Card * hunterHighestMoveCard(Hunter * h) {
-	Card * highest = NULL;
+	Card * highest = h->hand[0];
 
-	for (int n=0; n < HAND_LIMIT && h->hand[n]; n++) {
+	for (int n=1; n < HAND_LIMIT && h->hand[n]; n++) {
 		Card * c = h->hand[n];
+
+		if (c == NULL)
+			break;
 
 		switch (c->type) {
 			case MOVE_CARD:
@@ -433,6 +436,26 @@ void matchCycle(MatchContext * context){
 	*/
 
 	MatchAction * action = context->action;
+
+	/*
+	   Handle Hunter automated controlling.
+
+	   If the Hunter's controller_hook is set, pass execution to the
+	   hook, allowing a chance for new actions to be posted prior to
+	   game logic being executed.
+   */
+	if (		(context->polling) &&
+				(action != NULL)   &&
+				(action->actor != NULL) &&
+				(action->actor->controller_hook)
+	){
+			action->actor->controller_hook(
+					context,
+					action->actor,
+					action->actor->controller_data
+				);
+	}
+
 	context->action = action->next;
 
 	if(context->polling != 0 && context->enqueue != NULL){

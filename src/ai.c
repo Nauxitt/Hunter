@@ -13,12 +13,20 @@ BotAction * makeBotAction(BotAction * action, Hunter * hunter, enum MatchActionT
 	match_action->type = type;
 	match_action->actor = hunter;
 
+	action->action = match_action;
+
 	return action;
 }
 
 BotAction * botActionMax(BotAction * a, BotAction * b) {
+	/*
+		Returns the action with the greater score.  If one is NULL,
+		the other is returned, or NULL if both.  If they are equal
+		values, a random one is returned.
+	*/
+	
 	if (a == b)
-		return a;
+		return rand() % 2 ? a : b;
 
 	if (b == NULL)
 		return a;
@@ -54,22 +62,22 @@ void botClearMoveActions(Bot * bot) {
 	clear((BotAction **) &bot->move_to_character_action, 6 * PLAYERS_LENGTH);
 }
 
-void botTurnAction(Bot * bot, MatchContext * match, Hunter * hunter) {
+void botTurnAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 	// TODO: Always use highest available move card
 	Statset * stats = hunterStats(hunter);
 
 	// Healing threshold: heal if below a certain HP
 	// This overrides descisions over other actions
 	if (stats->hp <= stats->max_hp * bot->priorities.heal_threshold / 100) {
-		postTurnAction(match, REST_ACTION, NULL, NULL);
+		postTurnAction(context, REST_ACTION, NULL, NULL);
 		return;
 	}
 	
 	// Generate movement actions for each possible die roll
 	botClearMoveActions(bot);
-	botGenerateWander(bot, match, hunter);
-	botGenerateMoveToExit(bot, match, hunter);
-	botGenerateCrateAction(bot, match, hunter);
+	botGenerateWander(bot, context, hunter);
+	botGenerateMoveToExit(bot, context, hunter);
+	botGenerateCrateAction(bot, context, hunter);
 
 	// Score the various categories of move actions
 
@@ -98,7 +106,7 @@ void botTurnAction(Bot * bot, MatchContext * match, Hunter * hunter) {
 		
 		// TODO: reduce score depending on how many turns it takes to reach the exit
 
-		if (hunter == getHunterWithTarget(match))
+		if (hunter == getHunterWithTarget(context))
 			value = priorities->exit_has_target;
 
 		action->value = value;
@@ -123,7 +131,8 @@ void botTurnAction(Bot * bot, MatchContext * match, Hunter * hunter) {
 
 		action = botActionMax(action, bot->exit_action[n]);
 		action = botActionMax(action, bot->crate_target_action[n]);
-		action = botActionMax(action, bot->move_to_character_action[0][n]);
+		// action = botActionMax(action, bot->move_to_character_action[0][n]);
+		bot->move_actions[n] = action;
 	}
 
 	// Average all move roll action scores, and use that as the final score for performing a move action
@@ -138,10 +147,10 @@ void botTurnAction(Bot * bot, MatchContext * match, Hunter * hunter) {
 
 	// Move action
 	// Always use the highest move card
-	postTurnAction(match, MOVE_ACTION, NULL, hunterHighestMoveCard(hunter));
+	postTurnAction(context, MOVE_ACTION, NULL, hunterHighestMoveCard(hunter));
 }
 
-void botGenerateWander(Bot * bot, MatchContext * match, Hunter * hunter) {
+void botGenerateWander(Bot * bot, MatchContext * context, Hunter * hunter) {
 	/*
 		Generate one wander action for each possible die roll and card used.
 
@@ -151,15 +160,15 @@ void botGenerateWander(Bot * bot, MatchContext * match, Hunter * hunter) {
 		point.
 	*/
 
+	Statset * stats = hunterStats(hunter);
+
 	for (int roll=0; roll < 6; roll++) {
 		// Prepare map path register data
 		// TODO: copy data, instead of clearing and pathfinding the map data each time
-		mapClearPathList(match);
-
-		Statset * stats = hunterStats(hunter);
+		mapClearPathList(context);
 
 		PathNode * paths = generatePathsWithin(
-				match, hunter->x, hunter->y,
+				context, hunter->x, hunter->y,
 				stats->mov + roll + 1
 			);
 
@@ -215,10 +224,10 @@ void botGenerateWander(Bot * bot, MatchContext * match, Hunter * hunter) {
 	}
 }
 	
-void generateTargetedMoveActions(Bot * bot, MatchContext * match, Hunter * hunter, int x, int y, BotAction * (*action_array)[6]){
-	mapClearPathList(match);
+void generateTargetedMoveActions(Bot * bot, MatchContext * context, Hunter * hunter, int x, int y, BotAction * (*action_array)[6]){
+	mapClearPathList(context);
 
-	PathNode * path = findPath(match, hunter->x, hunter->y, match->exit_x, match->exit_y);
+	PathNode * path = findPath(context, hunter->x, hunter->y, context->exit_x, context->exit_y);
 
 	Statset * stats = hunterStats(hunter);
 
@@ -249,28 +258,28 @@ void generateTargetedMoveActions(Bot * bot, MatchContext * match, Hunter * hunte
 	}
 }
 
-void botGenerateMoveToExit(Bot * bot, MatchContext * match, Hunter * hunter) {
+void botGenerateMoveToExit(Bot * bot, MatchContext * context, Hunter * hunter) {
 	generateTargetedMoveActions(
-				bot, match, hunter,
-				match->exit_x, match->exit_y,
+				bot, context, hunter,
+				context->exit_x, context->exit_y,
 				&bot->exit_action
 			);
 }
 
-void botGenerateCrateAction(Bot * bot, MatchContext * match, Hunter * hunter) {
-	mapClearPathList(match);
+void botGenerateCrateAction(Bot * bot, MatchContext * context, Hunter * hunter) {
+	mapClearPathList(context);
 
 	generatePathsWithin(
-			match, hunter->x, hunter->y,
+			context, hunter->x, hunter->y,
 			(hunter->stats.mov + 9) * 3  // Only look within three turns of maximum movement
 		);
 
 	// Find the crate with the closest path
-	Crate * crate;
+	Crate * crate = NULL;
 	int crate_distance = 0;
 
-	for (int n=0; n < match->crates_len; n++) {
-		Crate * new_crate = &match->crates[n];
+	for (int n=0; n < context->crates_len; n++) {
+		Crate * new_crate = &context->crates[n];
 
 		// Skip crates which don't exist
 		if (!new_crate)
@@ -280,7 +289,7 @@ void botGenerateCrateAction(Bot * bot, MatchContext * match, Hunter * hunter) {
 			continue;
 		
 		// Get path to crate
-		PathNode * path = &getTile(match, crate->x, crate->y)->path;
+		PathNode * path = &getTile(context, new_crate->x, new_crate->y)->path;
 
 		// Skip crates to which no path exists
 		if (!path->scanned)
@@ -298,7 +307,7 @@ void botGenerateCrateAction(Bot * bot, MatchContext * match, Hunter * hunter) {
 			continue;
 		else if (path->distance == crate_distance) {
 			// For two crates of equal distance, 50/50 chance of changing crates
-			if (rand() % 2 == 0)
+			if (rand() % 2)
 				continue;
 		}
 
@@ -309,44 +318,46 @@ void botGenerateCrateAction(Bot * bot, MatchContext * match, Hunter * hunter) {
 
 	// Now that a crate has been chosen, generate an action towards it
 	generateTargetedMoveActions(
-			bot, match, hunter,
+			bot, context, hunter,
 			crate->x, crate->y,
 			&bot->exit_action
 		);
 }
 
-void botMoveAction(Bot * bot, MatchContext * match, Hunter * hunter) {
+void botMoveAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 	// Pick highest-scoring cached move action for this roll and use that
-	int roll = match->dice[0];
+	int roll = context->dice[0]-1;
 	BotAction * action = bot->move_actions[roll];
 	
 	postMoveAction(
-			match, hunter,
+			context, hunter,
 			action->action->x,
 			action->action->y
 		);
 }
 
-void botAttackAction(Bot * bot, MatchContext * match, Hunter * hunter) {}
-void botCombatCardAction(Bot * bot, MatchContext * match, Hunter * hunter) {}
+void botAttackAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
+void botCombatCardAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
 
-void botCombatAction(Bot * bot, MatchContext * match, Hunter * hunter) {
+void botCombatAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 	// If an attack action exists within the bot, execute it
 }
 
-void botDefendAction(Bot * bot, MatchContext * match, Hunter * hunter) {}
+void botDefendAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
 
-void botAction(Bot * bot, MatchContext * match, Hunter * hunter) {
+void botControllerHook(MatchContext * context, Hunter * hunter, void * controller_data) {
+	Bot * bot = (Bot *) controller_data;
+
 	// Don't make an action if the game doesn't want one
-	if (!match->polling)
+	if (!context->polling)
 		return;
 
-	// Generate goals based on the match's current action state
+	// Generate goals based on the context's current action state
 
-	switch (match->action->type) {
+	switch (context->action->type) {
 		// Decide an action type
 		case POLL_TURN_ACTION:
-			botTurnAction(bot, match, hunter);
+			botTurnAction(bot, context, hunter);
 			break;
 
 		case POLL_MOVE_CARD_ACTION:
@@ -354,22 +365,22 @@ void botAction(Bot * bot, MatchContext * match, Hunter * hunter) {
 			break;
 
 		case POLL_MOVE_ACTION:
-			botMoveAction(bot, match, hunter);
+			botMoveAction(bot, context, hunter);
 
 		case POLL_ATTACK_ACTION:
-			botAttackAction(bot, match, hunter);
+			botAttackAction(bot, context, hunter);
 			break;
 
 		case POLL_COMBAT_CARD_ACTION:
-			botCombatCardAction(bot, match, hunter);
+			botCombatCardAction(bot, context, hunter);
 			break;
 
 		case POLL_COMBAT_ACTION:
-			botCombatAction(bot, match, hunter);
+			botCombatAction(bot, context, hunter);
 			break;
 
 		case POLL_DEFEND_ACTION:
-			botDefendAction(bot, match, hunter);
+			botDefendAction(bot, context, hunter);
 			break;
 
 		default:
@@ -392,6 +403,13 @@ int botMain() {
 			.base_stats = {.atk = 11, .mov = 1, .def = 1, .max_hp=1}
 		}
 	};
+
+	Bot * bot = calloc(sizeof(Bot), 1);
+	for (int n=0; n < 4; n++) {
+		Hunter * hunter = &hunters[n];
+		hunter->controller_data = bot;
+		hunter->controller_hook = botControllerHook;
+	}
 
 	Relic floppy = {.item_id=0, .name="floppy"};
 	Relic metal = {.item_id=3, .name="metal"};
@@ -429,7 +447,9 @@ int botMain() {
 		);
 
 	initMatch(&context);
-	// matchCycle(&context);
+
+	while (context.action != NULL)
+		matchCycle(&context);
 
 	return 0;
 }

@@ -5,7 +5,11 @@
 #ifndef __hunter_h
 #define __hunter_h
 
-// Declare types before includes for two-way dependency
+/*
+   Declare basic types before including other source files, allowing
+   for bidirectional dependency between this and other source files.
+*/
+
 typedef struct _Statset Statset;
 typedef struct _Hunter Hunter;
 typedef struct _Card Card;
@@ -25,79 +29,6 @@ typedef struct _MatchContext MatchContext;
 #define NAME_MAX_LENGTH 8
 #define HAND_LIMIT 6
 #define INVENTORY_LIMIT 6
-
-
-#include <stdint.h>
-#include "cards.h"
-#include "score.h"
-#include "path.h"
-#include "ai.h"
-
-typedef struct _Statset {
-	uint8_t hp;     // current hp value
-	uint8_t restricted_hp; // short-term max hp. Cannot be healed beyond, but can be fixed in the hospital
-	uint8_t max_hp; // The highest possible hp value
-	uint8_t atk;    // Adds to damage in combat
-	uint8_t mov;    // Adds to map movement and combat escape attemps
-	uint8_t def;    // Subtracts from damage in combat
-	
-	// Invisible bonuses granted by certain items:
-	uint8_t escape_chance;
-	uint8_t evade_trap_chance;
-} Statset;
-
-
-typedef struct _Relic {
-	char name[7];
-	Statset (*statModifier)(Hunter * hunter);
-	int item_id;
-	int target_item;
-	int player_item;  // Denotes whether the relic the game through a player's inventory, which means it is not scored.
-} Relic;
-
-typedef struct _Hunter {
-	int id;
-	Statset stats;
-	Statset turn_stats;
-	Statset dice_stats;
-	Statset base_stats;
-	char name[NAME_MAX_LENGTH + 1];
-	char type[CHARACTER_TYPE_MAX_LENGTH];
-	int level;
-	Relic * inventory[INVENTORY_LIMIT+1];
-	Card * hand[HAND_LIMIT];
-	int x, y;
-	uint32_t credits;
-} Hunter;
-
-
-typedef struct _Crate {
-	Relic * contents;
-	int x, y;
-	int exists;
-} Crate;
-
-
-typedef struct _Tile {
-	int x, y;
-	uint8_t exists;
-	Hunter * hunter;
-	Crate * crate;
-	// Flag * flag;
-	// Trap * traps[3]
-
-	// Each tile reserves memory for nodes for pathfinding algorithm use.
-	// These will be overwritten between path searches and should be copied if
-	// preservation is needed.
-	PathNode path;
-
-	// General-purpose registers for algorithmic use
-	union {
-		void * reg_ptr;
-		int * reg_int;
-	};
-} Tile;
-
 
 enum MatchActionType {
 	BEGIN_MATCH_ACTION,
@@ -158,16 +89,84 @@ enum MatchActionType {
 	REMOVE_RELIC_ACTION
 };
 
-enum ControllerType {
-	CONTROLLER_SLEEPBOT,
-	CONTROLLER_LOCAL_HUMAN,
-	CONTROLLER_NETWORK,
-	CONTROLLER_BOT
-};
+#include <stdint.h>
+#include "cards.h"
+#include "score.h"
+#include "path.h"
+#include "ai.h"
 
-typedef struct _Agent {
-	enum ControllerType type;
-} Agent;
+typedef struct _Statset {
+	uint8_t hp;     // current hp value
+	uint8_t restricted_hp; // short-term max hp. Cannot be healed beyond, but can be fixed in the hospital
+	uint8_t max_hp; // The highest possible hp value
+	uint8_t atk;    // Adds to damage in combat
+	uint8_t mov;    // Adds to map movement and combat escape attemps
+	uint8_t def;    // Subtracts from damage in combat
+	
+	// Invisible bonuses granted by certain items:
+	uint8_t escape_chance;
+	uint8_t evade_trap_chance;
+} Statset;
+
+
+typedef struct _Relic {
+	char name[7];
+	Statset (*statModifier)(Hunter * hunter);
+	int item_id;
+	int target_item;
+	int player_item;  // Denotes whether the relic the game through a player's inventory, which means it is not scored.
+} Relic;
+
+typedef struct _Hunter {
+	int id;
+	Statset stats;
+	Statset turn_stats;
+	Statset dice_stats;
+	Statset base_stats;
+	char name[NAME_MAX_LENGTH + 1];
+	char type[CHARACTER_TYPE_MAX_LENGTH];
+	int level;
+	Relic * inventory[INVENTORY_LIMIT+1];
+	Card * hand[HAND_LIMIT];
+	int x, y;
+	uint32_t credits;
+
+	// References to controller data.  Can be set for automated Hunter control.
+	// When the MatchContext polls for a game action, if a controller hook is
+	// set, the MatchContext will poll that hook for an action.  Otherwise, the
+	// context will remain polling.
+
+	void (*controller_hook) (MatchContext * context, Hunter *, void * controller_data);
+	void * controller_data;
+} Hunter;
+
+
+typedef struct _Crate {
+	Relic * contents;
+	int x, y;
+	int exists;
+} Crate;
+
+
+typedef struct _Tile {
+	int x, y;
+	uint8_t exists;
+	Hunter * hunter;
+	Crate * crate;
+	// Flag * flag;
+	// Trap * traps[3]
+
+	// Each tile reserves memory for nodes for pathfinding algorithm use.
+	// These will be overwritten between path searches and should be copied if
+	// preservation is needed.
+	PathNode path;
+
+	// General-purpose registers for algorithmic use
+	union {
+		void * reg_ptr;
+		int * reg_int;
+	};
+} Tile;
 
 typedef struct _MatchAction {
 	enum MatchActionType type;

@@ -36,8 +36,11 @@ PathNode * insertPath(PathNode * insert_point, PathNode * inserted) {
 	if (insert_point) {
 		inserted->next_path = insert_point->next_path;
 		inserted->prev_path = insert_point->prev_path;
-		insert_point->next_path->prev_path = inserted;
-		insert_point->next_path = inserted;
+
+		if (insert_point->next_path) {
+			insert_point->next_path->prev_path = inserted;
+			insert_point->next_path = inserted;
+		}
 	}
 
 	return inserted;
@@ -174,8 +177,8 @@ PathNode * generatePathsWithin(MatchContext * context, int s_x, int s_y, int ran
 				path_head = insertPath(path_head, path);
 			}
 			else {
-				path_head = path;
-				paths_list = path;
+				path_head = insertPath(NULL, path);
+				paths_list = path_head;
 			}
 		}
 	}
