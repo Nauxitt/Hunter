@@ -190,7 +190,7 @@ PathNode * findPathWithin(MatchContext * context, int s_x, int s_y, int e_x, int
 
 	// Start-point of the path is the initial node
 	PathNode * path_head = mapAddPathNode(context, NULL, s_x, s_y);
-	insertPath(NULL, path_head);
+	insertPathCircular(NULL, path_head);
 	PathNode * final_path = NULL;
 
 	while (path_head) {
