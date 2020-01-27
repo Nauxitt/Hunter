@@ -13,6 +13,8 @@
 #include "sprites.h"
 #include "score.h"
 
+#include "ai.h"
+
 // For main menu
 #include "mainMenuState.h"
 
@@ -20,6 +22,7 @@ Game game;
 
 int basicMission(){
 	initGame();
+	game.tick_delay = 1;
 	loadSprites();
 
 	Hunter hunters[] = {
@@ -44,6 +47,14 @@ int basicMission(){
 			.type = "hunter"
 		}
 	};
+
+	Bot * bot = calloc(sizeof(Bot), 1);
+	for (int n=0; n < 4; n++) {
+		Hunter * hunter = &hunters[n];
+		hunter->controller_data = bot;
+		hunter->controller_hook = botControllerHook;
+	}
+
 
 	Relic floppy = {.item_id=0, .name="floppy"};
 	// Relic book = {.item_id=1, .name="book"};
@@ -115,7 +126,6 @@ int basicMission(){
 	crate_entities[1].crate = &crates[1];
 	crateSetTile(&crate_entities[0], crates[0].x, crates[0].y);
 	crateSetTile(&crate_entities[1], crates[1].x, crates[1].y);
-	
 
 	gamePushState(GameState(mapstate));
 	gameMainLoop();
@@ -128,7 +138,7 @@ int developmentMainMenu(){
 	loadSprites();
 
 	MainMenuState * state = initMainMenuState(NULL);
-	gamePushState(state);
+	gamePushState((GameState*) state);
 
 	gameMainLoop();
 
@@ -136,10 +146,23 @@ int developmentMainMenu(){
 }
 
 #include "path.h"
-int main() {
-	return developmentMainMenu();
+int main(int argc, char ** argv) {
+	if (argc <= 1)
+		return developmentMainMenu();
+	
+	// Debug launch modes
+
+	char * mode = argv[1];
+	if (strcmp(mode, "headless") == 0)
+		return botMain();
+
+	if (strcmp(mode, "basic") == 0)
+		return basicMission();
+
+	printf("Launch mode not recognized: %s\n", mode);
+	return 1;
+
 	/*
-	return basicMission();
 	return pathfindingMain();
 	return usermain();
 	*/

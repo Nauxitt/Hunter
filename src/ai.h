@@ -13,6 +13,8 @@ typedef struct _BotAction {
 	// Values default to 1, and then are multiplied for weighting,
 	// If the action is not to be taken, it's value is set to zero.
 	int value;
+
+	char * type;
 	
 	// Optionally specify how many turns an action will take, which may modify
 	// how an action is weighted.
@@ -57,14 +59,14 @@ typedef struct _Bot {
 	BotAction * move_actions[6];     // one for each move roll
 } Bot;
 
-void generateTargetedMoveActions(Bot * bot, MatchContext * match, Hunter * hunter, int x, int y, BotAction * (*action_array)[6]);
+void generateTargetedMoveActions(Bot * bot, MatchContext * context, Hunter * hunter, int x, int y, char * action_name, BotAction * (*action_array)[6]);
 
 BotAction * botActionMax(BotAction * a, BotAction * b);
 void botGenerateMoveToExit(Bot * bot, MatchContext * match, Hunter * hunter);
 void botGenerateWander(Bot * bot, MatchContext * match, Hunter * hunter);
 void botGenerateCrateAction(Bot * bot, MatchContext * match, Hunter * hunter);
 
-BotAction * makeBotAction(BotAction * action, Hunter * hunter, enum MatchActionType type);
+BotAction * makeBotAction(BotAction * action, char * action_name, Hunter * hunter, enum MatchActionType type);
 void botClearMoveActions(Bot * bot);
 
 void botControllerHook(MatchContext * context, Hunter * hunter, void * controller_data);

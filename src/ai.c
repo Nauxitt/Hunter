@@ -1,12 +1,14 @@
+#include <stdio.h>
 #include "ai.h"
 #include "hunter.h"
 
-BotAction * makeBotAction(BotAction * action, Hunter * hunter, enum MatchActionType type){
+BotAction * makeBotAction(BotAction * action, char * action_name, Hunter * hunter, enum MatchActionType type) {
 	if (action == NULL)
 		action = calloc(sizeof(BotAction), 1);
 
 	action->value = 1;
 	action->actor = hunter;
+	action->type = action_name;
 	
 	MatchAction * match_action = (MatchAction*) calloc(sizeof(MatchAction), 1);
 
@@ -25,11 +27,14 @@ BotAction * botActionMax(BotAction * a, BotAction * b) {
 		values, a random one is returned.
 	*/
 	
-	if (a == b)
-		return rand() % 2 ? a : b;
-
 	if (b == NULL)
 		return a;
+
+	if (a == NULL)
+		return a;
+
+	if (a->value == b->value)
+		return (rand() % 2) == 0 ? a : b;
 
 	if (b->value > a->value)
 		return b;
@@ -128,7 +133,6 @@ void botTurnAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 	// Get highest-value action for each move roll
 	for (int n=0; n < 6; n++) {
 		BotAction * action = bot->wander_action[n];
-
 		action = botActionMax(action, bot->exit_action[n]);
 		action = botActionMax(action, bot->crate_target_action[n]);
 		// action = botActionMax(action, bot->move_to_character_action[0][n]);
@@ -180,23 +184,26 @@ void botGenerateWander(Bot * bot, MatchContext * context, Hunter * hunter) {
 		// The number of paths is counted to randomly select an available path
 		int paths_length = 1;
 
-		// Filter paths which do not have the greatest distance
+		paths_length = 1;
 
-		for (PathNode * path = paths; path; path = path->next_path) {
-			if (path->prev_path == NULL)
+		// Filter paths which do not have the greatest distance
+		int iter = 0;
+		for (PathNode * path = paths; path != NULL; path = path->next_path) {
+			PathNode * previous = path->prev_path;
+			if (previous == NULL)
 				continue;
 
 			// Keep paths of equal distance
-			if (path->distance == path->prev_path->distance) {
+			if (path->distance == previous->distance) {
 				paths_length++;
 				continue;
 			}
 			
 			// If this path's distance is the highest yet, remove previous paths
 
-			if (path->prev_path->distance < path->distance) {
+			if (previous->distance < path->distance) {
 				// Point the paths variable to the start of the list
-				if (path->prev_path == paths)
+				if (previous == paths)
 					paths = path;
 				
 				paths_length = 1;
@@ -204,7 +211,7 @@ void botGenerateWander(Bot * bot, MatchContext * context, Hunter * hunter) {
 			}
 			else {
 				// This path's distance is lower, remove it from the list
-				path->prev_path->next_path = path->next_path;
+				previous->next_path = path->next_path;
 			}
 		}
 
@@ -216,7 +223,7 @@ void botGenerateWander(Bot * bot, MatchContext * context, Hunter * hunter) {
 
 		// Store this wander action
 
-		BotAction * wander_action = makeBotAction(NULL, hunter, MOVE_ACTION);
+		BotAction * wander_action = makeBotAction(NULL, "move.wander", hunter, MOVE_ACTION);
 		wander_action->action->x = wander_path->x;
 		wander_action->action->y = wander_path->y;
 
@@ -224,44 +231,60 @@ void botGenerateWander(Bot * bot, MatchContext * context, Hunter * hunter) {
 	}
 }
 	
-void generateTargetedMoveActions(Bot * bot, MatchContext * context, Hunter * hunter, int x, int y, BotAction * (*action_array)[6]){
+void generateTargetedMoveActions(Bot * bot, MatchContext * context, Hunter * hunter, int x, int y, char * action_name, BotAction * (*action_array)[6]) {
 	mapClearPathList(context);
-
-	PathNode * path = findPath(context, hunter->x, hunter->y, context->exit_x, context->exit_y);
+	PathNode * path = findPath(context, hunter->x, hunter->y, x, y);
 
 	Statset * stats = hunterStats(hunter);
-
-	// If no path exists, replace the move actions with NULL
-	if(path == NULL)
+	
+	// If no path exists, replace the move actions
+	// with NULL, then exit.
+	if(path == NULL) {
 		for (int n=0; n < 6; n++)
 			*action_array[n] = NULL;
+		return;
+	}
 
 	Card * move_card = hunterHighestMoveCard(hunter);
 	int move_bonus = 0;
 	if (move_card)
 		move_bonus = move_card->num;
 
-	for (int roll=5; roll >= 0; roll--) {
-		int max_distance = stats->mov + roll + move_bonus + 1;
+	for (int roll=1; roll <= 6; roll++) {
+		int max_distance = stats->mov + roll + move_bonus;
 
+		// Find maximum traversable distance along this path
 		PathNode * endpoint = path;
-		while (path->to && path->distance <= max_distance)
-			path = path->to;
+		for (; endpoint->to ; endpoint = endpoint->to) {
+			if (endpoint->distance >= max_distance)
+				break;
+		}
 
 		// Store action
 
-		BotAction * move_action = makeBotAction(NULL, hunter, MOVE_ACTION);
+		BotAction * move_action = makeBotAction(NULL, action_name, hunter, MOVE_ACTION);
+		
 		move_action->action->x = endpoint->x;
 		move_action->action->y = endpoint->y;
 		move_action->action->card = move_card;
-		*action_array[roll] = move_action;
+		*action_array[roll-1] = move_action;
 	}
+
+	/*
+	for (int roll=0; roll < 6; roll++) {
+		if (*action_array[roll] == NULL) {
+			printf("Bot warning: did not make all actions for %s\n", action_name);
+			break;
+		}
+	}
+	*/
 }
 
 void botGenerateMoveToExit(Bot * bot, MatchContext * context, Hunter * hunter) {
 	generateTargetedMoveActions(
 				bot, context, hunter,
 				context->exit_x, context->exit_y,
+				"move.exit",
 				&bot->exit_action
 			);
 }
@@ -316,11 +339,19 @@ void botGenerateCrateAction(Bot * bot, MatchContext * context, Hunter * hunter) 
 		crate = new_crate;
 	}
 
+	// If there is no path to a crate, zero out the crate actions and exit
+	if (crate == NULL) {
+		for (int n = 0; n < 6; n++)
+			bot->crate_target_action[n] = NULL;
+		return;
+	}
+
 	// Now that a crate has been chosen, generate an action towards it
 	generateTargetedMoveActions(
 			bot, context, hunter,
 			crate->x, crate->y,
-			&bot->exit_action
+			"move.crate",
+			&bot->crate_target_action
 		);
 }
 
@@ -328,6 +359,8 @@ void botMoveAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 	// Pick highest-scoring cached move action for this roll and use that
 	int roll = context->dice[0]-1;
 	BotAction * action = bot->move_actions[roll];
+
+	printf("Bot action: %s (%d, %d) -> (%d, %d)\n", action->type, hunter->x, hunter->y, action->action->x, action->action->y);
 	
 	postMoveAction(
 			context, hunter,
@@ -340,7 +373,10 @@ void botAttackAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
 void botCombatCardAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
 
 void botCombatAction(Bot * bot, MatchContext * context, Hunter * hunter) {
-	// If an attack action exists within the bot, execute it
+	// TODO: If an attack action exists within the bot, execute it
+
+	// Do not attack
+	postCombatAction(context, hunter, NULL);
 }
 
 void botDefendAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
@@ -405,6 +441,8 @@ int botMain() {
 	};
 
 	Bot * bot = calloc(sizeof(Bot), 1);
+	bot->priorities.exit = 10;
+
 	for (int n=0; n < 4; n++) {
 		Hunter * hunter = &hunters[n];
 		hunter->controller_data = bot;

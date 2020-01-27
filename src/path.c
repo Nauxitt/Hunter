@@ -34,13 +34,13 @@ void mapClearPathList(MatchContext * context) {
 
 PathNode * insertPath(PathNode * insert_point, PathNode * inserted) {
 	if (insert_point) {
-		inserted->next_path = insert_point->next_path;
-		inserted->prev_path = insert_point->prev_path;
-
 		if (insert_point->next_path) {
 			insert_point->next_path->prev_path = inserted;
-			insert_point->next_path = inserted;
 		}
+
+		inserted->next_path = insert_point->next_path;
+		inserted->prev_path = insert_point;
+		insert_point->next_path = inserted;
 	}
 
 	return inserted;
@@ -51,7 +51,7 @@ PathNode * insertPathCircular(PathNode * insert_point, PathNode * inserted) {
 		insertPath(insert_point, inserted);
 	}
 	else {
-		// If this is the first element, establish it a circular list
+		// If this is the first element, establish it as a circular list
 		inserted->next_path = inserted;
 		inserted->prev_path = inserted;
 	}
@@ -173,12 +173,14 @@ PathNode * generatePathsWithin(MatchContext * context, int s_x, int s_y, int ran
 	for (int n=0; n < context->map_w * context->map_h; n++) {
 		PathNode * path = &context->map[n].path;
 		if (path->scanned) {
-			if (paths_list) {
-				path_head = insertPath(path_head, path);
+			if (paths_list == NULL) {
+				path_head = path;
+				path->next_path = NULL;
+				path->prev_path = NULL;
+				paths_list = path_head;
 			}
 			else {
-				path_head = insertPath(NULL, path);
-				paths_list = path_head;
+				path_head = insertPath(path_head, path);
 			}
 		}
 	}

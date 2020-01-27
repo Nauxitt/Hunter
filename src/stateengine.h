@@ -30,6 +30,7 @@ struct _Game {
 	TTF_Font * font;
 
 	SDL_Color background_color;
+	uint8_t tick_delay;
 };
 
 

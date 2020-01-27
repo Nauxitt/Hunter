@@ -42,6 +42,8 @@ int initGame(){
 		return 1;
 	}
 
+	game.tick_delay = 16;
+
 	return 0;
 }
 
@@ -169,7 +171,7 @@ void gameCycle(){
 		game.state->events.onDraw((EventHandler *) game.state);
 
 	SDL_RenderPresent(game.renderer);
-	SDL_Delay(16);
+	SDL_Delay(game.tick_delay);
 }
 
 void gameMainLoop(){
