@@ -79,6 +79,7 @@ void botTurnAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 	}
 	
 	// Generate movement actions for each possible die roll
+	// TODO: do not generate actions where a higher score than the highest hitherto generated and valued is impossible to assign
 	botClearMoveActions(bot);
 	botGenerateWander(bot, context, hunter);
 	botGenerateMoveToExit(bot, context, hunter);
@@ -107,8 +108,6 @@ void botTurnAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 
 		int value = priorities->exit;
 
-		value = priorities->exit;
-		
 		// TODO: reduce score depending on how many turns it takes to reach the exit
 
 		if (hunter == getHunterWithTarget(context))
@@ -128,7 +127,7 @@ void botTurnAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 		action->value = value;
 	}
 
-	// TODO:Score move-to-hunter actions
+	// TODO: Score move-to-hunter actions
 
 	// Get highest-value action for each move roll
 	for (int n=0; n < 6; n++) {
@@ -267,7 +266,7 @@ void generateTargetedMoveActions(Bot * bot, MatchContext * context, Hunter * hun
 		move_action->action->x = endpoint->x;
 		move_action->action->y = endpoint->y;
 		move_action->action->card = move_card;
-		*action_array[roll-1] = move_action;
+		(*action_array)[roll-1] = move_action;
 	}
 
 	/*
@@ -360,7 +359,7 @@ void botMoveAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 	int roll = context->dice[0]-1;
 	BotAction * action = bot->move_actions[roll];
 
-	printf("Bot action: %s (%d, %d) -> (%d, %d)\n", action->type, hunter->x, hunter->y, action->action->x, action->action->y);
+	// printf("Bot action: %s (%d, %d) -> (%d, %d)\n", action->type, hunter->x, hunter->y, action->action->x, action->action->y);
 	
 	postMoveAction(
 			context, hunter,
@@ -441,8 +440,15 @@ int botMain() {
 	};
 
 	Bot * bot = calloc(sizeof(Bot), 1);
-	bot->priorities.exit = 10;
 
+	// Assign a priority set which technically
+	// makes it possible for bots to win.
+	bot->priorities.crate_target_unfound = 3;
+	bot->priorities.exit_has_target = 3;
+	bot->priorities.wander = 2;
+	bot->priorities.exit = 2;
+
+	// Assign this bot to all hunters
 	for (int n=0; n < 4; n++) {
 		Hunter * hunter = &hunters[n];
 		hunter->controller_data = bot;
@@ -486,7 +492,9 @@ int botMain() {
 
 	initMatch(&context);
 
-	while (context.action != NULL)
+	while (		(context.action != NULL) &&
+				(context.action->type != END_MATCH_ACTION)
+			)
 		matchCycle(&context);
 
 	return 0;
