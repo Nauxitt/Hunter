@@ -5,7 +5,10 @@
 
 typedef struct _CombatResultsSpread {
 	Hunter * hunter;
-	float hp_probability[100];
+	int total_outcomes;
+	int max_hp;
+	int total_damage;
+	int hp_spread[100];
 } CombatResultsSpread;
 
 typedef struct _BotAction {
@@ -25,24 +28,38 @@ typedef struct _BotAction {
 } BotAction;
 
 typedef struct _BotPriorities {
+	/*
+	   Percentage of HP, denoting when to override
+	   other actions and heal.
+	*/
 	uint8_t heal_threshold;
 	
+	/*
+	   Scoring for move actions
+	*/
 	int exit;
 	int exit_has_target;
 	int wander;
 	int crate_target_found;
 	int crate_target_unfound;
-	int flag;
 	
-	int heal_hp;     // per HP
-	int draw_card;   // per card
-	
+	/*
+	   Offensive scoring
+	*/
 	int kill_hunter;
 	int kill_target_hunter;
-
-	int damage_dealt;          // per HP
-	int damage_taken;          // per HP
-	int damage_target_hunter;  // per HP
+	int damage_hunter;
+	int damage_target_hunter;
+	
+	/*
+	   Negative combat result scoring
+	*/
+	int die;
+	int die_with_target;
+	int take_damage;
+	int take_damage_with_target;
+	int surrender;
+	int surrender_target;
 } BotPriorities;
 
 typedef struct _Bot {
@@ -57,6 +74,14 @@ typedef struct _Bot {
 
 	// For storing final move actions
 	BotAction * move_actions[6];     // one for each move roll
+
+	BotAction * combat_action[PLAYERS_LENGTH];
+	BotAction * combat_response_action[PLAYERS_LENGTH];
+
+	BotAction * counterattack_action[PLAYERS_LENGTH];
+	BotAction * defend_action[PLAYERS_LENGTH];
+	BotAction * surrender_action[PLAYERS_LENGTH][INVENTORY_LIMIT];
+	BotAction * escape_action[PLAYERS_LENGTH];
 } Bot;
 
 void generateTargetedMoveActions(Bot * bot, MatchContext * context, Hunter * hunter, int x, int y, char * action_name, BotAction * (*action_array)[6]);
@@ -76,6 +101,8 @@ void botAttackAction(Bot * bot, MatchContext * match, Hunter * hunter);
 void botCombatCardAction(Bot * bot, MatchContext * match, Hunter * hunter);
 void botCombatAction(Bot * bot, MatchContext * match, Hunter * hunter);
 void botDefendAction(Bot * bot, MatchContext * match, Hunter * hunter);
+
+void combatSpreadMultiply(CombatResultsSpread * spread, int numerator, int denominator);
 
 int botMain();
 

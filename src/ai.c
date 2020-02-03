@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "ai.h"
+#include "string.h"
+
 #include "hunter.h"
 
 BotAction * makeBotAction(BotAction * action, char * action_name, Hunter * hunter, enum MatchActionType type) {
@@ -186,7 +188,6 @@ void botGenerateWander(Bot * bot, MatchContext * context, Hunter * hunter) {
 		paths_length = 1;
 
 		// Filter paths which do not have the greatest distance
-		int iter = 0;
 		for (PathNode * path = paths; path != NULL; path = path->next_path) {
 			PathNode * previous = path->prev_path;
 			if (previous == NULL)
@@ -421,6 +422,202 @@ void botControllerHook(MatchContext * context, Hunter * hunter, void * controlle
 		default:
 			break;
 	}
+}
+
+
+void combatSpreadMultiply(CombatResultsSpread * spread, int numerator, int denominator) {
+	/*
+	   Fractional combat probability spread multiplication
+	*/
+
+	spread->total_outcomes *= denominator;
+	for (int hp = 0; hp <= spread->max_hp; hp++)
+		spread->hp_spread[hp] *= numerator;
+}
+
+
+int combatSpreadDamageScore(CombatResultsSpread * spread, int points){
+	/*
+	   Given `points` per damage, return how many points the combat spread
+	   returns, based on a weighted average of damage dealt.
+	*/
+
+	int64_t damage_total = 0;
+	for (int hp = 0; hp <= spread->max_hp; hp++)
+		damage_total += (spread->max_hp - hp) * points * spread->hp_spread[hp];
+
+	return damage_total / spread->total_outcomes;
+}
+
+
+void evalCombat(Hunter * attacker, Hunter * defender, CombatResultsSpread * attacker_spread, CombatResultsSpread * defender_spread) {
+	/*
+		Calculates the probability of each possible HP total which could result from an attack and counterattack between two hunters. 
+
+		TODO: calculate based on cards in hand
+	*/
+
+	// Resest results spreads
+	memset(attacker_spread, 0, sizeof(CombatResultsSpread));
+	memset(defender_spread, 0, sizeof(CombatResultsSpread));
+
+	attacker_spread->hunter = attacker;
+	defender_spread->hunter = defender;
+	
+	Statset * attacker_stats = hunterStats(attacker);
+	Statset * defender_stats = hunterStats(defender);
+
+	int roll_instances(int total) {
+		/*
+		   Returns the number of number of 2d6 permutations who's sum
+		   is equal to the specified total, which when divided by the
+		   total number of permutations results in the probability of
+		   that total.
+		*/
+
+		int instances = total - 1;
+		if (instances > 7)
+			instances -= (total - 7) * 2;
+		return instances;
+	}
+
+	int simulateAttack(Hunter * attacker, Hunter * defender, int permutation) {
+		/*
+		   Returns the HP of the recepiant of a simulated attack,
+		   given the permutation number of their combination of die
+		   rolls.
+		*/
+
+		Statset * attacker_stats = &attacker->stats;
+		Statset * defender_stats = &defender->stats;
+
+		int attacker_roll = permutation / 11 + 2;
+		int defender_roll = permutation % 11 + 2;
+
+		int defender_hp = defender_stats->hp;
+
+		int damage = attacker_roll + attacker_stats->atk - defender_roll - defender_stats->def;
+		if (damage < 0)
+			damage = 0;
+
+		defender_hp -= damage;
+		if (defender_hp < 0)
+			return 0;
+
+		return defender_hp;
+	}
+
+	/*
+	   Iterate through every combination of dice roll totals between the two players.
+	*/
+	
+	for (int permutation = 0; permutation < 121; permutation++) {
+		int attacker_roll = permutation / 11 + 2;
+		int defender_roll = permutation % 11 + 2;
+
+		uint32_t instances = roll_instances(attacker_roll) * roll_instances(defender_roll);
+
+		int defender_hp = simulateAttack(attacker, defender, permutation);
+
+		// Store probalistic data
+
+		defender_spread->total_outcomes += instances;
+		defender_spread->hp_spread[defender_hp] += instances;
+
+		if (defender_spread->max_hp < defender_hp)
+			defender_spread->max_hp = defender_hp;
+	}
+
+	/*
+		Calculate initial attacker's HP after counterattack from
+		defender.
+	*/
+
+	int kill_instances = defender_spread->hp_spread[0];
+
+	if (kill_instances == defender_spread->total_outcomes) {
+		// In the event of a 100% kill chance, the attacker's HP has no chance of change
+		int hp = attacker_stats->hp;
+		attacker_spread->hp_spread[hp] = 1;
+		attacker_spread->max_hp = hp;
+		attacker_spread->total_outcomes = 1;
+	}
+	else {
+		for (int permutation = 0; permutation < 121; permutation++) {
+			int attacker_roll = permutation / 11 + 2;
+			int defender_roll = permutation % 11 + 2;
+
+			uint32_t instances = roll_instances(attacker_roll) * roll_instances(defender_roll);
+
+			int attacker_hp = simulateAttack(defender, attacker, permutation);
+
+			// Store probalistic data
+
+			attacker_spread->total_outcomes += instances;
+			attacker_spread->hp_spread[attacker_hp] += instances;
+
+			if (attacker_spread->max_hp < attacker_hp)
+				attacker_spread->max_hp = attacker_hp;
+		}
+
+		if (kill_instances) {
+			int old_total = attacker_spread->total_outcomes;
+			attacker_spread->total_outcomes = old_total * defender_spread->total_outcomes / (defender_spread->total_outcomes - kill_instances);
+			attacker_spread->hp_spread[attacker_stats->hp] += attacker_spread->total_outcomes - old_total;
+		}
+	}
+}
+
+int combatTest() {
+	Hunter hunters[] = {
+		{	.name = "Daniel", .level = 1, .type = "hunter",
+			.base_stats={.atk = 4, .mov = 1, .def = 4, .max_hp=1}
+		},
+		{	.name = "Dave", .level = 1, .type = "hunter",
+			.base_stats = {.atk = 8, .mov=1, .def = 1, .max_hp=1}
+		},
+		{	.name = "Stan", .level = 1, .type = "hunter",
+			.base_stats = {.atk = 2, .mov = 3, .def = 4, .max_hp=1}
+		},
+		{	.name = "Tim", .level = 1, .type = "hunter",
+			.base_stats = {.atk = 30, .mov=3, .def = 2, .max_hp=2}
+		}
+	};
+
+	void try(int damage, int harm, int kill, int die) {
+		for (int n = 0; n < 16; n++) {
+			Hunter * attacker = &hunters[n/4];
+			Hunter * defender = &hunters[n%4];
+
+			attacker->base_stats.hp = hunterStats(attacker)->max_hp;
+			defender->base_stats.hp = hunterStats(defender)->max_hp;
+
+			if (attacker == defender)
+				continue;
+		
+			CombatResultsSpread attacker_spread;
+			CombatResultsSpread defender_spread;
+			evalCombat(attacker, defender, &attacker_spread, &defender_spread);
+
+			int score;
+			score  = combatSpreadDamageScore(&attacker_spread, harm);
+			score += combatSpreadDamageScore(&defender_spread, damage);
+			score += defender_spread.hp_spread[0] * kill / defender_spread.total_outcomes;
+			score += attacker_spread.hp_spread[0] * die  / attacker_spread.total_outcomes;
+
+			printHunter(attacker);
+			printf(" -> ");
+			printHunter(defender);
+			printf(" : %d", score);
+			printf("\n");
+		}
+	}
+
+	try(100, -100, 500, -1000);
+	printf("\n");
+	try(100, -120, 0, 0);
+
+	return 0;
 }
 
 int botMain() {

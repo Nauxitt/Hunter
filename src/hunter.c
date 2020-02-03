@@ -209,8 +209,8 @@ void printHunter(Hunter * h){
 			h->stats.max_hp,
 
 			h->level,
-			h->base_stats.mov,
 			h->base_stats.atk,
+			h->base_stats.mov,
 			h->base_stats.def,
 			h->credits
 		);

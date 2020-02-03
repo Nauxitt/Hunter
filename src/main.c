@@ -165,6 +165,9 @@ int main(int argc, char ** argv) {
 	if (strcmp(mode, "basic") == 0)
 		return basicMission();
 
+	if (strcmp(mode, "combat") == 0)
+		return combatTest();
+
 	printf("Launch mode not recognized: %s\n", mode);
 	return 1;
 
