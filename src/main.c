@@ -50,10 +50,12 @@ int basicMission(){
 
 	Bot * bot = calloc(sizeof(Bot), 1);
 	bot->priorities.wander = 10;
-	bot->priorities.exit = 10;
+	bot->priorities.exit = 200;
 	bot->priorities.crate_target_unfound = 100;
 	bot->priorities.crate_target_found = 50;
 	bot->priorities.exit_has_target = 100;
+
+	bot->priorities.deal_damage = 1000;
 
 	for (int n=0; n < 4; n++) {
 		Hunter * hunter = &hunters[n];

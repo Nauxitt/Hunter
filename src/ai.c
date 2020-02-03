@@ -86,6 +86,7 @@ void botTurnAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 	botGenerateWander(bot, context, hunter);
 	botGenerateMoveToExit(bot, context, hunter);
 	botGenerateCrateAction(bot, context, hunter);
+	botGenerateCombatActions(bot, context, hunter);
 
 	// Score the various categories of move actions
 
@@ -371,15 +372,67 @@ void botMoveAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 
 void botAttackAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
 void botCombatCardAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
+void botDefendAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
 
 void botCombatAction(Bot * bot, MatchContext * context, Hunter * hunter) {
-	// TODO: If an attack action exists within the bot, execute it
+	BotAction * max_action;
+	Hunter * final_target = NULL;
 
-	// Do not attack
-	postCombatAction(context, hunter, NULL);
+	for (int n=0; n < PLAYERS_LENGTH; n++) {
+		BotAction * action = bot->combat_action[n];
+
+		if (action == NULL)
+			continue;
+
+		Hunter * target = action->action->target;
+		
+		if ( // Hunters are adjacent (non-diagonally)
+			((hunter->x == target->x) && (abs(hunter->y - target->y) == 1)) ^
+			((hunter->y == target->y) && (abs(hunter->x - target->x) == 1))
+		){
+			if (max_action == NULL)
+				max_action = action;
+			else if (action->value > max_action->value)
+				max_action = action;
+		}
+	}
+
+	if (max_action)
+		final_target = max_action->action->target;
+	
+	postCombatAction(context, hunter, final_target);
 }
 
-void botDefendAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
+void botGenerateCombatActions(Bot * bot, MatchContext * context, Hunter * hunter) {
+	for (int n=0; n < PLAYERS_LENGTH; n++) {
+		if (bot->combat_action[n] != NULL) {
+			free(bot->combat_action[n]);
+			bot->combat_action[n] = NULL;
+		}
+
+		Hunter * target_hunter = context->characters[n];
+
+		if (target_hunter == NULL)
+			continue;
+		
+		CombatResultsSpread attacker_spread;
+		CombatResultsSpread defender_spread;
+
+		combatProbability(hunter, target_hunter, &attacker_spread, &defender_spread);
+		
+		int score;
+		score  = combatSpreadDamageScore(&attacker_spread, bot->priorities.take_damage);
+		score += combatSpreadDamageScore(&defender_spread, bot->priorities.deal_damage);
+		score += defender_spread.hp_spread[0] * bot->priorities.kill / defender_spread.total_outcomes;
+		score += attacker_spread.hp_spread[0] * bot->priorities.die  / attacker_spread.total_outcomes;
+
+		BotAction * combat_action = makeBotAction(NULL, "combat", hunter, COMBAT_ACTION);
+		combat_action->value = score;
+		combat_action->action->target = target_hunter;
+
+		bot->combat_action[n] = combat_action;
+	}
+}
 
 void botControllerHook(MatchContext * context, Hunter * hunter, void * controller_data) {
 	Bot * bot = (Bot *) controller_data;
@@ -450,7 +503,7 @@ int combatSpreadDamageScore(CombatResultsSpread * spread, int points){
 }
 
 
-void evalCombat(Hunter * attacker, Hunter * defender, CombatResultsSpread * attacker_spread, CombatResultsSpread * defender_spread) {
+void combatProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread * attacker_spread, CombatResultsSpread * defender_spread) {
 	/*
 		Calculates the probability of each possible HP total which could result from an attack and counterattack between two hunters. 
 
@@ -536,13 +589,16 @@ void evalCombat(Hunter * attacker, Hunter * defender, CombatResultsSpread * atta
 	int kill_instances = defender_spread->hp_spread[0];
 
 	if (kill_instances == defender_spread->total_outcomes) {
-		// In the event of a 100% kill chance, the attacker's HP has no chance of change
+		// In the event of a 100% kill chance of the defender, the attacker's HP has no chance of change
 		int hp = attacker_stats->hp;
 		attacker_spread->hp_spread[hp] = 1;
 		attacker_spread->max_hp = hp;
 		attacker_spread->total_outcomes = 1;
 	}
 	else {
+
+		// Calculate attacker HP spread from defender counterattack
+
 		for (int permutation = 0; permutation < 121; permutation++) {
 			int attacker_roll = permutation / 11 + 2;
 			int defender_roll = permutation % 11 + 2;
@@ -559,6 +615,9 @@ void evalCombat(Hunter * attacker, Hunter * defender, CombatResultsSpread * atta
 			if (attacker_spread->max_hp < attacker_hp)
 				attacker_spread->max_hp = attacker_hp;
 		}
+
+		// Adjust probability of attacker's HP totals by the chance of the
+		// attacker killing the defender before they counter
 
 		if (kill_instances) {
 			int old_total = attacker_spread->total_outcomes;
@@ -597,7 +656,7 @@ int combatTest() {
 		
 			CombatResultsSpread attacker_spread;
 			CombatResultsSpread defender_spread;
-			evalCombat(attacker, defender, &attacker_spread, &defender_spread);
+			combatProbability(attacker, defender, &attacker_spread, &defender_spread);
 
 			int score;
 			score  = combatSpreadDamageScore(&attacker_spread, harm);

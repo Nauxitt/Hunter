@@ -46,10 +46,10 @@ typedef struct _BotPriorities {
 	/*
 	   Offensive scoring
 	*/
-	int kill_hunter;
-	int kill_target_hunter;
-	int damage_hunter;
-	int damage_target_hunter;
+	int kill;
+	int kill_target;
+	int deal_damage;
+	int deal_damage_target;
 	
 	/*
 	   Negative combat result scoring
@@ -75,6 +75,7 @@ typedef struct _Bot {
 	// For storing final move actions
 	BotAction * move_actions[6];     // one for each move roll
 
+	// For storing combat actions
 	BotAction * combat_action[PLAYERS_LENGTH];
 	BotAction * combat_response_action[PLAYERS_LENGTH];
 
@@ -82,6 +83,7 @@ typedef struct _Bot {
 	BotAction * defend_action[PLAYERS_LENGTH];
 	BotAction * surrender_action[PLAYERS_LENGTH][INVENTORY_LIMIT];
 	BotAction * escape_action[PLAYERS_LENGTH];
+
 } Bot;
 
 void generateTargetedMoveActions(Bot * bot, MatchContext * context, Hunter * hunter, int x, int y, char * action_name, BotAction * (*action_array)[6]);
@@ -90,6 +92,7 @@ BotAction * botActionMax(BotAction * a, BotAction * b);
 void botGenerateMoveToExit(Bot * bot, MatchContext * match, Hunter * hunter);
 void botGenerateWander(Bot * bot, MatchContext * match, Hunter * hunter);
 void botGenerateCrateAction(Bot * bot, MatchContext * match, Hunter * hunter);
+void botGenerateCombatActions(Bot * bot, MatchContext * context, Hunter * hunter);
 
 BotAction * makeBotAction(BotAction * action, char * action_name, Hunter * hunter, enum MatchActionType type);
 void botClearMoveActions(Bot * bot);
@@ -103,6 +106,8 @@ void botCombatAction(Bot * bot, MatchContext * match, Hunter * hunter);
 void botDefendAction(Bot * bot, MatchContext * match, Hunter * hunter);
 
 void combatSpreadMultiply(CombatResultsSpread * spread, int numerator, int denominator);
+void combatProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread * attacker_spread, CombatResultsSpread * defender_spread);
+int combatSpreadDamageScore(CombatResultsSpread * spread, int points);
 
 int botMain();
 
