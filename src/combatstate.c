@@ -7,7 +7,7 @@
 #include "dicestate.h"
 #include "sprites.h"
 
-CombatState * makeCombatState(CombatState * state, MatchContext * match){
+CombatState * makeCombatState(CombatState * state, MatchContext * match) {
 	if(state == NULL)
 		state = (CombatState *) calloc(sizeof(CombatState), 1);
 
@@ -23,16 +23,16 @@ CombatState * makeCombatState(CombatState * state, MatchContext * match){
 	return state;
 }
 
-void combatOnEnter(EventHandler * h){
+void combatOnEnter(EventHandler * h) {
 	CombatState * state = CombatState(h);
 	state->menubar->active = 0;
 }
 
-void combatOnExit(EventHandler * h){
+void combatOnExit(EventHandler * h) {
 	// CombatState * state = CombatState(h);
 }
 
-void combatOnTick(EventHandler * h){
+void combatOnTick(EventHandler * h) {
 	CombatState * state = CombatState(h);
 	MatchContext * match = state->match;
 	
@@ -65,6 +65,11 @@ void combatOnTick(EventHandler * h){
 				break;
 
 			case POLL_ATTACK_ACTION:
+				matchCycle(match);
+
+				if (action->type != POLL_ATTACK_ACTION)
+					break;
+
 				if(state->card_selected == NULL){
 					breaker = 0;
 					SelectorPanelState * handState = makeCardSelectState(NULL, action->actor, 32, 72);
@@ -75,7 +80,6 @@ void combatOnTick(EventHandler * h){
 				else {
 					postAttackerCard(match, state->card_selected);
 				}
-				matchCycle(match);
 				break;
 
 			case DAMAGE_ACTION:
@@ -159,7 +163,7 @@ void combatOnTick(EventHandler * h){
 	}
 }
 
-void combatOnDraw(EventHandler * h){
+void combatOnDraw(EventHandler * h) {
 	CombatState * state = CombatState(h);
 	MatchContext * match = state->match;
 

@@ -105,8 +105,12 @@ void botCombatCardAction(Bot * bot, MatchContext * match, Hunter * hunter);
 void botCombatAction(Bot * bot, MatchContext * match, Hunter * hunter);
 void botDefendAction(Bot * bot, MatchContext * match, Hunter * hunter);
 
+int simulateAttack(Hunter * attacker, Hunter * defender, int permutation);
+int rollInstances(int total);
+
+void defendProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread * defender_spread);
 void combatSpreadMultiply(CombatResultsSpread * spread, int numerator, int denominator);
-void combatProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread * attacker_spread, CombatResultsSpread * defender_spread);
+void counterattackProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread * attacker_spread, CombatResultsSpread * defender_spread);
 int combatSpreadDamageScore(CombatResultsSpread * spread, int points);
 
 int botMain();

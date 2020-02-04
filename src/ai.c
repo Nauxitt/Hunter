@@ -370,9 +370,43 @@ void botMoveAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 		);
 }
 
-void botAttackAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
+void botAttackAction(Bot * bot, MatchContext * context, Hunter * hunter) {
+	postAttackerCard(context, NULL);
+}
+
 void botCombatCardAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
-void botDefendAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
+
+void botDefendAction(Bot * bot, MatchContext * context, Hunter * hunter) {
+	/*
+	   When a bot is attacked, it is prompted whether to
+	   counterattack, defend, escape, or surrender an item.  The bot
+	   will weigh each of these outcomes in accordance with their
+	   priorities, and post the highest-scoring action.
+	*/
+
+	Hunter * attacker = context->attacker;
+
+	CombatResultsSpread attacker_unscathed;
+	CombatResultsSpread attacker_countered;
+	CombatResultsSpread defender_counters;
+	CombatResultsSpread defender_blocks;
+	// CombatResultsSpread defender_escapes;
+
+	counterattackProbability(attacker, hunter, &attacker_countered, &defender_counters);
+	defendProbability(attacker, hunter, &defender_blocks);
+	// escapeProbability(attacker, hunter, &defender_escapes);
+
+	BotAction counter_action;
+	BotAction defend_action;
+	//BotAction escape_action;
+
+	makeBotAction(&counter_action, "counter", hunter, ATTACK_ACTION);
+	makeBotAction(&defend_action, "defend", hunter, DEFEND_ACTION);
+
+	BotAction * action = &counter_action;
+
+	postDefenderAction(context, action->action->type, NULL);
+}
 
 void botCombatAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 	BotAction * max_action;
@@ -418,7 +452,7 @@ void botGenerateCombatActions(Bot * bot, MatchContext * context, Hunter * hunter
 		CombatResultsSpread attacker_spread;
 		CombatResultsSpread defender_spread;
 
-		combatProbability(hunter, target_hunter, &attacker_spread, &defender_spread);
+		counterattackProbability(hunter, target_hunter, &attacker_spread, &defender_spread);
 		
 		int score;
 		score  = combatSpreadDamageScore(&attacker_spread, bot->priorities.take_damage);
@@ -502,8 +536,79 @@ int combatSpreadDamageScore(CombatResultsSpread * spread, int points){
 	return damage_total / spread->total_outcomes;
 }
 
+int rollInstances(int total) {
+	/*
+	   Returns the number of number of 2d6 permutations who's sum
+	   is equal to the specified total, which when divided by the
+	   total number of permutations results in the probability of
+	   that total.
+	*/
 
-void combatProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread * attacker_spread, CombatResultsSpread * defender_spread) {
+	int instances = total - 1;
+	if (instances > 7)
+		instances -= (total - 7) * 2;
+	return instances;
+}
+
+int simulateAttack(Hunter * attacker, Hunter * defender, int permutation) {
+	/*
+	   Returns the HP of the recepiant of a simulated attack,
+	   given the permutation number of their combination of die
+	   rolls.
+	*/
+
+	Statset * attacker_stats = &attacker->stats;
+	Statset * defender_stats = &defender->stats;
+
+	int attacker_roll = permutation / 11 + 2;
+	int defender_roll = permutation % 11 + 2;
+
+	int defender_hp = defender_stats->hp;
+
+	int damage = attacker_roll + attacker_stats->atk - defender_roll - defender_stats->def;
+	if (damage < 0)
+		damage = 0;
+
+	defender_hp -= damage;
+	if (defender_hp < 0)
+		return 0;
+
+	return defender_hp;
+}
+
+void defendProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread * defender_spread) {
+	/*
+	   Calculates the probability of each possible HP total which would result
+	   from one hunter choosing to block against another's attack.
+	*/
+
+	memset(defender_spread, 0, sizeof(CombatResultsSpread));
+	defender_spread->hunter = defender;
+	Statset * attacker_stats = hunterStats(attacker);
+	Statset * defender_stats = hunterStats(defender);
+
+	// Defend actions double base defence.  Temporarily raise stat,
+	// for the purpose of simulation.
+	defender_stats->def += defender->base_stats.def / 2;
+
+	for (int permutation = 0; permutation < 121; permutation++) {
+		int attacker_roll = permutation % 11 + 2;
+		int defender_roll = permutation % 11 + 2;
+
+		int instances = rollInstances(attacker_roll) * rollInstances(defender_roll);
+		int defender_hp = simulateAttack(attacker, defender, permutation);
+		
+		// Store probalistic data
+
+		defender_spread->total_outcomes = instances;
+		defender_spread->hp_spread[defender_hp] += instances;
+
+		if (defender_spread->max_hp < defender_hp)
+			defender_spread->max_hp = defender_hp;
+	}
+}
+
+void counterattackProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread * attacker_spread, CombatResultsSpread * defender_spread) {
 	/*
 		Calculates the probability of each possible HP total which could result from an attack and counterattack between two hunters. 
 
@@ -520,46 +625,6 @@ void combatProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread
 	Statset * attacker_stats = hunterStats(attacker);
 	Statset * defender_stats = hunterStats(defender);
 
-	int roll_instances(int total) {
-		/*
-		   Returns the number of number of 2d6 permutations who's sum
-		   is equal to the specified total, which when divided by the
-		   total number of permutations results in the probability of
-		   that total.
-		*/
-
-		int instances = total - 1;
-		if (instances > 7)
-			instances -= (total - 7) * 2;
-		return instances;
-	}
-
-	int simulateAttack(Hunter * attacker, Hunter * defender, int permutation) {
-		/*
-		   Returns the HP of the recepiant of a simulated attack,
-		   given the permutation number of their combination of die
-		   rolls.
-		*/
-
-		Statset * attacker_stats = &attacker->stats;
-		Statset * defender_stats = &defender->stats;
-
-		int attacker_roll = permutation / 11 + 2;
-		int defender_roll = permutation % 11 + 2;
-
-		int defender_hp = defender_stats->hp;
-
-		int damage = attacker_roll + attacker_stats->atk - defender_roll - defender_stats->def;
-		if (damage < 0)
-			damage = 0;
-
-		defender_hp -= damage;
-		if (defender_hp < 0)
-			return 0;
-
-		return defender_hp;
-	}
-
 	/*
 	   Iterate through every combination of dice roll totals between the two players.
 	*/
@@ -568,7 +633,7 @@ void combatProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread
 		int attacker_roll = permutation / 11 + 2;
 		int defender_roll = permutation % 11 + 2;
 
-		uint32_t instances = roll_instances(attacker_roll) * roll_instances(defender_roll);
+		uint32_t instances = rollInstances(attacker_roll) * rollInstances(defender_roll);
 
 		int defender_hp = simulateAttack(attacker, defender, permutation);
 
@@ -603,7 +668,7 @@ void combatProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread
 			int attacker_roll = permutation / 11 + 2;
 			int defender_roll = permutation % 11 + 2;
 
-			uint32_t instances = roll_instances(attacker_roll) * roll_instances(defender_roll);
+			uint32_t instances = rollInstances(attacker_roll) * rollInstances(defender_roll);
 
 			int attacker_hp = simulateAttack(defender, attacker, permutation);
 
@@ -656,7 +721,7 @@ int combatTest() {
 		
 			CombatResultsSpread attacker_spread;
 			CombatResultsSpread defender_spread;
-			combatProbability(attacker, defender, &attacker_spread, &defender_spread);
+			counterattackProbability(attacker, defender, &attacker_spread, &defender_spread);
 
 			int score;
 			score  = combatSpreadDamageScore(&attacker_spread, harm);
@@ -702,7 +767,7 @@ int botMain() {
 	bot->priorities.crate_target_unfound = 3;
 	bot->priorities.exit_has_target = 3;
 	bot->priorities.wander = 2;
-	bot->priorities.exit = 2;
+	bot->priorities.exit = 4;
 
 	// Assign this bot to all hunters
 	for (int n=0; n < 4; n++) {

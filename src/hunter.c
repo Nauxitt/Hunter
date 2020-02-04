@@ -10,7 +10,7 @@
 #include "ai.h"
 
 
-void decodeMap(MatchContext * context, char * map_encoded){
+void decodeMap(MatchContext * context, char * map_encoded) {
 	/*
 		Generate a map from a string encoding
 		Key:
@@ -94,7 +94,7 @@ void decodeMap(MatchContext * context, char * map_encoded){
 	context->exit_y = exit_y;
 }
 
-void encodeHunter(Hunter * hunter, char * buffer){
+void encodeHunter(Hunter * hunter, char * buffer) {
 	int o = 0;  // write offset within buffer
 	int data_length = 1;
 
@@ -152,7 +152,7 @@ void encodeHunter(Hunter * hunter, char * buffer){
 	buffer[o++] =  data_length        & 0xFF;
 }
 
-int decodeHunter(Hunter * hunter, char * buffer){
+int decodeHunter(Hunter * hunter, char * buffer) {
 	int o = 0;  // write offset within buffer
 
 	// Read hunter data header
@@ -200,7 +200,7 @@ int decodeHunter(Hunter * hunter, char * buffer){
 }
 
 
-void printHunter(Hunter * h){
+void printHunter(Hunter * h) {
 	hunterStats(h);
 	printf(
 			"%s (%02u/%02u) (lvl %d) [%u/%u/%u] Cr:%u",
@@ -232,13 +232,13 @@ void hunterSetPosition(MatchContext * context, Hunter * hunter, int x, int y) {
 	hunter->y = y;
 }
 
-void hunterClearBonus(Hunter * h){
+void hunterClearBonus(Hunter * h) {
 	h->turn_stats.atk = 0;
 	h->turn_stats.def = 0;
 	h->turn_stats.mov = 0;
 }
 
-Statset * hunterStats(Hunter * h){
+Statset * hunterStats(Hunter * h) {
 	if(h == NULL)
 		return NULL;
 
@@ -275,7 +275,7 @@ Hunter * randomHunter(Hunter * h, int points){
 	return h;
 }
 
-void hunterRandomStatIncrease(Hunter * h, int points){
+void hunterRandomStatIncrease(Hunter * h, int points) {
 	while(points-- > 0){
 		h->level++;
 		switch(rand() % 4){
@@ -287,7 +287,7 @@ void hunterRandomStatIncrease(Hunter * h, int points){
 	}
 }
 
-Card * hunterPopCard(Hunter * h, int card_num){
+Card * hunterPopCard(Hunter * h, int card_num) {
 	Card * ret = h->hand[card_num];
 
 	// Shift cards downward
@@ -299,7 +299,7 @@ Card * hunterPopCard(Hunter * h, int card_num){
 	return ret;
 }
 
-int hunterHandSize(Hunter * h){
+int hunterHandSize(Hunter * h) {
 	int hand_size = 0;
 	while((hand_size < HAND_LIMIT) && (h->hand[hand_size] != NULL)) hand_size++;
 	return hand_size;
@@ -363,7 +363,7 @@ Card * hunterHighestAttackCard(Hunter * h, int copy_val) {
 
 Card * hunterHighestDefenseCard(Hunter * h);
 
-void initMatch(MatchContext * context){
+void initMatch(MatchContext * context) {
 	// Copy deck into a cardpool, from which we will randomly initialize the context's deck
 	Card * cardpool[DECK_SIZE] = {};
 	for(int n = 0; n < DECK_SIZE; n++)
@@ -405,7 +405,7 @@ void initMatch(MatchContext * context){
 }
 
 
-void matchQueueUpdate(MatchContext * context){
+void matchQueueUpdate(MatchContext * context) {
 	// Push enqueue onto stack
 	if(context->enqueue){
 		MatchAction * end = context->enqueue;
@@ -418,19 +418,19 @@ void matchQueueUpdate(MatchContext * context){
 	}
 }
 
-int matchQueueLength(MatchContext * context){
+int matchQueueLength(MatchContext * context) {
 	int n = 0;
 	for(MatchAction * a = context->action; a; a = a->next) n++;
 	return n;
 }
 
-void freeAction(MatchAction * a){
+void freeAction(MatchAction * a) {
 	if(a->score)
 		free(a->score);
 	free(a);
 }
 
-void matchCycle(MatchContext * context){
+void matchCycle(MatchContext * context) {
 	/*
 	   This function serves as an iteration in the game's sequential, turn-based logic, and maintains a match's gameplay mechanics. Running the function once pops an action from the match's action stack, and responds to that action by modifying gameplay variables, as well as the context's action stack.
 	*/
@@ -454,6 +454,7 @@ void matchCycle(MatchContext * context){
 					action->actor,
 					action->actor->controller_data
 				);
+			action = context->action;
 	}
 
 	context->action = action->next;
@@ -1147,6 +1148,8 @@ uint8_t postAttackerCard(MatchContext * context, Card * card){
 		return 1;
 	
 	context->attacker_card = card;
+	
+	// Match action stack remove polling action and cleanup
 	context->polling = 0;
 	MatchAction * a = context->action;
 	context->action = a->next;
