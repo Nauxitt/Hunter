@@ -361,13 +361,11 @@ Card * hunterHighestAttackCard(Hunter * h, int copy_val) {
 	return highest;
 }
 
-Card * hunterHighestDefenseCard(Hunter * h);
-
 void initMatch(MatchContext * context) {
 	// Copy deck into a cardpool, from which we will randomly initialize the context's deck
 	Card * cardpool[DECK_SIZE] = {};
 	for(int n = 0; n < DECK_SIZE; n++)
-		cardpool[n] = &CARDS[n];
+		cardpool[n] = &DEFAULT_DECK[n];
 
 	for(int cardpool_end = DECK_SIZE-1; cardpool_end >= 0; cardpool_end--){
 		// Move a random card from cardpool to deck
@@ -1029,7 +1027,7 @@ uint8_t hunterAt(Hunter * hunter, int x, int y){
 }
 
 void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
-	Hunter * opponent = hunter == context->attacker ? context->attacker : context->defender;
+	Hunter * opponent = (hunter == context->attacker) ? context->attacker : context->defender;
 
 	// Remove card from hand, if there
 	int card_num = -1;

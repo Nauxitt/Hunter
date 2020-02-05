@@ -3,7 +3,11 @@
 
 #include "hunter.h"
 
-#define DECK_SIZE 30
+// TODO: when traps are implemented, add trap cards
+// #define DECK_SIZE 100
+#define DECK_SIZE 75
+
+#define MOVEMENT_DECK_SIZE 30
 
 enum CardType {
 	NO_CARD,             // Used to denote that no card is selected for the given action.
@@ -31,7 +35,8 @@ typedef struct _Card {
 	int num;
 } Card;
 
-extern Card CARDS[DECK_SIZE];
+extern Card DEFAULT_DECK[DECK_SIZE];
+extern Card MOVEMENT_DECK[MOVEMENT_DECK_SIZE];
 extern Card no_card;
 
 #endif
