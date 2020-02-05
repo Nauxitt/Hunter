@@ -32,32 +32,42 @@ int basicMission(){
 			.type = "hunter"
 		},
 		{	.name = "Dave",
-			.base_stats = {.mov = 1, .atk = 11, .def = 1, .max_hp=1},
+			.base_stats = {.mov = 3, .atk = 3, .def = 2, .max_hp=2},
 			.level = 1,
 			.type = "hunter"
 		},
 		{	.name = "Stan",
-			.base_stats = {.atk = 2, .mov = 3, .def = 8, .max_hp=1},
+			.base_stats = {.atk = 4, .mov = 1, .def = 4, .max_hp=1},
 			.level = 1,
 			.type = "hunter"
 		},
 		{	.name = "Tim",
-			.base_stats = {.atk = 11, .mov = 1, .def = 1, .max_hp=1},
+			.base_stats = {.atk = 1, .mov = 7, .def = 1, .max_hp=1},
 			.level = 1,
 			.type = "hunter"
 		}
 	};
 
 	Bot * bot = calloc(sizeof(Bot), 1);
+
+	bot->priorities.heal_threshold = 50;
+
+	// Movement priorities
 	bot->priorities.wander = 10;
 	bot->priorities.exit = 200;
 	bot->priorities.crate_target_unfound = 100;
 	bot->priorities.crate_target_found = 50;
-	bot->priorities.exit_has_target = 100;
+	bot->priorities.exit_has_target = 50;
 
-	bot->priorities.deal_damage = 1000;
+	// Combat priorities
+	bot->priorities.deal_damage = 15;
+	bot->priorities.take_damage = 0;
+	bot->priorities.die = -250;
+	bot->priorities.kill = 500;
 
-	for (int n=0; n < 4; n++) {
+	// Assign bots to players
+
+	for (int n=1; n < 4; n++) {
 		Hunter * hunter = &hunters[n];
 		hunter->controller_data = bot;
 		hunter->controller_hook = botControllerHook;

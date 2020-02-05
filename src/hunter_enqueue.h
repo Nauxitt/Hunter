@@ -44,6 +44,7 @@ void enqueuePollAttackerCardAction(MatchContext * context, Hunter * actor);
 void enqueueExecuteCombatAction(MatchContext * context);
 void enqueueEscapeAction(MatchContext * context);
 void enqueueEscapeAttemptAction(MatchContext * context);
+void enqueueDefendAction(MatchContext * context, Hunter * defender);
 void enqueueAttackAction(MatchContext * context, Hunter * attacker, Hunter * defender);
 void enqueueAttackDamageAction(MatchContext * context, Hunter * attacker, Hunter * defender);
 void enqueueDealDamageAction(MatchContext * context, Hunter * attacker, Hunter * target, int value);

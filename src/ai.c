@@ -376,6 +376,30 @@ void botAttackAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 
 void botCombatCardAction(Bot * bot, MatchContext * context, Hunter * hunter) {}
 
+void printCombatSpread(CombatResultsSpread * spread) {
+	int total = 0;
+	for (int hp=0; hp <= spread->max_hp; hp++) {
+		if (spread->hp_spread[hp] == 0)
+			continue;
+
+		total += spread->hp_spread[hp];
+
+		printf("% 8d - % 4d%\n", hp, spread->hp_spread[hp] * 100 / spread->total_outcomes);
+	}
+}
+
+int scoreDealDamage(Bot * bot, CombatResultsSpread * spread) {
+	int score = combatSpreadDamageScore(spread, bot->priorities.deal_damage);
+	score += spread->hp_spread[0] * bot->priorities.kill / spread->total_outcomes;
+	return score;
+}
+
+int scoreTakeDamage(Bot * bot, CombatResultsSpread * spread) {
+	int score  = combatSpreadDamageScore(spread, bot->priorities.take_damage);
+	score += spread->hp_spread[0] * bot->priorities.die  / spread->total_outcomes;
+	return score;
+}
+
 void botDefendAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 	/*
 	   When a bot is attacked, it is prompted whether to
@@ -386,7 +410,6 @@ void botDefendAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 
 	Hunter * attacker = context->attacker;
 
-	CombatResultsSpread attacker_unscathed;
 	CombatResultsSpread attacker_countered;
 	CombatResultsSpread defender_counters;
 	CombatResultsSpread defender_blocks;
@@ -402,9 +425,38 @@ void botDefendAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 
 	makeBotAction(&counter_action, "counter", hunter, ATTACK_ACTION);
 	makeBotAction(&defend_action, "defend", hunter, DEFEND_ACTION);
+	// makeBotAction(&escape_action, "defend", hunter, ESCAPE_ACTION);
 
+	/*
+	   Score actions
+	*/
+
+	// Score counterattack
+	counter_action.value  = scoreDealDamage(bot, &attacker_countered);
+	counter_action.value += scoreTakeDamage(bot, &defender_counters);
+
+	// Score block
+	defend_action.value = scoreTakeDamage(bot, &defender_blocks);
+
+	// Score escape
+	// defender_blocks.value = scoreTakeDamage(bot, &defender_escapes);
+
+	/*
+	   Choose most valuable action
+	*/
+	   
 	BotAction * action = &counter_action;
+	
+	if (defend_action.value > action->value)
+		action = &defend_action;
 
+	/*
+		printf("Bot combat, counter score: %d\n", counter_action.value);
+		printCombatSperad(&defender_counters);
+		printf("Bot combat, block score: %d\n", defend_action.value);
+		printf("%s\n", &hunter->name);
+	*/
+	printCombatSpread(&defender_blocks);
 	postDefenderAction(context, action->action->type, NULL);
 }
 
@@ -455,10 +507,8 @@ void botGenerateCombatActions(Bot * bot, MatchContext * context, Hunter * hunter
 		counterattackProbability(hunter, target_hunter, &attacker_spread, &defender_spread);
 		
 		int score;
-		score  = combatSpreadDamageScore(&attacker_spread, bot->priorities.take_damage);
-		score += combatSpreadDamageScore(&defender_spread, bot->priorities.deal_damage);
-		score += defender_spread.hp_spread[0] * bot->priorities.kill / defender_spread.total_outcomes;
-		score += attacker_spread.hp_spread[0] * bot->priorities.die  / attacker_spread.total_outcomes;
+		score  = scoreDealDamage(bot, &defender_spread);
+		score += scoreTakeDamage(bot, &attacker_spread);
 
 		BotAction * combat_action = makeBotAction(NULL, "combat", hunter, COMBAT_ACTION);
 		combat_action->value = score;
@@ -566,8 +616,9 @@ int simulateAttack(Hunter * attacker, Hunter * defender, int permutation) {
 	int defender_hp = defender_stats->hp;
 
 	int damage = attacker_roll + attacker_stats->atk - defender_roll - defender_stats->def;
-	if (damage < 0)
-		damage = 0;
+
+	if (damage <= 0)
+		return defender_hp;
 
 	defender_hp -= damage;
 	if (defender_hp < 0)
@@ -600,7 +651,7 @@ void defendProbability(Hunter * attacker, Hunter * defender, CombatResultsSpread
 		
 		// Store probalistic data
 
-		defender_spread->total_outcomes = instances;
+		defender_spread->total_outcomes += instances;
 		defender_spread->hp_spread[defender_hp] += instances;
 
 		if (defender_spread->max_hp < defender_hp)
@@ -764,10 +815,15 @@ int botMain() {
 
 	// Assign a priority set which technically
 	// makes it possible for bots to win.
+	bot->priorities.heal_threshold = 50;
 	bot->priorities.crate_target_unfound = 3;
 	bot->priorities.exit_has_target = 3;
 	bot->priorities.wander = 2;
 	bot->priorities.exit = 4;
+
+	bot->priorities.take_damage = -10;
+	bot->priorities.die = -200;
+	bot->priorities.deal_damage = 0;
 
 	// Assign this bot to all hunters
 	for (int n=0; n < 4; n++) {

@@ -489,6 +489,21 @@ void matchCycle(MatchContext * context) {
 	}
 
 	switch(action->type){
+		case POLL_MOVE_CARD_ACTION:
+		case POLL_MOVE_ACTION:
+		case POLL_ATTACK_ACTION:
+		case POLL_COMBAT_CARD_ACTION:
+		case POLL_COMBAT_ACTION:
+		case POLL_TURN_ACTION:
+		case POLL_DEFEND_ACTION:
+			break;
+
+		default:
+			printMatchAction(action);
+			break;
+	}
+
+	switch(action->type){
 		case BEGIN_MATCH_ACTION:
 			// Deal each player four cards
 			for(int n = 0; n < 4; n++)
@@ -568,7 +583,6 @@ void matchCycle(MatchContext * context) {
 			if(actor->stats.hp <= 0){
 				actor->stats.hp = 0;
 				enqueueTeleportRandomAction(context, actor);
-				enqueueEndMoveAction(context, actor);
 			}
 			break;
 
@@ -580,6 +594,10 @@ void matchCycle(MatchContext * context) {
 			break;
 
 		case TELEPORT_ACTION:
+			hunterSetPosition(context, actor, action->x, action->y);
+			enqueueEndMoveAction(context, actor);
+			break;
+
 		case MOVE_STEP_ACTION:
 			hunterSetPosition(context, actor, action->x, action->y);
 			break;
@@ -652,10 +670,6 @@ void matchCycle(MatchContext * context) {
 			enqueuePollDefenderAction(context, action->target);
 			enqueueExecuteCombatAction(context);
 			enqueueExitCombatAction(context);
-
-			// If anyone died, teleport them to a random location
-			enqueueDeathCheckAction(context, actor);
-			enqueueDeathCheckAction(context, action->target);
 			break;
 
 		case ENTER_COMBAT_ACTION:
@@ -666,6 +680,10 @@ void matchCycle(MatchContext * context) {
 			break;
 
 		case EXIT_COMBAT_ACTION:
+			// If anyone died, teleport them to a random location
+			enqueueDeathCheckAction(context, context->attacker);
+			enqueueDeathCheckAction(context, context->defender);
+
 			context->attacker = NULL;
 			context->defender = NULL;
 			context->attacker_card = NULL;
@@ -715,11 +733,15 @@ void matchCycle(MatchContext * context) {
 				enqueueAttackAction(context, context->attacker, context->defender);
 			}
 			else {
+				/*
+				   Defending hunter is either blocking or
+				   counterattacking.
+				*/
 				enqueuePollAttackerCardAction(context, actor);
 
 				// A defend action will double the user's base DEF stat.
 				if(context->defender_action->type == DEFEND_ACTION){
-					context->defender->turn_stats.def += context->defender->base_stats.def/2;
+					enqueueDefendAction(context, context->defender);
 				}
 
 				if(context->attacker_card)
@@ -753,13 +775,20 @@ void matchCycle(MatchContext * context) {
 			break;
 
 		case DEFEND_ACTION:
+			context->defender->turn_stats.def += context->defender->base_stats.def/2;
+			break;
+
 		case SURRENDER_ACTION:
 			/*
-			   These actions are not directly handled by matchCycle or the action stack.
+			   This actions is not directly handled by matchCycle
+			   or the action stack.
 			*/
 			break;
 
 		case ATTACK_ACTION:
+			if (active_stats->hp <= 0)
+				break;
+
 			enqueueRollDiceAction(context);
 			enqueueAttackDamageAction(context, action->actor, action->target);
 			break;
@@ -810,6 +839,7 @@ void matchCycle(MatchContext * context) {
 			}
 			break;
 	}
+
 	matchQueueUpdate(context);
 
 	switch(context->action->type){
@@ -824,7 +854,7 @@ void matchCycle(MatchContext * context) {
 			break;
 
 		default:
-			printMatchAction(action);
+			// printMatchAction(action);
 			context->polling = 0;
 			break;
 	}
