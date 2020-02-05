@@ -1060,6 +1060,9 @@ void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
 			hunter->turn_stats.atk += hunter->base_stats.atk;
 
 		case ATTACK_COPY_CARD:
+			if (opponent == NULL)
+				break;
+
 			hunter->turn_stats.atk += opponent->base_stats.atk;
 			break;
 
@@ -1261,9 +1264,12 @@ uint8_t postTurnAction(MatchContext * context, enum MatchActionType type, Hunter
 		case MOVE_ACTION:
 			if(card)
 				enqueueUseCardAction(context, character, card);
-			enqueueRollDiceAction(context);
-			enqueueMoveRollBonusAction(context, character);
-			enqueuePollMoveAction(context, character);
+
+			if ((card == NULL) ^ (card->type != MOVE_EXIT_CARD)) {
+				enqueueRollDiceAction(context);
+				enqueueMoveRollBonusAction(context, character);
+				enqueuePollMoveAction(context, character);
+			}
 			break;
 
 		case REST_ACTION:
