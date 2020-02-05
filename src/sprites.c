@@ -20,21 +20,21 @@ void spritesheetBlit(SpriteSheet * sheet, int sx, int sy, int x, int y){
 #define SHEET(name, path, w, h) .name = {NULL, path, w*2, h*2, w, h}
 
 Textures textures = {
-	SHEET(tiles          , "resources/hunter-tile.png", 32,16),
-	SHEET(items          , "resources/items.png", 16,16),
-	SHEET(daniel         , "resources/daniel.png", 0,0),
-	SHEET(statbox        , "resources/statbox.png", 8,9),
-	SHEET(cards          , "resources/cards.png", 16,18),
-	SHEET(menu_gradient  , "resources/menubar-gradient.png", 0,0),
-	SHEET(menu_icons     , "resources/menubar-icons.png", 16,16),
-	SHEET(crate          , "resources/crate.png", 0,0),
-	SHEET(dice           , "resources/dice.png", 37, 48),
-	SHEET(font           , "resources/font.png", 8, 16),
-	SHEET(small_numbers  , "resources/small-numbers.png", 5, 6),
-	SHEET(wallpapers     , "resources/wallpapers.png", 320, 208),
-	SHEET(bubble         , "resources/bubble.png", 10, 10),
-	SHEET(character_portraits , "resources/character_portraits.png", 128, 224),
-	SHEET(target_relic_panel  , "resources/target-relic-panel.png", 0, 0)
+	SHEET(tiles          , "resources/images/hunter-tile.png", 32,16),
+	SHEET(items          , "resources/images/items.png", 16,16),
+	SHEET(daniel         , "resources/images/daniel.png", 0,0),
+	SHEET(statbox        , "resources/images/statbox.png", 8,9),
+	SHEET(cards          , "resources/images/cards.png", 16,18),
+	SHEET(menu_gradient  , "resources/images/menubar-gradient.png", 0,0),
+	SHEET(menu_icons     , "resources/images/menubar-icons.png", 16,16),
+	SHEET(crate          , "resources/images/crate.png", 0,0),
+	SHEET(dice           , "resources/images/dice.png", 37, 48),
+	SHEET(font           , "resources/images/font.png", 8, 16),
+	SHEET(small_numbers  , "resources/images/small-numbers.png", 5, 6),
+	SHEET(wallpapers     , "resources/images/wallpapers.png", 320, 208),
+	SHEET(bubble         , "resources/images/bubble.png", 10, 10),
+	SHEET(character_portraits , "resources/images/character_portraits.png", 128, 224),
+	SHEET(target_relic_panel  , "resources/images/target-relic-panel.png", 0, 0)
 };
 
 
