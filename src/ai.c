@@ -75,7 +75,7 @@ void botTurnAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 
 	// Healing threshold: heal if below a certain HP
 	// This overrides descisions over other actions
-	if (stats->hp <= stats->max_hp * bot->priorities.heal_threshold / 100) {
+	if (stats->hp <= stats->restricted_hp * bot->priorities.heal_threshold / 100) {
 		postTurnAction(context, REST_ACTION, NULL, NULL);
 		return;
 	}

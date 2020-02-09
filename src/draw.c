@@ -8,7 +8,7 @@
 void drawWindowPanel(enum WindowColor color, SDL_Rect * window_dest){
 	SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderDrawColor(game.renderer, 0, 0, 0, 32);
-	// SDL_SetRenderDrawColor(game.renderer, 255-32, 255, 255, 32);
+
 	// active player background color ^
 	SDL_RenderFillRect(game.renderer, window_dest);
 	SDL_SetRenderDrawBlendMode(game.renderer, SDL_BLENDMODE_NONE);
@@ -60,21 +60,21 @@ void drawWindowPanelScaled(enum WindowColor color, SDL_Rect * window_dest, float
 		drawWindowPanel(color, &rect);
 }
 
-void drawSmallNumber(int x, int y, int n){
+void drawSmallNumber(int x, int y, int n) {
 	spritesheetBlit(&textures.small_numbers, n,0, x,y);
 }
 
-void drawBigNumber(int x, int y, int n){
+void drawBigNumber(int x, int y, int n) {
 	spritesheetBlit(&textures.statbox, n,0, x,y);
 }
 		
-void drawBigRedNumber(int x, int y, int n){
+void drawBigRedNumber(int x, int y, int n) {
 	SDL_SetTextureColorMod(textures.statbox.texture, 255, 0, 0);
 	drawBigNumber(x, y, n);
 	SDL_SetTextureColorMod(textures.statbox.texture, 255, 255, 255);
 }
 
-void drawCard(int x, int y, Card * card){
+void drawCard(int x, int y, Card * card) {
 	int sx, sy;
 
 	switch(card->type){
@@ -149,11 +149,11 @@ void drawStatboxItems(Hunter * hunter, int x, int y){
 	}
 }
 
-void drawRelic(Relic * relic, int x, int y){
+void drawRelic(Relic * relic, int x, int y) {
 	spritesheetBlit(&textures.items, relic->item_id,0, x, y);
 }
 
-void drawStatboxStats(Hunter * hunter, int x, int y){
+void drawStatboxStats(Hunter * hunter, int x, int y) {
 	Statset * stats = hunterStats(hunter);
 
 	int panel_w = (game.w - 16*2 - 4*3) / 4;
@@ -252,11 +252,26 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 
 	// Healthbar left edge
 	statval_dest.x = panel_rect.x + element_margin/2;
-	spritesheetBlit(
-			&textures.statbox,
-			3 + ((hunter->stats.hp == 0) ? 3:0), 2,
-			statval_dest.x, statval_dest.y
-		);
+	if (hunter->stats.hp == 0) {
+		SDL_SetTextureAlphaMod(
+				textures.statbox.texture,
+				120
+			);
+
+		spritesheetBlit(
+				&textures.statbox,
+				3 + ((hunter->stats.restricted_hp < hunter->stats.max_hp) ? 3:0), 2,
+				statval_dest.x, statval_dest.y
+			);
+	
+		SDL_SetTextureAlphaMod(textures.statbox.texture, 255);
+	}
+	else {
+		spritesheetBlit(
+				&textures.statbox, 3, 2,
+				statval_dest.x, statval_dest.y
+			);
+	}
 	
 	// Healthbar middle
 	int middle_w = panel_rect.w - element_margin - textures.statbox.w*2;
@@ -266,6 +281,19 @@ void drawStatboxStats(Hunter * hunter, int x, int y){
 	statval_dest.w = middle_w;
 	getSpriteClip(&textures.statbox, 7, 2, &statbar_src);
 	blit(textures.statbox.texture, &statbar_src, &statval_dest);
+
+	// Draw restricted HP bar
+
+	if (hunter->stats.restricted_hp < hunter->stats.max_hp) {
+		statval_dest.w = middle_w * hunter->stats.restricted_hp / (hunter->stats.max_hp-1);
+		SDL_SetTextureAlphaMod(
+				textures.statbox.texture,
+				120
+			);
+		getSpriteClip(&textures.statbox, 4, 2, &statbar_src);
+		blit(textures.statbox.texture, &statbar_src, &statval_dest);
+		SDL_SetTextureAlphaMod(textures.statbox.texture, 255);
+	}
 	
 	// The first and last HP points are drawn by the left and right edge blits respectively, so draw the middle portion of the healthbar in proportion of health to max health, precluding representation of those values.
 	if(hunter->stats.hp <= 1)

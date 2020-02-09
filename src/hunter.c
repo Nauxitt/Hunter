@@ -247,7 +247,7 @@ Statset * hunterStats(Hunter * h) {
 	h->stats.mov = h->base_stats.mov/3 + h->turn_stats.mov;
 	h->stats.hp = h->base_stats.hp;
 
-	// TODO: max HP penalties from respawn
+	h->stats.restricted_hp = h->base_stats.restricted_hp;
 	h->stats.max_hp = h->base_stats.max_hp * 3 + 6 + h->level;
 	return &h->stats;
 }
@@ -385,9 +385,16 @@ void initMatch(MatchContext * context) {
 		hunter->id = n;
 
 		hunterStats(hunter);
+
+		if (hunter->base_stats.restricted_hp == 0)
+			hunter->base_stats.restricted_hp = hunter->stats.max_hp;
+
 		if (hunter->base_stats.hp == 0)
-			hunter->base_stats.hp = hunter->stats.max_hp;
-		
+			hunter->base_stats.hp = hunter->base_stats.restricted_hp;
+
+		if (hunter->base_stats.hp < hunter->base_stats.restricted_hp)
+			hunter->base_stats.hp = hunter->base_stats.restricted_hp;
+
 		// Update tile/hunter data
 		hunterSetPosition(context, hunter, hunter->x, hunter->y);
 	}
@@ -472,7 +479,7 @@ void matchCycle(MatchContext * context) {
 		actor = context->characters[context->active_player];
 
 	Statset * active_stats = hunterStats(actor);
-	Statset * actor_stats;
+	Statset * actor_stats;  // TODO: Redundant?
 	Statset * target_stats;
 
 	PathNode * path = NULL;
@@ -501,7 +508,7 @@ void matchCycle(MatchContext * context) {
 			break;
 	}
 
-	switch(action->type){
+	switch(action->type) {
 		case BEGIN_MATCH_ACTION:
 			// Deal each player four cards
 			for(int n = 0; n < 4; n++)
@@ -549,8 +556,9 @@ void matchCycle(MatchContext * context) {
 
 		case HEAL_ACTION:
 			actor->base_stats.hp += action->value;
-			if(actor->base_stats.hp > actor->stats.max_hp)
-				actor->base_stats.hp = actor->stats.max_hp;
+			if(actor->base_stats.hp > actor->base_stats.restricted_hp) {
+				actor->base_stats.hp = actor->base_stats.restricted_hp;
+			}
 			break;
 
 		case DEAL_DAMAGE_ACTION:
@@ -578,8 +586,12 @@ void matchCycle(MatchContext * context) {
 			break;
 
 		case DEATH_CHECK_ACTION:
-			if(actor->stats.hp <= 0){
-				actor->stats.hp = 0;
+			if(actor->base_stats.hp == 0){
+				actor->base_stats.restricted_hp /= 2;
+				if (actor->base_stats.restricted_hp < 1)
+					actor->base_stats.restricted_hp = 1;
+
+				actor->base_stats.hp = actor->base_stats.restricted_hp;
 				enqueueTeleportRandomAction(context, actor);
 			}
 			break;

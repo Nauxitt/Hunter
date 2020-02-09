@@ -22,7 +22,6 @@ Game game;
 
 int basicMission(){
 	initGame();
-	game.tick_delay = 1;
 	loadSprites();
 
 	Hunter hunters[] = {
@@ -50,7 +49,7 @@ int basicMission(){
 
 	Bot * bot = calloc(sizeof(Bot), 1);
 
-	bot->priorities.heal_threshold = 50;
+	bot->priorities.heal_threshold = 30;
 
 	// Movement priorities
 	bot->priorities.wander = 10;
