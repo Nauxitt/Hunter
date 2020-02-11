@@ -23,11 +23,11 @@ extern Game game;
 extern MapState mapstate;
 extern MenubarState menubar;
 
-int iso_x(MapState * state, int x, int y){
+int iso_x(MapState * state, int x, int y) {
 	return state->camera_x + (x-y) * state->tile_w/2 + state->tile_w/2;
 };
 
-int iso_y(MapState * state, int x, int y){
+int iso_y(MapState * state, int x, int y) {
 	return state->camera_y + (x+y) * state->tile_h/2 + state->tile_h/2;
 };
 
@@ -267,7 +267,7 @@ void mapOnTick(EventHandler * h){
 				break;
 		}
 
-		switch(action->type){
+		switch (action->type) {
 			case END_MATCH_ACTION:
 				// If the match ends, exit this state and display score screen.
 				matchCycle(match);
@@ -300,7 +300,6 @@ void mapOnTick(EventHandler * h){
 			case ESCAPE_ROLL_BONUS_ACTION:
 			case ATTACK_ROLL_BONUS_ACTION:
 			case DEFENSE_ROLL_BONUS_ACTION:
-			case TELEPORT_RANDOM_ACTION:
 			case COMBAT_ACTION:
 			case EXIT_COMBAT_ACTION:
 			case EXECUTE_COMBAT_ACTION:
@@ -309,6 +308,7 @@ void mapOnTick(EventHandler * h){
 			case DAMAGE_ACTION:
 			case ROLL_DICE_ACTION:
 			case ATTACK_DAMAGE_ACTION:
+			case ESCAPE_ATTEMPT_ACTION:
 				matchCycle(match);
 				break;
 
@@ -318,11 +318,14 @@ void mapOnTick(EventHandler * h){
 				matchCycle(match);
 				break;
 
+			case TELEPORT_RANDOM_ACTION:
+				mapTeleportHunterUp(state, action_hunter_entity);
+				return;
+
 			case TELEPORT_ACTION:
 				hunterSetTile(action_hunter_entity, action->x, action->y);
-				matchCycle(match);
-				matchCycle(match);
-				break;
+				mapTeleportHunterDown(state, action_hunter_entity);
+				return;
 
 			case MOVE_ROLL_BONUS_ACTION:
 				gamePushState(GameState(initDiceState(
@@ -460,7 +463,113 @@ void mapOnTick(EventHandler * h){
 		menu_handler->onTick(menu_handler);
 }
 
-void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed){
+void mapTeleportHunterUp(MapState * state, HunterEntity * hunter) {
+	/*
+	   Pushes a new GameState which blcks the underlaying
+	   MapState's interaction but forwards draw events, and
+	   controls the specified Hunter entity's z-offset to move
+	   upwards, off the screen.
+	*/
+
+	GameState * teleportState = makeGameState();
+	gamePushState(teleportState);
+	
+	ActionQueueEntity * action = makeEntityAction("teleport_entity_up");
+
+	action->entity = Entity(hunter);
+	action->speed = 32;
+
+	EventHandler(teleportState)->type = "MapState.mapTeleportUpHunter";
+	EventHandler(teleportState)->data = action;
+	EventHandler(teleportState)->onDraw = prevStateOnDraw;
+	EventHandler(teleportState)->onTick = mapOnTickTeleportUpHunter;
+}
+
+void mapOnTickTeleportUpHunter(EventHandler * h) {
+	/*
+	   Animate a hunter moving straight up the screen, until they are offscreen
+	*/
+
+	MapState * state = MapState(GameState(h)->prevState);
+	ActionQueueEntity * action = (ActionQueueEntity*) h->data;
+
+	Entity * entity = Entity(action->entity);
+	int speed = action->speed;
+
+	// If the hunter is offscreen, exit this state.
+
+	if (entity->y + entity->offset_y < 0 - 100) {
+		// Pop state and free data
+		gamePopState();
+		free(action);
+		free(h);
+
+		matchCycle(MapState(game.state)->match);
+
+		entity->hide = 1;
+		entity->offset_y = 0;
+
+		return;
+	}
+
+	entity->offset_y -= speed;
+}
+
+void mapTeleportHunterDown(MapState * state, HunterEntity * hunter) {
+	/*
+	   Pushes a new GameState which blcks the underlaying
+	   MapState's interaction but forwards draw events, and
+	   controls the specified Hunter entity's z-offset to move
+	   upwards, off the screen.
+	*/
+
+	GameState * teleportState = makeGameState();
+	gamePushState(teleportState);
+	
+	ActionQueueEntity * action = makeEntityAction("teleport_entity_down");
+
+	action->entity = Entity(hunter);
+	action->speed = 32;
+
+	Entity(hunter)->offset_y = -Entity(hunter)->y;
+	Entity(hunter)->hide = 0;
+
+	EventHandler(teleportState)->type = "MapState.mapTeleportDownHunter";
+	EventHandler(teleportState)->data = action;
+	EventHandler(teleportState)->onDraw = prevStateOnDraw;
+	EventHandler(teleportState)->onTick = mapOnTickTeleportDownHunter;
+}
+
+void mapOnTickTeleportDownHunter(EventHandler * h) {
+	/*
+	   Animate a hunter moving straight down the screen, until they land on their tile.
+	*/
+
+	MapState * state = MapState(GameState(h)->prevState);
+	ActionQueueEntity * action = (ActionQueueEntity*) h->data;
+
+	Entity * entity = Entity(action->entity);
+	int speed = action->speed;
+
+	// If the hunter is offscreen, exit this state.
+
+	if (entity->offset_y >= 0) {
+		// Pop state and free data
+		gamePopState();
+		free(action);
+		free(h);
+
+		matchCycle(MapState(game.state)->match);
+
+		entity->offset_y = 0;
+
+		return;
+	}
+
+	entity->offset_y += speed;
+}
+
+void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed) {
 	/*
 	   Pushes a new GameState on the stack, which redirects its draw events the the previous (MapState) state.  The new state's onTick event directs the hunter to the given target position, then pops the state upon completion.
 	*/
@@ -480,7 +589,7 @@ void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int sp
 	EventHandler(moveState)->onTick = mapOnTickMoveHunter;
 }
 
-void mapOnTickMoveHunter(EventHandler * h){
+void mapOnTickMoveHunter(EventHandler * h) {
 	/*
 		Animate moving
 		If done, pop gamestate, perform a match cycle, and then fire the previous state's onTick event
@@ -497,28 +606,28 @@ void mapOnTickMoveHunter(EventHandler * h){
 	// Move TileEntity offset and cell position
 	// Set running animation
 	
-	if(entity->x > target_x){
+	if (entity->x > target_x) {
 		Entity(entity)->direction = WEST; Entity(entity)->flip_h = 1;
 
 		entity->offset_x -= speed;
 		if(entity->offset_x <= -state->tile_w/2)
 			entity->offset_x = 0, entity->x--;
 	}
-	else if(entity->x < target_x){
+	else if (entity->x < target_x) {
 		Entity(entity)->direction = EAST; Entity(entity)->flip_h = 1;
 
 		entity->offset_x += speed;
 		if(entity->offset_x >= state->tile_w/2)
 			entity->offset_x = 0, entity->x++;
 	}
-	else if(entity->y > target_y){
+	else if (entity->y > target_y) {
 		Entity(entity)->direction = NORTH; Entity(entity)->flip_h = 0;
 
 		entity->offset_y -= speed;
 		if(entity->offset_y <= -state->tile_h)
 			entity->offset_y = 0, entity->y--;
 	}
-	else if(entity->y < target_y){
+	else if (entity->y < target_y) {
 		Entity(entity)->direction = SOUTH; Entity(entity)->flip_h = 0;
 
 		entity->offset_y += speed;
@@ -526,7 +635,7 @@ void mapOnTickMoveHunter(EventHandler * h){
 			entity->offset_y = 0, entity->y++;
 	}
 
-	switch(Entity(entity)->direction){
+	switch (Entity(entity)->direction) {
 		case NORTH:
 		case WEST:
 			entitySetAnimation(
@@ -561,7 +670,7 @@ void mapOnTickMoveHunter(EventHandler * h){
 	}
 }
 
-void mapGiveRelic(HunterEntity * hunter, Relic * relic){
+void mapGiveRelic(HunterEntity * hunter, Relic * relic) {
 	GameState * giveState = makeGameState();
 	gamePushState(giveState);
 

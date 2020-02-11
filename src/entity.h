@@ -26,6 +26,8 @@ typedef struct _Entity {
 	int x, y;
 	int offset_x, offset_y;
 
+	uint8_t hide;
+
 	SDL_Texture * texture;
 	AnimationFrame * animation;
 	AnimationFrame * animation_frame;

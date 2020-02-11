@@ -597,7 +597,7 @@ void matchCycle(MatchContext * context) {
 			break;
 
 		case TELEPORT_RANDOM_ACTION:
-			getRandomTile(context, &action->x, &action->y);
+			getRandomEmptyTile(context, &action->x, &action->y);
 			enqueueTeleportAction(
 					context, actor, action->x, action->y
 				);
@@ -972,6 +972,17 @@ void printMatchAction(MatchAction * action){
 	printf(")\n");
 }
 
+int pointEmpty(MatchContext * context, int x, int y) {
+	return tileEmpty(getTile(context, x, y));
+}
+
+int tileEmpty(Tile * tile) {
+	if (tile == NULL || !tile->exists)
+		return 1;
+
+	return (tile->crate == NULL && tile->hunter == NULL);
+}
+
 int pointWalkable(MatchContext * context, int x, int y) {
 	// Check map bounds
 	if ((x < 0) || (y < 0))
@@ -993,9 +1004,30 @@ int tileWalkable(Tile * tile) {
 	return 1;
 }
 
+void getRandomEmptyTile(MatchContext * context, int * x, int * y) {
+	int walkable_tiles = 0;
+	for(int n=0; n < context->map_h * context->map_w; n++)
+		if(context->map[n].exists) walkable_tiles++;
+
+	int target = rand() % walkable_tiles;
+	for(int n=0; n < context->map_h * context->map_w; n++) {
+		Tile * tile = &context->map[n];
+		if (tileWalkable(tile)){
+			target--;
+
+			if(target == 0){
+				*x = n % context->map_w;
+				*y = n / context->map_w;
+				return;
+			}
+		}
+	}
+}
+
 void getRandomTile(MatchContext * context, int * x, int * y){
 	*x = 0;
 	*y = 0;
+
 	int tiles = 1;
 	for(int n=0; n < context->map_h * context->map_w; n++)
 		if(context->map[n].exists) tiles++;

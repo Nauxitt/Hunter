@@ -4,6 +4,9 @@ void entityOnDraw(EventHandler * h){
 	Entity * entity = Entity(h);
 	AnimationFrame * frame = entity->animation_frame;
 
+	if (entity->hide)
+		return;
+
 	if(frame == NULL)
 		frame = entity->animation_frame = entity->animation;
 
@@ -91,7 +94,7 @@ void entityOnDraw(EventHandler * h){
 
 	dest.x += entity->offset_x;
 	dest.y += entity->offset_y;
-	
+
 	// Render
 	SDL_RenderCopyEx(
 			game.renderer, entity->texture,

@@ -1,5 +1,9 @@
 /*
-   This file contians a gamestate which handles the bulk of the game's features, specifically those of the screen which contains the map on which the game is played.  It contains code for rendering isometric map with entities an and an event queue system so that the game's turn-based behaviors do not find themselves in conflict.
+   This file contians a gamestate which handles the bulk of the game's
+   features, specifically those of the screen which contains the map on which
+   the game is played.  It contains code for rendering isometric map with
+   entities an and an event queue system so that the game's turn-based
+   behaviors do not find themselves in conflict.
 */
 
 #ifndef __mapstate_h
@@ -183,6 +187,11 @@ void mapEnterCombat(MapState * state);
 
 void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed);
 void mapOnTickMoveHunter(EventHandler * h);
+
+void mapTeleportHunterUp(MapState * state, HunterEntity * hunter);
+void mapTeleportHunterDown(MapState * state, HunterEntity * hunter);
+void mapOnTickTeleportUpHunter(EventHandler * h);
+void mapOnTickTeleportDownHunter(EventHandler * h);
 
 void mapStateFlash(MapState * mapstate);
 void mapStateOnDrawFlash(EventHandler * h);

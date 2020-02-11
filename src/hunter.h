@@ -287,5 +287,8 @@ void matchQueueUpdate(MatchContext * context);
 int matchQueueLength(MatchContext * context);
 const char * getMatchActionName(enum MatchActionType type);
 
+int pointEmpty(MatchContext * context, int x, int y);
+int tileEmpty(Tile * tile);
+void getRandomEmptyTile(MatchContext * context, int * x, int * y);
 void getRandomTile(MatchContext * context, int * x, int * y);
 #endif
