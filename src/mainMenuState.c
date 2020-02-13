@@ -287,8 +287,42 @@ void mainMenuStartBasicMission(MainMenuState * state){
 	match->crates = crates;
 	match->crates_len = 2;
 
-	for(int n=0; n<4; n++)
-		match->characters[n] = state->hunters[n];
+	// Create a generic bot profile
+	Bot * bot = gameCalloc(sizeof(Bot), 1);
+	bot->priorities.heal_threshold = 30;
+	
+	// Movement priorities
+	bot->priorities.wander = 200;
+	bot->priorities.exit = 200;
+	bot->priorities.crate_target_unfound = 400;
+	bot->priorities.crate_target_found = 200;
+	bot->priorities.exit_has_target = 500;
+
+	// Combat priorities
+	bot->priorities.deal_damage = 15;
+	bot->priorities.take_damage = -10;
+	bot->priorities.die = -250;
+	bot->priorities.kill = 500;
+
+	/*
+	   Setup match hunters list. Loaded Hunters are assigned
+	   human players, and if no hunter is specified for a given
+	   character slot, they are randomly generated and assigned
+	   a bot.
+	*/
+	for(int n=0; n<4; n++) {
+		Hunter * hunter = state->hunters[n];
+		
+		// If no hunter was created from the main menu, create one and assign it a bot
+		if (hunter == NULL) {
+			hunter = gameCalloc(sizeof(Hunter), 1);
+
+			randomHunter(hunter, 10);
+			hunter->controller_data = bot;
+			hunter->controller_hook = botControllerHook;
+		}
+		match->characters[n] = hunter;
+	}
 
 	match->target_relic = &relics[0];
 	match->scoring_context = &DEFAULT_SCORING_CONTEXT;
