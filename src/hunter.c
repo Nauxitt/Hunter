@@ -615,11 +615,9 @@ void matchCycle(MatchContext * context) {
 
 		case END_MOVE_ACTION:
 			// Open crate if one has been landed on
-			if(strcmp(actor->type, "hunter") == 0){
-				crate = getCrateAt(context, actor->x, actor->y);
-				if(crate != NULL)
-					enqueueOpenCrateAction(context, crate, actor);
-			}
+			crate = getCrateAt(context, actor->x, actor->y);
+			if(crate != NULL)
+				enqueueOpenCrateAction(context, crate, actor);
 
 			// If a hunter ends a moves next to an enemy, poll for attacking
 			if(
@@ -1095,7 +1093,7 @@ void hunterUseCard(MatchContext * context, Hunter * hunter, Card * card){
 			if(context->defender)
 				; // TODO: enqueueEscapeCombatAction();
 			else
-				enqueueTeleportRandomAction(context, hunter);
+				enqueueTeleportAction(context, hunter, context->exit_x, context->exit_y);
 			break;
 
 		case ATTACK_CARD:
