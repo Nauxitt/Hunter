@@ -123,6 +123,21 @@ PathNode * mapAddPathNode(MatchContext * context, PathNode * from, int x, int y)
 	return node;
 }
 
+void expandPath(MatchContext * context, PathNode * path_head, int x, int y, int s_x, int s_y) {
+	PathNode * node = &context->map[context->map_w*y + x].path;
+
+	if (node->scanned)
+		return;
+
+	if (!pointWalkable(context, x, y))
+		if (!((x == s_x) && (y == s_y)))
+			return;
+
+	// Path doesn't break any requirements, add it
+	node->scanned = 1;
+	insertPath(path_head->prev_path, mapAddPathNode(context, path_head, x, y));
+}
+
 PathNode * generatePathsWithin(MatchContext * context, int s_x, int s_y, int range) {
 	// Clear leftover path data of previous searches from tile map
 	mapResetPathData(context);
@@ -137,26 +152,13 @@ PathNode * generatePathsWithin(MatchContext * context, int s_x, int s_y, int ran
 
 		// Expand paths clockwise, starting up, by maping a function in each
 		// direction, unless we've hit the search distance limit.
-
-		inline void expandPath(int x, int y) {
-			PathNode * node = &context->map[context->map_w*y + x].path;
-
-			if (node->scanned)
-				return;
-
-			if (!pointWalkable(context, x, y))
-				if (!((x == s_x) && (y == s_y)))
-					return;
-
-			// Path doesn't break any requirements, add it
-			node->scanned = 1;
-			insertPath(path_head->prev_path, mapAddPathNode(context, path_head, x, y));
-		}
 		
 		if (path_head->distance < range) {
-			ADJACENT_MAP(expandPath, x, y);
+			expandPath(context, path_head, x, y-1, s_x, s_y);
+			expandPath(context, path_head, x+1, y, s_x, s_y);
+			expandPath(context, path_head, x, y+1, s_x, s_y);
+			expandPath(context, path_head, x-1, y, s_x, s_y);
 		}
-
 		
 		// Break if we've scanned the entire map
 		if (path_head->next_path == path_head)
@@ -188,7 +190,6 @@ PathNode * generatePathsWithin(MatchContext * context, int s_x, int s_y, int ran
 	return paths_list;
 }
 
-
 PathNode * findPathWithin(MatchContext * context, int s_x, int s_y, int e_x, int e_y, int distance){
 	// Clear leftover path data of previous searches from tile map
 	mapResetPathData(context);
@@ -211,25 +212,12 @@ PathNode * findPathWithin(MatchContext * context, int s_x, int s_y, int e_x, int
 		// Expand paths clockwise, starting up, by maping a function in each
 		// direction, unless we've hit the search distance limit.
 
-		inline void expandPath(int x, int y) {
-			PathNode * node = &context->map[context->map_w*y + x].path;
-
-			if (node->scanned)
-				return;
-
-			if (!pointWalkable(context, x, y))
-				if (!((x == s_x) && (y == s_y)))
-					return;
-
-			// Path doesn't break any requirements, add it
-			node->scanned = 1;
-			insertPath(path_head->prev_path, mapAddPathNode(context, path_head, x, y));
-		}
-		
 		if (path_head->distance < distance) {
-			ADJACENT_MAP(expandPath, x, y);
+			expandPath(context, path_head, x, y-1, s_x, s_y);
+			expandPath(context, path_head, x+1, y, s_x, s_y);
+			expandPath(context, path_head, x, y+1, s_x, s_y);
+			expandPath(context, path_head, x-1, y, s_x, s_y);
 		}
-
 		
 		// Return NULL if we've scanned the entire map
 		if (path_head->next_path == path_head)
@@ -254,6 +242,7 @@ PathNode * findPath(MatchContext * context, int s_x, int s_y, int e_x, int e_y){
 	return findPathWithin(context, s_x, s_y, e_x, e_y, INT_MAX);
 }
 
+/*
 int pathfindingMain(){
 	Hunter hunters[] = {
 		{	.name = "Daniel", .level = 1, .type = "hunter",
@@ -365,3 +354,4 @@ int pathfindingMain(){
 
 	return 0;
 }
+*/

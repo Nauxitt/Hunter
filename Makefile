@@ -5,7 +5,7 @@ RM = rm -f
 
 SDL_FLAGS += `sdl2-config --libs` -lSDL2_mixer -lSDL2_image -lSDL2_ttf -lm
 
-CFLAGS = -g -Wall
+CFLAGS = -g -Wall -Wpedantic
 CFLAGS += $(SDL_FLAGS)
 
 LFLAGS = -g -Wall

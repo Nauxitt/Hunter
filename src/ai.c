@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stddef.h>
 #include "ai.h"
 #include "string.h"
 
@@ -50,23 +51,33 @@ void botClearMoveActions(Bot * bot) {
 	   them from the bot.
 	*/
 
-	// Function to map onto arrays of move actions, to reduce redundancy
-	void clear(BotAction ** actions, int length) {
-		for (int n=0; n < length; n++) {
-			BotAction * action = actions[n];
-			
-			if (action == NULL)
-				continue;
-
-			free(action);
-			actions[n] = NULL;
+	for (int n=0; n < 6; n++) {
+		if (bot->wander_action[n]) {
+			free(bot->wander_action[n]);
+			bot->wander_action[n] = NULL;
 		}
-	}
 
-	clear((BotAction **) &bot->wander_action, 6);
-	clear((BotAction **) &bot->exit_action, 6);
-	clear((BotAction **) &bot->crate_target_action, 6);
-	clear((BotAction **) &bot->move_to_character_action, 6 * PLAYERS_LENGTH);
+		if (bot->exit_action[n]) {
+			free(bot->exit_action[n]);
+			bot->exit_action[n] = NULL;
+		}
+
+		if (bot->crate_target_action[n]) {
+			free(bot->crate_target_action[n]);
+			bot->crate_target_action[n] = NULL;
+		}
+
+		if (bot->wander_action[n]) {
+			free(bot->wander_action[n]);
+			bot->wander_action[n] = NULL;
+		}
+
+		for (int player=0; player < PLAYERS_LENGTH; player++)
+			if (bot->move_to_character_action[player][n]) {
+				free(bot->move_to_character_action[player][n]);
+				bot->move_to_character_action[player][n] = NULL;
+			}
+	}
 }
 
 void botTurnAction(Bot * bot, MatchContext * context, Hunter * hunter) {
@@ -741,58 +752,6 @@ void counterattackProbability(Hunter * attacker, Hunter * defender, CombatResult
 			attacker_spread->hp_spread[attacker_stats->hp] += attacker_spread->total_outcomes - old_total;
 		}
 	}
-}
-
-int combatTest() {
-	Hunter hunters[] = {
-		{	.name = "Daniel", .level = 1, .type = "hunter",
-			.base_stats={.atk = 4, .mov = 1, .def = 4, .max_hp=1}
-		},
-		{	.name = "Dave", .level = 1, .type = "hunter",
-			.base_stats = {.atk = 8, .mov=1, .def = 1, .max_hp=1}
-		},
-		{	.name = "Stan", .level = 1, .type = "hunter",
-			.base_stats = {.atk = 2, .mov = 3, .def = 4, .max_hp=1}
-		},
-		{	.name = "Tim", .level = 1, .type = "hunter",
-			.base_stats = {.atk = 30, .mov=3, .def = 2, .max_hp=2}
-		}
-	};
-
-	void try(int damage, int harm, int kill, int die) {
-		for (int n = 0; n < 16; n++) {
-			Hunter * attacker = &hunters[n/4];
-			Hunter * defender = &hunters[n%4];
-
-			attacker->base_stats.hp = hunterStats(attacker)->max_hp;
-			defender->base_stats.hp = hunterStats(defender)->max_hp;
-
-			if (attacker == defender)
-				continue;
-		
-			CombatResultsSpread attacker_spread;
-			CombatResultsSpread defender_spread;
-			counterattackProbability(attacker, defender, &attacker_spread, &defender_spread);
-
-			int score;
-			score  = combatSpreadDamageScore(&attacker_spread, harm);
-			score += combatSpreadDamageScore(&defender_spread, damage);
-			score += defender_spread.hp_spread[0] * kill / defender_spread.total_outcomes;
-			score += attacker_spread.hp_spread[0] * die  / attacker_spread.total_outcomes;
-
-			printHunter(attacker);
-			printf(" -> ");
-			printHunter(defender);
-			printf(" : %d", score);
-			printf("\n");
-		}
-	}
-
-	try(100, -100, 500, -1000);
-	printf("\n");
-	try(100, -120, 0, 0);
-
-	return 0;
 }
 
 int botMain() {
