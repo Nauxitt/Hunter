@@ -1,0 +1,42 @@
+# set the compiler
+CC = x86_64-w64-mingw32-gcc
+LINKER = x86_64-w64-mingw32-gcc
+RM = rm -f
+
+# SDL_FLAGS += `x86_64-w64-mingw32-sdl2-config --libs` -lSDL2_mixer -lSDL2_image -lSDL2_ttf -lm
+SDL_FLAGS += `x86_64-w64-mingw32-sdl2-config --libs --cflags` -lSDL2_image -lSDL2_ttf -lm
+
+DEBUG_FLAG = -gstabs
+CFLAGS = $(DEBUG_FLAG) -Wall -w -Wl,-subsystem,windows 
+LFLAGS = $(DEBUG_FLAG) -Wall -w -Wl,-subsystem,windows 
+
+CFLAGS += $(SDL_FLAGS)
+LFLAGS += $(SDL_FLAGS)
+
+EXEC = hunter.exe
+
+SRCDIR = src
+OBJDIR = bin
+
+SOURCES  := $(wildcard $(SRCDIR)/*.c)
+INCLUDES := $(wildcard $(SRCDIR)/*.h)
+OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+
+$(EXEC): $(OBJECTS)
+	$(LINKER) $(OBJECTS) $(LFLAGS) -o $@
+
+$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
+	@mkdir -p $(OBJDIR)
+	$(CC) -c $< $(CFLAGS) -o $@
+
+run:
+	wine ./$(EXEC)
+
+.PHONY: clean
+clean:
+	$(RM) $(OBJECTS)
+	rmdir $(OBJDIR)
+
+.PHONY: remove
+remove: clean
+	$(RM) $(EXEC)

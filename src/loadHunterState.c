@@ -89,9 +89,21 @@ void loadHunterStateOnPush(EventHandler * h){
 		}
 
 		// If the new node's modify time is greatest, make it the new root and continue
-		time_t node_time = node->attr.st_mtim.tv_sec;
+		// TODO: replace ifdef's with something more clean
+		time_t node_time =
+#ifdef _WIN32
+			node->attr.st_mtime;
+#else
+			node->attr.st_mtim.tv_sec;
+#endif
 
-		if (node_time >= hunters->attr.st_mtim.tv_sec) {
+		if (
+#ifdef _WIN32
+				node_time >= hunters->attr.st_mtime
+#else
+				node_time >= hunters->attr.st_mtim.tv_sec
+#endif
+		) {
 			hunters->prev = node;
 			node->next = hunters;
 			hunters = node;
@@ -102,8 +114,13 @@ void loadHunterStateOnPush(EventHandler * h){
 		struct HunterFileLinkedList * iter = hunters;
 
 		while (iter->next != NULL) {
+#ifdef _WIN32
+			time_t iter_time = iter->attr.st_mtime;
+			time_t next_time = iter->next->attr.st_mtime;
+#else
 			time_t iter_time = iter->attr.st_mtim.tv_sec;
 			time_t next_time = iter->next->attr.st_mtim.tv_sec;
+#endif
 
 			if(iter_time >= node_time && node_time >= next_time)
 				break;

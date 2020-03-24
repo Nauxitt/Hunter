@@ -39,7 +39,11 @@ char * dataDir(){
 	}
 	else if (ENOENT == errno){
 		// Make directory
+#ifdef _WIN32
+		mkdir((char*) &__data_dir);
+#else
 		mkdir((char*) &__data_dir, 0755);
+#endif
 	}
 	return NULL;
 }

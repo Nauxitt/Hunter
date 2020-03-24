@@ -32,7 +32,11 @@ int initGame(){
 			"Hunter of Battles",
 			SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 			game.w, game.h,
+#ifdef _WIN32
+			SDL_WINDOW_SHOWN
+#else
 			SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL
+#endif
 		);
 
 	if (game.window == NULL){
