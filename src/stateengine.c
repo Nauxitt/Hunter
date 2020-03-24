@@ -1,6 +1,11 @@
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include "stateengine.h"
 #include <stdlib.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include <time.h>
 
 int initGame(){
@@ -15,7 +20,8 @@ int initGame(){
 		return 1;
 	}
 
-	if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
+	// if(SDL_Init(SDL_INIT_EVERYTHING) != 0)
+	if(SDL_Init(SDL_INIT_VIDEO) != 0)
 		return 1;
 
 	// TODO: allow different window sizes
@@ -24,25 +30,29 @@ int initGame(){
 
 	game.window = SDL_CreateWindow(
 			"Hunter of Battles",
-			SDL_WINDOWPOS_CENTERED,
-			SDL_WINDOWPOS_CENTERED,
+			SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 			game.w, game.h,
-			SDL_WINDOW_SHOWN
+			SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL
 		);
 
 	if (game.window == NULL){
-		return 1;
 		SDL_Quit();
+		return 1;
 	}
 
 	game.renderer = SDL_CreateRenderer(game.window, -1, SDL_RENDERER_ACCELERATED);
 
 	if(game.renderer == NULL){
 		SDL_DestroyWindow(game.window);
+		SDL_Quit();
 		return 1;
 	}
 
+#ifdef __EMSCRIPTEN__
+	game.tick_delay = 0;
+#else
 	game.tick_delay = 16;
+#endif
 
 	return 0;
 }
@@ -171,15 +181,21 @@ void gameCycle(){
 		game.state->events.onDraw((EventHandler *) game.state);
 
 	SDL_RenderPresent(game.renderer);
-	SDL_Delay(game.tick_delay);
+
+	if (game.tick_delay)
+		SDL_Delay(game.tick_delay);
 }
 
 void gameMainLoop(){
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop(gameCycle, 0, 1);
+#else
 	while(game.state && !game.quit)
 		gameCycle();
 	
 	SDL_DestroyWindow(game.window);
 	SDL_Quit();
+#endif
 }
 
 uint32_t stateUpdateTime(GameState * state, uint32_t time){

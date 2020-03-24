@@ -776,7 +776,7 @@ void mapOnKeyUp(EventHandler * h, SDL_Event * e){
 
 	else if(pollAction("poll_tile_select")){
 		if(e->key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-			nextAction(state);
+			nextAction();
 	}
 
 	else if(pollAction("poll_combat_target")){

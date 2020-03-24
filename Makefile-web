@@ -1,0 +1,44 @@
+# set the compiler
+CC = emcc
+LINKER = emcc
+RM = rm -f
+
+SDL_FLAGS = --preload-file resources -s USE_SDL=2 -s USE_SDL_TTF=2 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png","jpg"]' -s WASM=1 -s ALLOW_MEMORY_GROWTH=1
+
+DEBUG_FLAGS = -O3 #-g4 -s DEMANGLE_SUPPORT=1
+CFLAGS = -Wall -std=gnu11
+CFLAGS += $(DEBUG_FLAGS)
+CFLAGS += $(SDL_FLAGS)
+
+LFLAGS = -Wall
+LFLAGS += $(DEBUG_FLAGS)
+LFLAGS += $(SDL_FLAGS)
+
+EXEC = hunter.html
+
+SRCDIR = src
+OBJDIR = bin
+
+SOURCES  := $(wildcard $(SRCDIR)/*.c)
+INCLUDES := $(wildcard $(SRCDIR)/*.h)
+OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+
+$(EXEC): $(OBJECTS)
+	$(LINKER) $(LFLAGS) $(OBJECTS) -o $@
+
+$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
+	@mkdir -p $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+run:
+	./$(EXEC)
+
+.PHONY: clean
+clean:
+	$(RM) $(OBJECTS)
+	$(RM) hunter.*
+	rmdir $(OBJDIR)
+
+.PHONY: remove
+remove: clean
+	$(RM) $(EXEC)

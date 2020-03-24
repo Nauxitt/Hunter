@@ -2,6 +2,7 @@
 #include "sprites.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <stdio.h>
 
 void getSpriteClip(SpriteSheet * sheet, int x, int y, SDL_Rect * dest){
 	dest->x = x * sheet->src_w;
@@ -42,7 +43,11 @@ void loadSprites(){
 	// Treat textures as an array of SpriteSheets and iterate across it, loading textures from their path properties.
 	for(int x = sizeof(textures)/sizeof(SpriteSheet)-1; x >= 0; x--){
 		SpriteSheet * sheet = ((SpriteSheet *) &textures) + x;
+
 		sheet->texture = IMG_LoadTexture(game.renderer, sheet->path);
+		
+		if (sheet->texture == NULL)
+			printf("ERROR: %s\n", SDL_GetError());
 
 		// Store sheet dimensions for convenience
 		SDL_QueryTexture(
@@ -51,7 +56,7 @@ void loadSprites(){
 				&sheet->sheet_w,
 				&sheet->sheet_h
 			);
-		
+
 		// If the sheet has unspecified dimensions, generate scaled size data.
 		if(sheet->w == 0 || sheet->h == 0){
 			sheet->src_w = sheet->sheet_w;
