@@ -472,7 +472,7 @@ void botDefendAction(Bot * bot, MatchContext * context, Hunter * hunter) {
 }
 
 void botCombatAction(Bot * bot, MatchContext * context, Hunter * hunter) {
-	BotAction * max_action;
+	BotAction * max_action = NULL;
 	Hunter * final_target = NULL;
 
 	for (int n=0; n < PLAYERS_LENGTH; n++) {
@@ -832,6 +832,8 @@ int botMain() {
 				(context.action->type != END_MATCH_ACTION)
 			)
 		matchCycle(&context);
+
+	free(context.map);
 
 	return 0;
 }

@@ -116,6 +116,8 @@ void mapOnPop(EventHandler * h){
 	MapState * state = MapState(h);
 	MatchContext * match = state->match;
 
+	free(state->map);
+
 	// Clear hunter hands
 	for(int n=0; n < 4; n++)
 		match->characters[n]->hand[0] = NULL;

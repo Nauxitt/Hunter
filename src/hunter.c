@@ -48,14 +48,10 @@ void decodeMap(MatchContext * context, char * map_encoded) {
 
 	x = 0;
 	y = 0;
-	for(char * c = map_encoded; *c; c++){
+
+	for(char * c = map_encoded; *c; c++) {
 		Tile * tile = context->map + w*y + x;
 		tile->exists = 1;
-
-		tile->x = x;
-		tile->y = y;
-		tile->path.x = x;
-		tile->path.y = y;
 
 		switch(*c){
 			case ' ':
@@ -92,6 +88,17 @@ void decodeMap(MatchContext * context, char * map_encoded) {
 
 	context->exit_x = exit_x;
 	context->exit_y = exit_y;
+
+	// Set tile positional and PathNode data
+	for (y=0; y < h; y++)
+		for (x=0; x < w; x++) {
+			Tile * tile = context->map + y*w + x;
+			tile->x = x;
+			tile->y = y;
+			tile->path.x = x;
+			tile->path.y = y;
+			tile->path.tile = tile;
+		}
 }
 
 void encodeHunter(Hunter * hunter, char * buffer) {

@@ -124,12 +124,19 @@ PathNode * mapAddPathNode(MatchContext * context, PathNode * from, int x, int y)
 }
 
 void expandPath(MatchContext * context, PathNode * path_head, int x, int y, int s_x, int s_y) {
-	PathNode * node = &context->map[context->map_w*y + x].path;
-
-	if (node->scanned)
+	// Check map bounds
+	if ((x < 0) || (y < 0))
 		return;
 
-	if (!pointWalkable(context, x, y))
+	if ((x >= context->map_w) || (y >= context->map_h))
+		return;
+
+	PathNode * node = &context->map[context->map_w*y + x].path;
+
+	if (node->scanned != NULL)
+		return;
+
+	if (!tileWalkable(node->tile))
 		if (!((x == s_x) && (y == s_y)))
 			return;
 
