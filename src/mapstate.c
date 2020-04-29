@@ -340,17 +340,9 @@ void mapOnTick(EventHandler * h){
 				return;
 
 			case OPEN_CRATE_ACTION:
+				// Unset Mapstate tile's crate reference, hiding it
+				getMapstateTile(state->map, action->x, action->y)->contents[TILE_LAYER_CRATE] = NULL;
 				matchCycle(match);
-				for_xy(x, y, state->map->w, state->map->h){
-					MapStateTile * tile = getMapstateTile(state->map, x, y);
-					CrateEntity * entity = CrateEntity(tile->contents[TILE_LAYER_CRATE]);
-
-					if(!entity || (entity->crate != action->crate))
-						continue;
-
-					tile->contents[TILE_LAYER_CRATE] = NULL;
-					break;
-				}
 				break;
 
 			case GIVE_RELIC_ACTION:
@@ -1055,8 +1047,10 @@ void mapStateOnDrawFlash(EventHandler * h){
 	}
 	else {
 		mapstate->tint.a = 0;
+		prevStateOnDraw(h);
 		gamePopState();
 		free(h);
+		return;
 	}
 
 	prevStateOnDraw(h);

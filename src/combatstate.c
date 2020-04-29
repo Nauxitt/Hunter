@@ -65,11 +65,6 @@ void combatOnTick(EventHandler * h) {
 				break;
 
 			case POLL_ATTACK_ACTION:
-				matchCycle(match);
-
-				if (action->type != POLL_ATTACK_ACTION)
-					break;
-
 				if(state->card_selected == NULL){
 					breaker = 0;
 					SelectorPanelState * handState = makeCardSelectState(NULL, action->actor, 32, 72);
@@ -80,6 +75,7 @@ void combatOnTick(EventHandler * h) {
 				else {
 					postAttackerCard(match, state->card_selected);
 				}
+				matchCycle(match);
 				break;
 
 			case DAMAGE_ACTION:

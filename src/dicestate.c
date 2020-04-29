@@ -20,6 +20,7 @@ DiceState * initDiceState(DiceState * state, int num, int x, int y, enum DiceCol
 
 	EventHandler(state)->type = "DiceState";
 	EventHandler(state)->onDraw = diceStateOnDraw;
+	EventHandler(state)->onTick = diceStateOnTick;
 
 	return state;
 }
@@ -44,10 +45,10 @@ void diceStateOnDraw(EventHandler * h){
 		drawDiceBack(&dest);	
 	}
 
-	else if(duration < DICE_FLIP_DURATION + DICE_SHOW_DURATION){
+	else if(duration < DICE_FLIP_DURATION + DICE_SHOW_DURATION) {
 		void (*drawDice)(int n, int x, int y) = NULL;
 
-		switch(state->color){
+		switch(state->color) {
 			case MOVE_DICE_COLOR: drawDice = drawMoveDice; break;
 			case DAMAGE_DICE_COLOR: drawDice = drawDamageDice; break;
 			case DEFENSE_DICE_COLOR: drawDice = drawDefenseDice; break;
@@ -60,7 +61,9 @@ void diceStateOnDraw(EventHandler * h){
 				state->y
 			);
 	} 
-	else {
+}
+
+void diceStateOnTick(EventHandler * h) {
+	if(GameState(h)->duration < DICE_FLIP_DURATION + DICE_SHOW_DURATION)
 		free(gamePopState());
-	}
 }
