@@ -47,8 +47,8 @@ void characterCreatorOnTick(EventHandler * h) {
 		case CHARACTER_CREATOR_MODE_AVATAR:
 			// TODO: Push avatar selector state
 			characterCreatorOnTick(h);
-			gamePushState((GameSTate*) makeAvatarSelectorState(
-					&creator->avatar, hunter
+			gamePushState((GameState*) makeAvatarSelectorState(
+					&creator->avatar
 				));
 			break;
 

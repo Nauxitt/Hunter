@@ -9,16 +9,18 @@
 #ifndef __mapstate_h
 #define __mapstate_h
 
+typedef struct _Entity Entity;
+typedef struct _HunterEntity HunterEntity;
+
 #include "stateengine.h"
 #include "hunter.h"
 #include <stdint.h>
 #include <stdio.h>
 #include "entity.h"
+#include "characterEntity.h"
 #include "menubar.h"
 #include "statboxDisplayState.h"
 #include "draw.h"
-
-typedef struct _Entity Entity;
 
 #define TILE_LAYER_TILESELECTOR 0
 #define TILE_LAYER_TRAPS 1
@@ -59,6 +61,8 @@ typedef struct _MapStateMap {
 typedef struct _HunterEntity {
 	TileEntity entity;
 	Hunter * hunter;
+	CharacterEntityAnimationHandler * animation_handler;
+	CharacterEntityAnimationContext * animation_context;
 } HunterEntity;
 
 

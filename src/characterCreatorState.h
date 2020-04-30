@@ -18,6 +18,16 @@ enum CharacterCreatorMode {
 	CHARACTER_CREATOR_MODE_END
 };
 
+typedef struct _AvatarSelectorState {
+	GameState * state;
+
+	int avatar;
+	int color;
+
+	int * avatar_write;
+	int * color_write;
+} AvatarSelectorState;
+
 /*
  * The CharacterCreatorState manages a sequence of GameStates, which prompt the
  * user on the cusomization of their character.  It holds the date between these
@@ -35,22 +45,12 @@ typedef struct _CharacterCreatorState {
 	
 	StatAllocatorState allocator;
 	//NamePromptState name_prompt;
-	//AvatarSelectState avatar_selector;
+	AvatarSelectorState avatar;
 } CharacterCreatorState;
 
 
 CharacterCreatorState * makeCharacterCreatorState(CharacterCreatorState * state, Hunter * hunter);
 void characterCreatorOnTick(EventHandler * h);
-
-typedef struct _AvatarSelectorState {
-	GameState * state;
-
-	int avatar;
-	int color;
-
-	int * avatar_write;
-	int * color_write;
-} AvatarSelectorState;
  
 AvatarSelectorState * makeAvatarSelectorState(AvatarSelectorState * state);
 void avatarSelectorStateOnKeyUp(EventHandler * h, SDL_Event * e);

@@ -131,6 +131,8 @@ typedef struct _Hunter {
 	int x, y;
 	uint32_t credits;
 
+	int avatar;
+
 	// References to controller data.  Can be set for automated Hunter control.
 	// When the MatchContext polls for a game action, if a controller hook is
 	// set, the MatchContext will poll that hook for an action.  Otherwise, the
