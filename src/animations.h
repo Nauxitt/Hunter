@@ -9,8 +9,8 @@
 
 #define ANIMATION AnimationFrame ANIMATION_NAME[] =
 
-#define SPRITE_HUNTER_W 32
-#define SPRITE_HUNTER_H 40
+#define SPRITE_HUNTER_W 42
+#define SPRITE_HUNTER_H 42
 
 #define HUNTER_FRAME_N(n, x, y, d) \
 	{ \
@@ -29,9 +29,16 @@
 
 extern AnimationFrame ANIM_HUNTER_STAND_S[];
 extern AnimationFrame ANIM_HUNTER_STAND_N[];
+extern AnimationFrame ANIM_HUNTER_STAND_S_DROPFIRST[];
+extern AnimationFrame ANIM_HUNTER_STAND_N_DROPFIRST[];
+
 extern AnimationFrame ANIM_HUNTER_RUN_S[];
 extern AnimationFrame ANIM_HUNTER_RUN_N[];
+
 extern AnimationFrame ANIM_HUNTER_DAMAGE_N[];
 extern AnimationFrame ANIM_HUNTER_DAMAGE_S[];
+
+#define ANIM_HUNTER_HIT_N ANIM_HUNTER_DAMAGE_N
+#define ANIM_HUNTER_HIT_S ANIM_HUNTER_DAMAGE_N
 
 #endif
