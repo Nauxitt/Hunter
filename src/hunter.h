@@ -130,7 +130,8 @@ typedef struct _Hunter {
 	Card * hand[HAND_LIMIT];
 	int x, y;
 	uint32_t credits;
-
+	
+	// Numeric ID referring to a spritesheet, used by display code.
 	int avatar;
 
 	// References to controller data.  Can be set for automated Hunter control.

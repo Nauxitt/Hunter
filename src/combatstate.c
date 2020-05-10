@@ -26,6 +26,8 @@ CombatState * makeCombatState(CombatState * state, MatchContext * match) {
 void combatOnEnter(EventHandler * h) {
 	CombatState * state = CombatState(h);
 	state->menubar->active = 0;
+	characterLoopAnimation(&state->attacker_entity, CHAR_ANIM_IDLE);
+	characterLoopAnimation(&state->defender_entity, CHAR_ANIM_IDLE);
 }
 
 void combatOnExit(EventHandler * h) {

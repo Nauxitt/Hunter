@@ -23,7 +23,6 @@ void spritesheetBlit(SpriteSheet * sheet, int sx, int sy, int x, int y){
 Textures textures = {
 	SHEET(tiles          , "resources/images/hunter-tile.png", 32,16),
 	SHEET(items          , "resources/images/items.png", 16,16),
-	SHEET(daniel         , "resources/images/daniel.png", 0,0),
 	SHEET(statbox        , "resources/images/statbox.png", 8,9),
 	SHEET(cards          , "resources/images/cards.png", 16,18),
 	SHEET(menu_gradient  , "resources/images/menubar-gradient.png", 0,0),
@@ -35,7 +34,11 @@ Textures textures = {
 	SHEET(wallpapers     , "resources/images/wallpapers.png", 320, 208),
 	SHEET(bubble         , "resources/images/bubble.png", 10, 10),
 	SHEET(character_portraits , "resources/images/character_portraits.png", 128, 224),
-	SHEET(target_relic_panel  , "resources/images/target-relic-panel.png", 0, 0)
+	SHEET(target_relic_panel  , "resources/images/target-relic-panel.png", 0, 0),
+
+	SHEET(daniel         , "resources/images/daniel.png", 0,0),
+	SHEET(christina      , "resources/images/christina.png", 0,0),
+	SHEET(simon          , "resources/images/simon.png", 0,0)
 };
 
 

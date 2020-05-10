@@ -29,22 +29,25 @@ int basicMission(){
 	loadSprites();
 
 	Hunter hunters[] = {
-		{	.name = "Daniel",
+		{	.name = "DANIEL",
 			.base_stats={.atk = 7, .mov = 6, .def = 3, .max_hp=1},
 			.level = 1,
-			.type = "hunter"
+			.type = "hunter",
+			.avatar = 1
 		},
-		{	.name = "Dave",
+		{	.name = "CHRISTINA",
 			.base_stats = {.mov = 3, .atk = 3, .def = 2, .max_hp=2},
 			.level = 1,
-			.type = "hunter"
+			.type = "hunter",
+			.avatar = 1
 		},
-		{	.name = "Stan",
+		{	.name = "SIMON",
 			.base_stats = {.atk = 4, .mov = 1, .def = 4, .max_hp=1},
 			.level = 1,
-			.type = "hunter"
+			.type = "hunter",
+			.avatar = 2,
 		},
-		{	.name = "Tim",
+		{	.name = "TIM",
 			.base_stats = {.atk = 1, .mov = 7, .def = 1, .max_hp=1},
 			.level = 1,
 			.type = "hunter"
@@ -133,8 +136,9 @@ int basicMission(){
 	MapState * mapstate = makeMapState(NULL, &context);
 
 	for(int n=0; n < 4; n++){
-		initHunterEntity(&mapstate->hunters[n], mapstate, textures.daniel.texture);
-		mapstate->hunters[n].hunter = &hunters[n];
+		HunterEntity * h_entity = initHunterEntity(&mapstate->hunters[n], &hunters[n]);
+		TileEntity(h_entity)->mapstate = mapstate;
+		
 		hunterSetTile(&mapstate->hunters[n], hunters[n].x, hunters[n].y);
 	}
 

@@ -20,7 +20,6 @@ void spritesheetBlit(SpriteSheet * sheet, int sx, int sy, int x, int y);
 typedef struct _Textures {
 	SpriteSheet tiles;
 	SpriteSheet items;
-	SpriteSheet daniel;
 	SpriteSheet statbox;
 	SpriteSheet cards;
 	SpriteSheet menu_gradient;
@@ -33,6 +32,10 @@ typedef struct _Textures {
 	SpriteSheet bubble;
 	SpriteSheet character_portraits;
 	SpriteSheet target_relic_panel;
+
+	SpriteSheet daniel;
+	SpriteSheet christina;
+	SpriteSheet simon;
 } Textures;
 
 extern Textures textures;

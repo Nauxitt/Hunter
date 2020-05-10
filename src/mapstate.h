@@ -61,8 +61,8 @@ typedef struct _MapStateMap {
 typedef struct _HunterEntity {
 	TileEntity entity;
 	Hunter * hunter;
-	CharacterEntityAnimationHandler * animation_handler;
-	CharacterEntityAnimationContext * animation_context;
+	CharacterAnimationHandler * animation_handler;
+	CharacterAnimationContext animation_context;
 } HunterEntity;
 
 
@@ -111,8 +111,6 @@ typedef struct _MapState {
 typedef struct _HunterEntityDamageState {
 	GameState state;
 	HunterEntity * hunter;
-	AnimationFrame * old_animation;
-	uint8_t old_animation_loop;
 	int damage;
 
 	int hit_end_time;
@@ -167,7 +165,7 @@ int iso_y(MapState * state, int x, int y);
 MapStateTile * getMapstateTileAtPx(MapState * state, float p_x, float p_y);
 
 void tileEntityOnDraw(EventHandler * h);
-HunterEntity * initHunterEntity(HunterEntity * hunter, MapState * state, SDL_Texture * texture);
+HunterEntity * initHunterEntity(HunterEntity * h_entity, Hunter * hunter);
 CrateEntity * initCrateEntity(CrateEntity * hunter, MapState * state, SDL_Texture * texture);
 void crateOnDraw(EventHandler * h);
 
@@ -189,8 +187,9 @@ void mapGiveRelic(HunterEntity * hunter, Relic * relic);
 void mapOnDrawGiveRelic(EventHandler * h);
 void mapEnterCombat(MapState * state);
 
-void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int speed);
-void mapOnTickMoveHunter(EventHandler * h);
+void mapMoveHunter (MapState * state, HunterEntity * hunter, int x, int y, int speed);
+void mapOnTickMoveHunter (EventHandler * h);
+void mapOnEnterMoveHunter (EventHandler * h);
 
 void mapTeleportHunterUp(MapState * state, HunterEntity * hunter);
 void mapTeleportHunterDown(MapState * state, HunterEntity * hunter);

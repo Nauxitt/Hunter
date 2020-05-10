@@ -310,12 +310,14 @@ void mainMenuStartBasicMission(MainMenuState * state){
 	   character slot, they are randomly generated and assigned
 	   a bot.
 	*/
-	for(int n=0; n<4; n++) {
+	for (int n=0; n<4; n++) {
 		Hunter * hunter = state->hunters[n];
 		
 		// If no hunter was created from the main menu, create one and assign it a bot
 		if (hunter == NULL) {
 			hunter = gameCalloc(sizeof(Hunter), 1);
+
+			hunter->avatar = rand() % CHARACTER_ID_MAX;
 
 			randomHunter(hunter, 10);
 			hunter->controller_data = bot;
@@ -351,8 +353,8 @@ void mainMenuStartBasicMission(MainMenuState * state){
 
 	// Make mapstate - Hunter Entities
 	for(int n=0; n < 4; n++){
-		initHunterEntity(&mapstate->hunters[n], mapstate, textures.daniel.texture);
-		mapstate->hunters[n].hunter = match->characters[n];
+		initHunterEntity(&mapstate->hunters[n], match->characters[n]);
+		TileEntity(&mapstate->hunters[n])->mapstate = mapstate;
 		hunterSetTile(&mapstate->hunters[n], match->characters[n]->x, match->characters[n]->y);
 	}
 

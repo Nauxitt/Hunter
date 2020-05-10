@@ -1,41 +1,41 @@
 #include "entity.h"
 
-void entityOnDraw(EventHandler * h){
+void entityOnDraw(EventHandler * h) {
 	Entity * entity = Entity(h);
 	AnimationFrame * frame = entity->animation_frame;
 
 	if (entity->hide)
 		return;
 
-	if(frame == NULL)
+	if (frame == NULL)
 		frame = entity->animation_frame = entity->animation;
 
 	// Handle animation timing
 	entity->animation_finished = 0;
 
-	if(frame){
+	if (frame) {
 		uint32_t time = SDL_GetTicks();
 		
 		// If the entity has no animation timing data, create
 		// it and don't update to the next frame.
-		if(entity->last_frame == 0){
+		if (entity->last_frame == 0) {
 			entity->last_frame = time;
 		}
 
 		// If it is time, update the frame, but only if there
 		// is a new frame to update to.
-		else if(time - entity->last_frame >= frame->duration){
+		else if (time - entity->last_frame >= frame->duration) {
 			
 			// next frame?
-			if(entity->animation_frame->next)
-				entity->animation_frame = entity->animation_frame->next;
+			if (frame->next)
+				entity->animation_frame = frame->next;
 
 			// animation end
 			else {
-				entity->animation_finished = 1;
-			
 				if (entity->animation_loop)
 					frame = entity->animation_frame = entity->animation;
+				else
+					entity->animation_finished = 1;
 			}
 
 			entity->last_frame = time;
@@ -47,18 +47,18 @@ void entityOnDraw(EventHandler * h){
 	flip_h = entity->flip_h;
 	flip_v = entity->flip_v;
 
-	if(frame){
+	if (frame) {
 		flip_h ^= frame->flip_h;
 		flip_v ^= frame->flip_v;
 	}
 	
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
-	if(flip_h) flip |= SDL_FLIP_HORIZONTAL;
-	if(flip_v) flip |= SDL_FLIP_VERTICAL;
+	if (flip_h) flip |= SDL_FLIP_HORIZONTAL;
+	if (flip_v) flip |= SDL_FLIP_VERTICAL;
 
 	// Handle source clipping
 	SDL_Rect * src = NULL;
-	if(frame)
+	if (frame)
 		src = &frame->clip;
 
 	// Rendering destination
@@ -83,7 +83,7 @@ void entityOnDraw(EventHandler * h){
 		};
 
 	//    Frame center
-	if(frame){
+	if (frame) {
 		dest.x -= frame->center_x * entity->scale_w;
 		dest.y -= frame->center_y * entity->scale_h;
 	}
@@ -104,14 +104,15 @@ void entityOnDraw(EventHandler * h){
 		);
 }
 
-void entitySetAnimation(Entity * entity, AnimationFrame * animation){
+void entitySetAnimation (Entity * entity, AnimationFrame * animation) {
 	if(entity->animation != animation){
 		entity->animation = animation;
 		entity->animation_frame = NULL;
+		entity->last_frame = 0;
 	}
 }
 
-uint32_t animationGetDuration(AnimationFrame * animation){
+uint32_t animationGetDuration (AnimationFrame * animation) {
 	uint32_t duration = 0;
 
 	for(AnimationFrame * frame = animation; frame != NULL; frame = frame->next)

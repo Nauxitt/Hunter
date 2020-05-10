@@ -25,11 +25,11 @@ extern MenubarState menubar;
 
 int iso_x(MapState * state, int x, int y) {
 	return state->camera_x + (x-y) * state->tile_w/2 + state->tile_w/2;
-};
+}
 
 int iso_y(MapState * state, int x, int y) {
 	return state->camera_y + (x+y) * state->tile_h/2 + state->tile_h/2;
-};
+}
 
 MapStateMap * makeMap(int w, int h){
 	MapStateMap * ret = (MapStateMap*) malloc(sizeof(MapStateMap));
@@ -200,22 +200,31 @@ void crateSetTile(CrateEntity * c, int x, int y){
 	c->crate->y = y;
 }
 
-HunterEntity * initHunterEntity(HunterEntity * hunter, MapState * state, SDL_Texture * texture){
-	if(hunter == NULL)
-		hunter = HunterEntity(malloc(sizeof(HunterEntity)));
-	
-	Entity * e = Entity(hunter);
-	TileEntity * te = TileEntity(hunter);
+HunterEntity * initHunterEntity (HunterEntity * h_entity, Hunter * hunter) {
+	if (h_entity == NULL)
+		h_entity = malloc(sizeof(HunterEntity));
 
-	te->mapstate = state;
-	e->texture = texture;
-	e->animation = (AnimationFrame*) &ANIM_HUNTER_STAND_S;
-	e->animation_loop = 1;
-	e->scale_w = 2;
-	e->scale_h = 2;
-	EventHandler(hunter)->type = "HunterEntity";
-	EventHandler(hunter)->onDraw = tileEntityOnDraw;
-	return hunter;
+	memset(h_entity, 0, sizeof(HunterEntity));
+
+	EventHandler(h_entity)->type = "HunterEntity";
+	EventHandler(h_entity)->onDraw = characterEntityOnDraw;
+
+	h_entity->hunter = hunter;
+	h_entity->animation_handler = getCharacterAnimationHandler(hunter->avatar);
+
+	initCharacterAnimationContext(
+			&h_entity->animation_context,
+			h_entity->animation_handler,
+			h_entity
+		);
+
+	Entity(h_entity)->texture = h_entity->animation_handler->texture;
+	Entity(h_entity)->scale_w = h_entity->animation_handler->scale_w;
+	Entity(h_entity)->scale_h = h_entity->animation_handler->scale_h;
+
+	characterLoopAnimation(h_entity, CHAR_ANIM_IDLE);
+	
+	return h_entity;
 }
 
 CrateEntity * initCrateEntity(CrateEntity * crate, MapState * state, SDL_Texture * texture){
@@ -362,23 +371,7 @@ void mapOnTick(EventHandler * h){
 				return;
 
 			case END_MOVE_ACTION:
-				switch(Entity(action_hunter_entity)->direction){
-					case NORTH:
-					case WEST:
-						entitySetAnimation(
-								Entity(action_hunter_entity),
-								(AnimationFrame *) &ANIM_HUNTER_STAND_N
-							);
-						break;
-
-					case SOUTH:
-					case EAST:
-						entitySetAnimation(
-								Entity(action_hunter_entity),
-								(AnimationFrame *) &ANIM_HUNTER_STAND_S
-							);
-						break;
-				}
+				characterLoopAnimation(action_hunter_entity, CHAR_ANIM_IDLE);
 				breaker = 0;
 				matchCycle(match);
 				break;
@@ -569,7 +562,6 @@ void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int sp
 	*/
 
 	GameState * moveState = makeGameState();
-	gamePushState(moveState);
 
 	ActionQueueEntity * action = makeEntityAction("move_entity");
 	action->entity = Entity(hunter);
@@ -581,6 +573,15 @@ void mapMoveHunter(MapState * state, HunterEntity * hunter, int x, int y, int sp
 	EventHandler(moveState)->data = action;
 	EventHandler(moveState)->onDraw = prevStateOnDraw;
 	EventHandler(moveState)->onTick = mapOnTickMoveHunter;
+	EventHandler(moveState)->onEnter = mapOnEnterMoveHunter;
+
+	gamePushState(moveState);
+}
+
+void mapOnEnterMoveHunter (EventHandler * h) {
+	MapState * state = MapState(GameState(h)->prevState);
+	ActionQueueEntity * action = (ActionQueueEntity*) h->data;
+	characterLoopAnimation(HunterEntity(action->entity), CHAR_ANIM_RUN);
 }
 
 void mapOnTickMoveHunter(EventHandler * h) {
@@ -629,22 +630,6 @@ void mapOnTickMoveHunter(EventHandler * h) {
 			entity->offset_y = 0, entity->y++;
 	}
 
-	switch (Entity(entity)->direction) {
-		case NORTH:
-		case WEST:
-			entitySetAnimation(
-					Entity(entity), (AnimationFrame *) &ANIM_HUNTER_RUN_N
-				);
-			break;
-
-		case SOUTH:
-		case EAST:
-			entitySetAnimation(
-					Entity(entity), (AnimationFrame *) &ANIM_HUNTER_RUN_S
-				);
-			break;
-	}
-
 	hunterSetTile(HunterEntity(entity), entity->x, entity->y);
 	
 	// If finished running, stop.  Switch to standing animation
@@ -652,6 +637,7 @@ void mapOnTickMoveHunter(EventHandler * h) {
 		(entity->x == target_x) &&
 		(entity->y == target_y)
 	){
+		characterLoopAnimation(HunterEntity(action->entity), CHAR_ANIM_IDLE);
 
 		// Exit this state and do cleanup
 		gamePopState();
@@ -953,6 +939,17 @@ void tileEntityOnDraw(EventHandler * h){
 
 	TileEntity * te = TileEntity(h);
 	Entity * e = Entity(h);
+
+	// If mapstate is not defined, we cannot get isometric tile size data.
+	// Thus, we will defer to normal entity drawing, using isometric tile data
+	// as regular pixel positions.
+
+	if (te->mapstate == NULL) {
+		e->x = te->x;
+		e->y = te->y;
+		entityOnDraw(h);
+		return;
+	}
 	
 	if(te->mapstate == NULL){
 		e->x = te->x - te->y;
@@ -998,7 +995,7 @@ void mapEnterCombat(MapState * state){
 			HunterEntity * hunter = &state->hunters[n];
 			HunterEntity * dest = &combat->attacker_entity;
 			memcpy(dest, hunter, sizeof(HunterEntity));
-			EventHandler(dest)->onDraw = entityOnDraw;
+			dest->animation_context.character = dest;
 			break;
 		}
 
@@ -1007,9 +1004,19 @@ void mapEnterCombat(MapState * state){
 			HunterEntity * hunter = &state->hunters[n];
 			HunterEntity * dest = &combat->defender_entity;
 			memcpy(dest, hunter, sizeof(HunterEntity));
-			EventHandler(dest)->onDraw = entityOnDraw;
+			dest->animation_context.character = dest;
 			break;
 		}
+
+	HunterEntity * attacker = &combat->attacker_entity;
+	HunterEntity * defender = &combat->defender_entity;
+
+	TileEntity(attacker)->mapstate = NULL;
+	TileEntity(defender)->mapstate = NULL;
+	TileEntity(attacker)->x = Entity(attacker)->x;
+	TileEntity(attacker)->y = Entity(attacker)->y;
+	TileEntity(defender)->x = Entity(defender)->x;
+	TileEntity(defender)->y = Entity(defender)->y;
 
 	gamePushState(GameState(combat));
 }
@@ -1071,8 +1078,7 @@ HunterEntityDamageState * makeHunterEntityDamageState(HunterEntityDamageState * 
 
 	state->hunter = hunter;
 	state->damage = damage;
-	state->old_animation = Entity(state->hunter)->animation;
-	state->old_animation_loop = Entity(state->hunter)->animation_loop;
+
 	state->bounce_duration = 250;
 	state->bounce_height = 32;
 	state->show_duration = 350;
@@ -1088,18 +1094,18 @@ HunterEntityDamageState * makeHunterEntityDamageState(HunterEntityDamageState * 
 void hunterEntityDamageStateOnEnter(EventHandler * h){
 	HunterEntityDamageState * state = (HunterEntityDamageState *) h;
 
-	AnimationFrame * animation = (AnimationFrame*) &ANIM_HUNTER_DAMAGE_S;
+	enum CharacterAnimationType animation = CHAR_ANIM_HIT;
 	
-	entitySetAnimation(Entity(state->hunter), animation);
-	Entity(state->hunter)->animation_loop = 0;
-	state->hit_end_time = animationGetDuration(animation);
+	if (state->damage == 0)
+		animation = CHAR_ANIM_TAUNT;
+
+	state->hit_end_time = animationHandlerGetAnimationDuration(state->hunter->animation_handler, animation);
+	characterSetAnimation(state->hunter, animation);
 }
 
 void hunterEntityDamageStateOnExit(EventHandler * h){
 	HunterEntityDamageState * state = (HunterEntityDamageState *) h;
-	entitySetAnimation(Entity(state->hunter), state->old_animation);
-
-	Entity(state->hunter)->animation_loop = state->old_animation_loop;
+	characterLoopAnimation(state->hunter, CHAR_ANIM_IDLE);
 }
 	
 void hunterEntityDamageStateOnDraw(EventHandler * h){
