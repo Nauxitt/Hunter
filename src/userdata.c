@@ -11,6 +11,7 @@
 
 
 char __data_dir[128];
+char __hunters_dir[128];
 
 char * dataDir(){
 	/*
@@ -28,8 +29,9 @@ char * dataDir(){
 	if(home == NULL)
 		return NULL;
 
-	// Store data directory
+	// Directory names
 	sprintf((char*) &__data_dir, "%s/.hunter", home);
+	sprintf((char*) &__hunters_dir, "%s/hunters", &__data_dir);
 
 	// Create data directory if it doesn't exist
 	DIR * dir = opendir((char*) &__data_dir);
@@ -41,11 +43,14 @@ char * dataDir(){
 		// Make directory
 #ifdef _WIN32
 		mkdir((char*) &__data_dir);
+		mkdir((char*) &__hunters_dir);
 #else
 		mkdir((char*) &__data_dir, 0755);
+		mkdir((char*) &__hunters_dir, 0755);
 #endif
 	}
-	return NULL;
+
+	return &__data_dir;
 }
 
 char * dataPath(char * dest, char * sub_path){

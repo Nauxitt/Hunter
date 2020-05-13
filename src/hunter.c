@@ -119,9 +119,12 @@ void encodeHunter(Hunter * hunter, char * buffer) {
 	o += 4;
 	data_length += 4;
 
-	// Write level (1)
+	// Write level (1b)
 	buffer[o++] = hunter->level;
 	data_length++;
+
+	// Write Avatar ID and color(2b)
+	buffer[o++] = hunter->avatar;
 
 	// Write name (9b)
 	strncpy(&buffer[o], (char*) &hunter->name, NAME_MAX_LENGTH);
@@ -175,8 +178,11 @@ int decodeHunter(Hunter * hunter, char * buffer) {
 	encoded_length |= buffer[o++] << 8;
 	encoded_length |= buffer[o++];
 
-	// Read level (1)
+	// Read level (1b)
 	hunter->level = buffer[o++];
+
+	// Read avatar (1b)
+	hunter->avatar = buffer[o++];
 
 	// Read name (9b)
 	strncpy((char*) &hunter->name, &buffer[o], NAME_MAX_LENGTH);

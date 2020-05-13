@@ -132,7 +132,7 @@ typedef struct _Hunter {
 	uint32_t credits;
 	
 	// Numeric ID referring to a spritesheet, used by display code.
-	int avatar;
+	int8_t avatar;
 
 	// References to controller data.  Can be set for automated Hunter control.
 	// When the MatchContext polls for a game action, if a controller hook is
