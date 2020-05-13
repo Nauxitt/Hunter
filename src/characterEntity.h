@@ -2,7 +2,8 @@
 #define __character_h
 
 #include "entity.h"
-#include "mapstate.h"
+
+typedef struct _HunterEntity HunterEntity;
 
 enum AvatarId {
 	CHARACTER_DANIEL,
@@ -59,6 +60,11 @@ typedef struct {
 typedef struct _CharacterAnimationHandler {
 	int id;
 	char * name;
+
+	// Track the number of references to this handler, so that it doesn't
+	// become free'd prematurely.
+	int references;
+
 	SDL_Texture * texture;
 	CharacterAnimation * animations[CHAR_ANIM_MAX];
 
@@ -110,6 +116,7 @@ void characterAnimationBlockTicksStateOnTick(EventHandler * h);
 
 void initCharacterAnimations();
 CharacterAnimationHandler * getCharacterAnimationHandler(enum AvatarId id);
+void freeCharacterAnimationHandler (enum AvatarId id);
 
 void animationContextSetCharacterAnimation(CharacterAnimationContext * a_context, CharacterAnimation * animation);
 void characterEntityOnDraw(EventHandler * h);
@@ -127,4 +134,8 @@ void characterSetAnimation (HunterEntity * character, enum CharacterAnimationTyp
 int animationHandlerGetAnimationDuration (CharacterAnimationHandler * handler, enum CharacterAnimationType id);
 
 CharacterAnimationContext * initCharacterAnimationContext(CharacterAnimationContext * a_context, CharacterAnimationHandler * handler, HunterEntity * character);
+
+
+extern CharacterAnimationHandler * characterAnimationHandlers[CHARACTER_ID_MAX];
+
 #endif

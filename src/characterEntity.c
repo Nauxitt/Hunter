@@ -236,8 +236,13 @@ CharacterAnimation * generateCharacterAnimation (CharacterAnimationHandler * han
 
 CharacterAnimationHandler * getCharacterAnimationHandler (enum AvatarId id) {
 	// Lazy loading of handlers
-	if (characterAnimationHandlers[id])
-		return characterAnimationHandlers[id];
+	if (characterAnimationHandlers[id]) {
+		CharacterAnimationHandler * handler = characterAnimationHandlers[id];
+
+		handler->references++;
+
+		return handler;
+	}
 	
 	// Hanlder not initialized, so allocate and init a new
 	// one.
@@ -377,4 +382,16 @@ CharacterAnimationHandler * getCharacterAnimationHandler (enum AvatarId id) {
 	characterAnimationHandlers[id] = handler;
 
 	return handler;
+}
+
+void freeCharacterAnimationHandler (enum AvatarId id) {
+	CharacterAnimationHandler * handler = characterAnimationHandlers[id];
+
+	if (handler == NULL)
+		return;
+
+	if (--handler->references < 1) {
+		characterAnimationHandlers[id] = NULL;
+		free(handler);
+	}
 }

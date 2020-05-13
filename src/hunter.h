@@ -255,7 +255,10 @@ void printHunter(Hunter * h);
 void encodeHunter(Hunter * hunter, char * buffer);
 int decodeHunter(Hunter * hunter, char * buffer);
 
+Hunter * baseHunter (Hunter * h);
+void hunterSetRandomName (Hunter * h, int length);
 Hunter * randomHunter(Hunter * h, int points);
+
 void hunterRandomStatIncrease(Hunter * h, int points);
 Statset * hunterStats(Hunter * h);
 Card * hunterPopCard(Hunter * h, int card_num);

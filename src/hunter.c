@@ -9,6 +9,8 @@
 #include "score.h"
 #include "ai.h"
 
+#include "characterEntity.h"
+
 
 void decodeMap(MatchContext * context, char * map_encoded) {
 	/*
@@ -259,22 +261,34 @@ Statset * hunterStats(Hunter * h) {
 	return &h->stats;
 }
 
-Hunter * randomHunter(Hunter * h, int points){
+Hunter * baseHunter (Hunter * h) {
 	if(h == NULL)
-		h = (Hunter*) calloc(sizeof(Hunter), 1);
+		h = malloc(sizeof(Hunter));
+	memset(h, 0, sizeof(Hunter));
+
 	strcpy((char*) &h->type, "hunter");
-	
-	// Generate a random (and unreadable) name
-	for(int n=0; n<5; n++)
-		h->name[n] = 65 + rand() % 26;
 
 	h->base_stats.atk = 1;
 	h->base_stats.def = 1;
 	h->base_stats.mov = 1;
 	h->base_stats.max_hp = 1;
+	h->base_stats.hp = 9;
+
+	return h;
+}
+
+void hunterSetRandomName (Hunter * h, int length) {
+	for(int n=0; n < length; n++)
+		h->name[n] = 65 + rand() % 26;
+}
+
+Hunter * randomHunter (Hunter * h, int points) {
+	h = baseHunter(h);
+	hunterSetRandomName(h, 5);
 
 	hunterRandomStatIncrease(h, points);
 
+	h->avatar = rand() % CHARACTER_ID_MAX;
 	h->level = points - 10;
 
 	h->base_stats.hp = h->base_stats.max_hp * 3 + 6 + h->level;

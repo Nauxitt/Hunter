@@ -95,13 +95,19 @@ void mainMenuOnEnter(EventHandler * h){
 void mainMenuHunterMenubarOnSpace(MainMenuState * state){
 	switch (state->menubar->selector) {
 		case 0: // Make new hunter
-			state->hunters[state->hunter_selected] = randomHunter(state->hunters[state->hunter_selected], 0);
-			state->hunters[state->hunter_selected]->id = state->hunter_selected;
-			state->hunters[state->hunter_selected]->level = 1;
-			gamePushState((GameState*) makeStatAllocatorState(
-					&state->allocator, state->hunters[state->hunter_selected], 10
-				));
-			state->allocator.color = state->hunter_selected;
+			if (state->hunters[state->hunter_selected] == NULL) {
+				Hunter * new = &state->hunter_memory[state->hunter_selected];
+				state->hunters[state->hunter_selected] = new;
+			}
+
+			initCharacterCreatorState(
+					&state->character_creator, state->hunters[state->hunter_selected], 1
+				);
+			
+			state->character_creator.hunter_id = state->hunter_selected;
+
+			gamePushState((GameState*) &state->character_creator);
+
 			break;
 
 		case 1:  // Save hunter

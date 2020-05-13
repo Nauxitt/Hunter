@@ -5,10 +5,10 @@
 #include "menubar.h"
 #include "sprites.h"
 #include "statboxDisplayState.h"
-#include "statAllocatorPanel.h"
 #include "brokerState.h"
 #include "nurseState.h"
 #include "loadHunterState.h"
+#include "characterCreatorState.h"
 
 typedef struct _WallpaperTransitionState {
 	GameState state;
@@ -33,11 +33,14 @@ typedef struct _MainMenuState {
 	LoadHunterState load_hunter;
 
 	StatboxDisplayState statbox;
-	StatAllocatorState allocator;
+	CharacterCreatorState character_creator;
 	WallpaperTransitionState transition;
 	int wallpaper;
+
 	int hunter_selected;
 	Hunter * hunters[4];
+	Hunter hunter_memory[4];
+
 	BrokerState broker;
 	NurseState nurse;
 } MainMenuState;

@@ -2,6 +2,7 @@
 #define __characterCreatorState_h
 
 #include "stateengine.h"
+#include "hunter.h"
 #include "statAllocatorPanel.h"
 
 /*
@@ -12,14 +13,18 @@
 enum CharacterCreatorMode {
 	CHARACTER_CREATOR_MODE_INIT,
 	CHARACTER_CREATOR_MODE_NAME,
-	CHARACTER_CREATOR_MODE_STATS,
 	CHARACTER_CREATOR_MODE_AVATAR,
+	CHARACTER_CREATOR_MODE_STATS,
 	CHARACTER_CREATOR_MODE_CONFIRM,
 	CHARACTER_CREATOR_MODE_END
 };
 
 typedef struct _AvatarSelectorState {
-	GameState * state;
+	GameState state;
+
+	enum WindowColor window_color;
+
+	SDL_Rect rect;
 
 	int avatar;
 	int color;
@@ -37,24 +42,25 @@ typedef struct _AvatarSelectorState {
 typedef struct _CharacterCreatorState {
 	GameState state;
 
-	enum WindowColor color;
+	enum WindowColor window_color;
 	Hunter hunter;
 	Hunter * hunter_write;
+	int hunter_id;
 
 	enum CharacterCreatorMode mode;
 	
-	StatAllocatorState allocator;
+	StatAllocatorState allocator_state;
 	//NamePromptState name_prompt;
-	AvatarSelectorState avatar;
+	AvatarSelectorState avatar_state;
 } CharacterCreatorState;
 
 
-CharacterCreatorState * makeCharacterCreatorState(CharacterCreatorState * state, Hunter * hunter);
+CharacterCreatorState * initCharacterCreatorState(CharacterCreatorState * state, Hunter * hunter, int level);
+void characterCreatorOnPush(EventHandler * h);
 void characterCreatorOnTick(EventHandler * h);
  
-AvatarSelectorState * makeAvatarSelectorState(AvatarSelectorState * state);
+AvatarSelectorState * initAvatarSelectorState(AvatarSelectorState * state, int * avatar_write, int * color_write);
 void avatarSelectorStateOnKeyUp(EventHandler * h, SDL_Event * e);
-void avatarSelectorStateOnTick(EventHandler * h);
 void avatarSelectorStateOnDraw(EventHandler * h);
 void avatarSelectorStateEnd(AvatarSelectorState * state);
 
